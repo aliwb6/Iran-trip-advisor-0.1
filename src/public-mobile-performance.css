@@ -74,10 +74,6 @@
     font-size: 16px;
   }
 
-  .public-site-shell img {
-    height: auto;
-  }
-
   /* Expensive full-strength glass blur is noticeably janky on mid-range phones. */
   .public-site-shell .backdrop-blur-2xl,
   .public-site-shell .backdrop-blur-xl,
@@ -86,25 +82,39 @@
     backdrop-filter: blur(8px);
   }
 
+  /* Large decorative blur layers are cheaper at phone sizes with a smaller radius. */
+  .public-site-shell .blur-3xl {
+    filter: blur(32px);
+  }
+
+  .public-site-shell .blur-2xl {
+    filter: blur(24px);
+  }
+
   /* Keep generic action/header rows from forcing horizontal overflow. */
   .public-site-shell main .justify-between {
     min-width: 0;
   }
 
-  /* Common modal/dialog shapes stay inside the visual viewport. */
-  .public-site-shell [role="dialog"],
-  .public-site-shell .fixed.inset-0 > div {
+  /* Common dialogs and popovers stay inside the visual viewport. */
+  .public-site-shell [role="dialog"] {
     max-width: calc(100vw - 1.25rem);
     max-height: calc(100dvh - 1.25rem);
   }
 
-  /* Better tap targets without changing visual button sizing. */
+  .public-site-shell [class*="absolute"][class*="w-72"],
+  .public-site-shell [class*="absolute"][class*="w-80"],
+  .public-site-shell [class*="absolute"][class*="w-96"] {
+    max-width: calc(100vw - 1rem);
+  }
+
+  /* Better tap behavior without changing visual button sizing. */
   .public-site-shell button,
   .public-site-shell a {
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Render deep page sections only as they approach the viewport. */
+  /* Render deep home sections only as they approach the viewport. */
   .public-site-shell .mobile-content-visibility {
     content-visibility: auto;
     contain-intrinsic-size: 1px 620px;
@@ -113,7 +123,14 @@
 
 @media (max-width: 479px) {
   .public-site-shell main h1 {
+    font-size: clamp(2rem, 9vw, 2.75rem);
+    line-height: 1.12;
     overflow-wrap: anywhere;
+  }
+
+  .public-site-shell main h2 {
+    font-size: clamp(1.5rem, 7vw, 2rem);
+    line-height: 1.18;
   }
 
   .public-site-shell main p,
@@ -122,6 +139,13 @@
   .public-site-shell main button {
     word-break: normal;
     overflow-wrap: break-word;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  /* Hover-only image zoom/shadow effects provide no value on touch and can cost GPU work. */
+  .public-site-shell .group:hover img {
+    transform: none !important;
   }
 }
 
