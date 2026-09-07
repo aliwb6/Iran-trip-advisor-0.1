@@ -15,13 +15,14 @@ test('guide selection uses the atomic RPC and never directly updates trip_reques
   assert.match(selection, /if \(!data\) throw new Error/);
 });
 
-test('proposal availability uses max_proposals and leaves cap enforcement to Remote', async () => {
+test('proposal availability uses max_proposals and leaves cap/expiry enforcement to Remote', async () => {
   const flow = await source('../src/api/tourRequestFlow.js');
-  assert.match(flow, /max_proposals: r\.max_proposals \|\| 5/);
-  assert.match(flow, /accepted_count < r\.max_proposals/);
+  assert.match(flow, /max_proposals: Math\.max\(1, Number\(request\.max_proposals\) \|\| 5\)/);
+  assert.match(flow, /request\.accepted_count < request\.max_proposals/);
+  assert.match(flow, /!isExpired\(request\.expires_at\)/);
   const submit = flow.slice(flow.indexOf('export async function guideSubmitProposal'), flow.indexOf('export async function touristSelectGuide'));
   assert.doesNotMatch(submit, />= 5/);
-  assert.match(submit, /database trigger is authoritative/i);
+  assert.match(submit, /Remote validation\/unique constraints are authoritative/i);
 });
 
 test('reject UI and canonical RPC block terminal proposal states and refresh request state', async () => {
