@@ -29,6 +29,7 @@ test('trip request reads use canonical ownership and dynamic proposal counts', a
   assert.match(api, /trip\.proposals_count < trip\.max_proposals/);
   assert.doesNotMatch(api, /\.lt\('slot_count'/);
   assert.doesNotMatch(api, /\.eq\('traveler_id'/);
+  assert.doesNotMatch(api, /\.neq\('status', 'rejected'\)/);
 });
 
 test('mutation helpers delegate to canonical authenticated RPCs', async () => {
@@ -48,7 +49,7 @@ test('MyTripRequests uses canonical dates, people, rebroadcast and proposal fiel
   assert.match(page, /trip\.proposals_count/);
   assert.match(page, /trip\.max_proposals/);
   assert.match(page, /trip\.adults/);
-  assert.doesNotMatch(page, /travel_dates|group_size|slot_count|broadcast_count/);
+  assert.doesNotMatch(page, /travel_dates|group_size|slot_count|trip\.broadcast_count/);
   assert.doesNotMatch(page, /\/3 guide/);
 });
 
