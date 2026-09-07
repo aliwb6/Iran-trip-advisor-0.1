@@ -7,6 +7,15 @@ const TestimonialsSection = lazy(() => import('@/components/home/TestimonialsSec
 const SpotlightDestinations = lazy(() => import('@/components/SpotlightDestinations'));
 const PopularPackages = lazy(() => import('@/components/home/PopularPackages'));
 
+function getDeferredRootMargin() {
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const effectiveType = connection?.effectiveType || '';
+  const constrainedNetwork = connection?.saveData || effectiveType === 'slow-2g' || effectiveType === '2g';
+  if (constrainedNetwork) return '100px 0px';
+  if (window.matchMedia('(max-width: 767px)').matches) return '280px 0px';
+  return '700px 0px';
+}
+
 function DeferredSection({ children, minHeight = 560 }) {
   const rootRef = useRef(null);
   const [shouldRender, setShouldRender] = useState(false);
@@ -22,15 +31,19 @@ function DeferredSection({ children, minHeight = 560 }) {
       if (!entry.isIntersecting) return;
       setShouldRender(true);
       observer.disconnect();
-    }, { rootMargin: '700px 0px' });
+    }, { rootMargin: getDeferredRootMargin() });
 
     observer.observe(node);
     return () => observer.disconnect();
   }, []);
 
   return (
-    <div ref={rootRef} style={shouldRender ? undefined : { minHeight }}>
-      {shouldRender ? <Suspense fallback={<div style={{ minHeight }} />} >{children}</Suspense> : null}
+    <div
+      ref={rootRef}
+      className="mobile-content-visibility"
+      style={shouldRender ? undefined : { minHeight }}
+    >
+      {shouldRender ? <Suspense fallback={<div style={{ minHeight }} />}>{children}</Suspense> : null}
     </div>
   );
 }

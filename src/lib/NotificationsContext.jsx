@@ -3,6 +3,7 @@ import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 
 const NotificationsContext = createContext(null);
+const NOTIFICATION_FIELDS = 'id,user_id,type,title,body,link,is_read,created_at';
 
 export function NotificationsProvider({ children }) {
   const { user } = useAuth();
@@ -17,7 +18,7 @@ export function NotificationsProvider({ children }) {
     try {
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(NOTIFICATION_FIELDS)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -47,25 +48,38 @@ export function NotificationsProvider({ children }) {
     if (!userId) {
       setNotifications([]);
       setUnreadCount(0);
-      return;
+      return undefined;
     }
-    fetchNotifications();
 
-    const channel = supabase
-      .channel(`notifications-${userId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'notifications',
-        filter: `user_id=eq.${userId}`,
-      }, (payload) => {
-        setNotifications(prev => [payload.new, ...prev]);
-        setUnreadCount(prev => prev + 1);
-      })
-      .subscribe();
+    let cancelled = false;
+    let channel = null;
+
+    const startNotifications = () => {
+      if (cancelled) return;
+      fetchNotifications();
+      channel = supabase
+        .channel(`notifications-${userId}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        }, (payload) => {
+          setNotifications(prev => [payload.new, ...prev].slice(0, 20));
+          setUnreadCount(prev => prev + 1);
+        })
+        .subscribe();
+    };
+
+    const idleId = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback(startNotifications, { timeout: 1200 })
+      : window.setTimeout(startNotifications, 650);
 
     return () => {
-      supabase.removeChannel(channel);
+      cancelled = true;
+      if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idleId);
+      else window.clearTimeout(idleId);
+      if (channel) supabase.removeChannel(channel);
     };
   }, [userId, fetchNotifications]);
 

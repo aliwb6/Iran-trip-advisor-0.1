@@ -28,22 +28,39 @@ export const routeLoaders = {
   guideOnboarding: () => import('@/pages/GuideOnboarding'),
 };
 
+// Most-specific matchers come first so detail links preload the detail chunk,
+// not just their parent listing chunk.
 const pathLoaders = [
-  ['/tours', routeLoaders.tours],
-  ['/guides', routeLoaders.guides],
-  ['/agencies', routeLoaders.agencies],
-  ['/ai-assistant', routeLoaders.aiAssistant],
-  ['/blog', routeLoaders.blog],
-  ['/dashboard', routeLoaders.dashboard],
-  ['/admin', routeLoaders.adminDashboard],
-  ['/profile', routeLoaders.profile],
-  ['/trip-requests', routeLoaders.requests],
-  ['/login', routeLoaders.login],
-  ['/signup', routeLoaders.signup],
+  [(path) => path.startsWith('/profile/requests/'), routeLoaders.requestDetails],
+  [(path) => path === '/profile/requests', routeLoaders.requests],
+  [(path) => path === '/profile/settings', routeLoaders.settings],
+  [(path) => path === '/profile', routeLoaders.profile],
+  [(path) => path.startsWith('/tours/'), routeLoaders.tourDetails],
+  [(path) => path === '/tours', routeLoaders.tours],
+  [(path) => path.startsWith('/package/'), routeLoaders.packageDetails],
+  [(path) => path.startsWith('/guides/'), routeLoaders.guideDetails],
+  [(path) => path === '/guides', routeLoaders.guides],
+  [(path) => path.startsWith('/agencies/'), routeLoaders.agencyProfile],
+  [(path) => path === '/agencies', routeLoaders.agencies],
+  [(path) => path.startsWith('/request-trip/'), routeLoaders.tripRequest],
+  [(path) => path.startsWith('/blog/'), routeLoaders.articleDetails],
+  [(path) => path === '/blog', routeLoaders.blog],
+  [(path) => path.startsWith('/destinations/'), routeLoaders.city],
+  [(path) => path.startsWith('/chat/'), routeLoaders.chat],
+  [(path) => path === '/find-jobs', routeLoaders.findJobs],
+  [(path) => path === '/my-trips', routeLoaders.myTrips],
+  [(path) => path === '/about', routeLoaders.about],
+  [(path) => path === '/ai-assistant', routeLoaders.aiAssistant],
+  [(path) => path === '/dashboard' || path.startsWith('/dashboard/'), routeLoaders.dashboard],
+  [(path) => path === '/admin', routeLoaders.adminDashboard],
+  [(path) => path === '/trip-requests', routeLoaders.requests],
+  [(path) => path === '/guide-onboarding', routeLoaders.guideOnboarding],
+  [(path) => path === '/login', routeLoaders.login],
+  [(path) => path === '/signup' || path === '/register', routeLoaders.signup],
 ];
 
 export function preloadRoute(path) {
-  const match = pathLoaders.find(([prefix]) => path === prefix || path.startsWith(`${prefix}/`));
+  const match = pathLoaders.find(([matches]) => matches(path));
   const loader = match?.[1];
   if (typeof loader === 'function') void loader();
 }

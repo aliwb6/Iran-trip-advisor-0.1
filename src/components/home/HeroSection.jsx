@@ -17,6 +17,16 @@ const STATS = [
   { en: "15+", fa: "۱۵+", ar: "15+", label: { en: "Expert Guides", fa: "راهنمای متخصص", ar: "مرشد خبير" }},
 ];
 
+function shouldRunHeroCarousel() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return true;
+  const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  const effectiveType = connection?.effectiveType || '';
+  const constrainedNetwork = connection?.saveData || effectiveType === 'slow-2g' || effectiveType === '2g';
+  const mobileViewport = window.matchMedia('(max-width: 767px)').matches;
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  return !constrainedNetwork && !mobileViewport && !reducedMotion;
+}
+
 export default function HeroSection() {
   const { t, dir, lang } = useI18n();
   const navigate = useNavigate();
@@ -24,6 +34,7 @@ export default function HeroSection() {
   const [activeImg, setActiveImg] = useState(0);
   const [searchValue, setSearchValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [carouselEnabled] = useState(shouldRunHeroCarousel);
   const searchRef = useRef(null);
   const prefetchedImages = useRef(new Set([HERO_IMAGES[0]]));
 
@@ -32,13 +43,16 @@ export default function HeroSection() {
     : [];
 
   useEffect(() => {
+    if (!carouselEnabled) return undefined;
     const interval = setInterval(() => {
       setActiveImg(i => (i + 1) % HERO_IMAGES.length);
     }, 5500);
     return () => clearInterval(interval);
-  }, []);
+  }, [carouselEnabled]);
 
   useEffect(() => {
+    if (!carouselEnabled) return undefined;
+
     const preloadNext = () => {
       const nextImage = HERO_IMAGES[(activeImg + 1) % HERO_IMAGES.length];
       if (prefetchedImages.current.has(nextImage)) return;
@@ -50,7 +64,7 @@ export default function HeroSection() {
 
     const timeoutId = window.setTimeout(preloadNext, activeImg === 0 ? 1800 : 300);
     return () => window.clearTimeout(timeoutId);
-  }, [activeImg]);
+  }, [activeImg, carouselEnabled]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -64,10 +78,10 @@ export default function HeroSection() {
 
   return (
     <section dir={dir} className="relative min-h-screen flex flex-col overflow-hidden">
-      {/* Background images with crossfade */}
+      {/* Background image. Auto-rotation/preload is disabled on phones, reduced-motion and constrained networks. */}
       <div
         key={HERO_IMAGES[activeImg]}
-        className="absolute inset-0 animate-in fade-in duration-700"
+        className={`absolute inset-0 ${carouselEnabled ? 'animate-in fade-in duration-700' : ''}`}
       >
         <img
           src={HERO_IMAGES[activeImg]}
@@ -87,9 +101,7 @@ export default function HeroSection() {
       <div className="relative z-10 flex flex-col justify-end flex-1 max-w-7xl mx-auto w-full px-5 sm:px-8 lg:px-10 pb-16 lg:pb-20 pt-28">
 
         {/* Trust badge */}
-        <div
-          className="flex items-center gap-2 mb-6"
-        >
+        <div className="flex items-center gap-2 mb-6">
           <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-3.5 py-1.5">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
@@ -110,17 +122,12 @@ export default function HeroSection() {
           {t('hero_title')}
         </h1>
 
-        <p
-          className="font-body text-white/70 text-base lg:text-lg leading-relaxed mb-10 max-w-xl"
-        >
+        <p className="font-body text-white/70 text-base lg:text-lg leading-relaxed mb-10 max-w-xl">
           {t('hero_subtitle')}
         </p>
 
         {/* Search bar with autocomplete */}
-        <div
-          className="mb-5 relative"
-          ref={searchRef}
-        >
+        <div className="mb-5 relative" ref={searchRef}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -179,9 +186,7 @@ export default function HeroSection() {
         </div>
 
         {/* CTA row */}
-        <div
-          className="flex flex-wrap items-center gap-4 mb-14 lg:mb-16"
-        >
+        <div className="flex flex-wrap items-center gap-4 mb-14 lg:mb-16">
           <Link
             to="/trip-requests"
             onMouseEnter={() => preloadRoute('/trip-requests')}
@@ -198,13 +203,12 @@ export default function HeroSection() {
             className="relative inline-flex items-center gap-2.5 overflow-hidden bg-gold/20 hover:bg-gold/30 text-gold border border-gold/50 hover:border-gold/80 px-7 py-3.5 rounded-full font-body font-semibold text-sm uppercase tracking-wide transition-all duration-300 backdrop-blur-sm hover:shadow-lg hover:shadow-gold/25 hover:-translate-y-0.5"
             style={{ isolation: 'isolate' }}
           >
-            {/* Shimmer sweep — repeating glass-flash every 3 seconds */}
             <span
               className="pointer-events-none absolute inset-0 rounded-full"
               style={{
                 background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.45) 50%, transparent 65%)',
                 backgroundSize: '250% 100%',
-                animation: 'shimmer-sweep 3s ease-in-out infinite',
+                animation: carouselEnabled ? 'shimmer-sweep 3s ease-in-out infinite' : 'none',
               }}
             />
             <Sparkles className="w-4 h-4 text-gold relative z-10" />
@@ -215,10 +219,7 @@ export default function HeroSection() {
         </div>
 
         {/* Bottom row: stats */}
-        <div
-          className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-6"
-        >
-          {/* Stats */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-6">
           <div className="flex items-center gap-6 sm:gap-8">
             {STATS.map((stat, i) => (
               <div key={i} className="text-center">
@@ -232,12 +233,13 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Image dots */}
+      {/* Image dots remain available for explicit user-selected loading. */}
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 flex gap-2">
         {HERO_IMAGES.map((_, i) => (
           <button
             key={i}
             onClick={() => setActiveImg(i)}
+            aria-label={`Show hero image ${i + 1}`}
             className={`rounded-full transition-all duration-500 ${
               i === activeImg ? 'w-6 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/40 hover:bg-white/70'
             }`}
