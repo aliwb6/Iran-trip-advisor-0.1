@@ -81,8 +81,6 @@ export async function fetchMyAcceptedRequests(guideId) {
 // ── Guide: submit a full proposal ────────────────────────────────────────────
 
 export async function guideSubmitProposal(guideId, requestId, proposal) {
-  // Remote validation/unique constraints are authoritative. This preflight only
-  // gives the guide faster, clearer feedback for expired/duplicate submissions.
   const { data: request, error: requestError } = await supabase
     .from('trip_requests')
     .select('proposal_round, status, expires_at')
@@ -130,6 +128,18 @@ export async function guideSubmitProposal(guideId, requestId, proposal) {
     }
     throw error;
   }
+  return data;
+}
+
+// ── Guide: confirm the traveler-selected proposal as a booked trip ───────────
+
+export async function guideConfirmBooking(requestId) {
+  const { data, error } = await supabase.rpc('finalize_selected_trip_slot', {
+    request_id: requestId,
+  });
+
+  if (error) throw error;
+  if (!data) throw new Error('Could not confirm this booking.');
   return data;
 }
 
