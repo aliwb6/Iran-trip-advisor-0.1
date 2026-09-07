@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/supabaseClient';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
+import { selectPublicTours } from '@/lib/publicTours';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
 import { mergeLanguages, popularLanguages } from '@/data/languages';
 
@@ -21,7 +22,7 @@ export function useTours(filters = {}) {
         // what guides have actually published. Matches the convention used
         // by CityPage, the AI Assistant catalog, and the dashboard's
         // "Upcoming tour" widget.
-        let query = supabase.from('tours').select('*').eq('status', 'published');
+        let query = selectPublicTours(supabase);
 
         // tours.purpose and tours.theme are `text[]` in Supabase, so we use
         // PostgREST array-containment (`@>`) via `.contains([value])`. A
@@ -107,9 +108,7 @@ export function useTopRatedTours(limit = 4) {
 
     const fetchTopRatedTours = async () => {
       try {
-        const { data, error: supabaseError } = await supabase
-          .from('tours')
-          .select('*')
+        const { data, error: supabaseError } = await selectPublicTours(supabase)
           .order('rating', { ascending: false, nullsLast: true })
           .limit(limit);
 
@@ -146,9 +145,7 @@ export function useTourBySlug(slug) {
 
     const fetchTour = async () => {
       try {
-        const { data, error: supabaseError } = await supabase
-          .from('tours')
-          .select('*')
+        const { data, error: supabaseError } = await selectPublicTours(supabase)
           .eq('slug', slug)
           .single();
 
@@ -185,9 +182,7 @@ export function useTourById(id) {
 
     const fetchTour = async () => {
       try {
-        const { data, error: supabaseError } = await supabase
-          .from('tours')
-          .select('*')
+        const { data, error: supabaseError } = await selectPublicTours(supabase)
           .eq('id', id)
           .single();
 
@@ -224,9 +219,7 @@ export function usePackageById(id) {
 
     const fetchPackage = async () => {
       try {
-        const { data, error: supabaseError } = await supabase
-          .from('tours')
-          .select('*')
+        const { data, error: supabaseError } = await selectPublicTours(supabase)
           .eq('id', id)
           .single();
 
@@ -268,9 +261,7 @@ export function useDestinations() {
 
     const fetchDestinations = async () => {
       try {
-        const { data, error: supabaseError } = await supabase
-          .from('tours')
-          .select('location, city')
+        const { data, error: supabaseError } = await selectPublicTours(supabase, 'location, city')
           .order('location', { ascending: true });
 
         if (supabaseError) throw supabaseError;
@@ -315,9 +306,7 @@ export function useSearchTours(query) {
 
     const searchTours = async () => {
       try {
-        const { data, error: supabaseError } = await supabase
-          .from('tours')
-          .select('*')
+        const { data, error: supabaseError } = await selectPublicTours(supabase)
           .or(`title.ilike.%${query}%,description.ilike.%${query}%,location.ilike.%${query}%,cities.ilike.%${query}%`)
           .order('created_at', { ascending: false })
           .limit(20);
@@ -436,7 +425,7 @@ export function useGuideProfile(guideId) {
       try {
         const [profileResult, toursResult, reviewsResult] = await Promise.all([
           selectPublicProfiles(supabase).eq('id', guideId).single(),
-          supabase.from('tours').select('*').eq('guide_id', guideId).eq('status', 'published'),
+          selectPublicTours(supabase).eq('guide_id', guideId),
           fetchProfileReviewsSafely(supabase, { targetType: 'guide', profileId: guideId }),
         ]);
 
@@ -479,7 +468,7 @@ export function useAgencyProfile(agencyId) {
       try {
         const [profileResult, toursResult, reviewsResult] = await Promise.all([
           selectPublicProfiles(supabase).eq('id', agencyId).single(),
-          supabase.from('tours').select('*').eq('agency_id', agencyId).eq('status', 'published'),
+          selectPublicTours(supabase).eq('agency_id', agencyId),
           fetchProfileReviewsSafely(supabase, { targetType: 'agency', profileId: agencyId }),
         ]);
 
@@ -598,8 +587,9 @@ export function useArticles({ featured = false } = {}) {
       try {
         let query = supabase
           .from('articles')
-          .select('*, author_profile:profiles!author_id(full_name, avatar_url, city, role)')
-          .eq('status', 'approved');
+          .select('*')
+          .eq('status', 'approved')
+          .eq('is_published', true);
 
         if (featured) query = query.eq('is_featured', true);
 
@@ -639,6 +629,7 @@ export function useGuideArticles(authorId) {
           .select('*')
           .eq('author_id', authorId)
           .eq('status', 'approved')
+          .eq('is_published', true)
           .order('created_at', { ascending: false });
 
         if (err) throw err;

@@ -42,7 +42,7 @@ function Tag({ children }) {
   );
 }
 
-function ProposalCountPill({ count, max = 5 }) {
+function ProposalCountPill({ count, max }) {
   const full = count >= max;
   return (
     <span className={`text-xs px-3 py-1 rounded-full font-medium ${
@@ -77,7 +77,8 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
   const { t, lang, dir } = useI18n();
   const [modalOpen, setModalOpen] = useState(false);
 
-  const isFull    = req.accepted_count >= 5;
+  const maxProposals = req.max_proposals || 5;
+  const isFull    = req.accepted_count >= maxProposals;
   const mySlot    = req.my_slot;
   const hasApplied = Boolean(mySlot);
 
@@ -110,7 +111,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
               Submitted {fmt(req.created_at)}
             </p>
           </div>
-          <ProposalCountPill count={req.accepted_count} />
+          <ProposalCountPill count={req.accepted_count} max={maxProposals} />
         </div>
 
         {/* Meta chips */}

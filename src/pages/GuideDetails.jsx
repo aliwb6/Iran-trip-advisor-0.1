@@ -19,6 +19,7 @@ import PublicProfileGallery from '@/components/profile/PublicProfileGallery';
 import PublicLicenseCard from '@/components/profile/PublicLicenseCard';
 import ProfileReviewDialog from '@/components/profile/ProfileReviewDialog';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
+import { selectPublicTours } from '@/lib/publicTours';
 
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1589562784072-9ede7d082e5e?w=800&h=1000&fit=crop';
 
@@ -286,11 +287,8 @@ export default function GuideDetails() {
         // Part 1/2/3: profile + published tours (newest first).
         const [{ data: profileData, error: profileErr }, { data: tourData }, reviewResult] = await Promise.all([
           selectPublicProfiles(supabase).eq('id', id).single(),
-          supabase
-            .from('tours')
-            .select('*')
+          selectPublicTours(supabase)
             .or(`guide_id.eq.${id},agency_id.eq.${id}`)
-            .eq('status', 'published')
             .order('created_at', { ascending: false }),
           fetchProfileReviewsSafely(supabase, { targetType: 'guide', profileId: id }),
         ]);
@@ -364,7 +362,6 @@ export default function GuideDetails() {
   const rating = guide.rating ?? null;
   const reviewCount = guide.reviews ?? guide.review_count ?? 0;
   const otherCities = Array.isArray(guide.other_cities) ? guide.other_cities : [];
-  const licenseId = guide.license_id || guide.license_number || null;
   const licenseVerified = guide.license_status === 'verified';
   const guideSince = guide.guide_since || guide.created_at?.slice(0, 4) || null;
 
@@ -470,14 +467,6 @@ export default function GuideDetails() {
                   <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                     {lang === 'fa' ? 'مجوز تأیید شده' : lang === 'ar' ? 'رخصة موثقة' : 'Verified'}
                   </span>
-                  {licenseId && (
-                    <span className="font-body text-sm text-foreground">
-                      <span className="text-muted-foreground">
-                        {lang === 'fa' ? 'شناسه مجوز:' : lang === 'ar' ? 'رقم الترخيص:' : 'License ID:'}
-                      </span>{' '}
-                      {licenseId}
-                    </span>
-                  )}
                 </div>
               )}
               {guideSince && (

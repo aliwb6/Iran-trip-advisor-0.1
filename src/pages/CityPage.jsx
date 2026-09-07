@@ -10,6 +10,7 @@ import {
 import { useI18n } from '@/lib/i18n.jsx';
 import { supabase } from '@/supabaseClient';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
+import { selectPublicTours } from '@/lib/publicTours';
 import { avatarFor } from '@/lib/avatar';
 
 // ── City catalog ─────────────────────────────────────────────────────────────
@@ -204,10 +205,7 @@ export default function CityPage() {
       setGuidesLoading(true);
 
       const [toursRes, guidesRes] = await Promise.all([
-        supabase
-          .from('tours')
-          .select('*')
-          .eq('status', 'published')
+        selectPublicTours(supabase)
           .ilike('city', `%${city.name}%`)
           .order('created_at', { ascending: false }),
         selectPublicProfiles(supabase, 'id, full_name, avatar_url, gender, city, languages, role')

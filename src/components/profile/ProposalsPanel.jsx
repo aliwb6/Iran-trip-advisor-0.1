@@ -236,6 +236,7 @@ function ProposalRow({ slot, onReject, rejecting }) {
   const guide = slot.guide || {};
   const path  = profilePath(guide);
   const rejected = slot.status === 'rejected';
+  const cannotReject = ['rejected', 'finalized', 'selected', 'closed'].includes(slot.status);
 
   return (
     <>
@@ -279,7 +280,7 @@ function ProposalRow({ slot, onReject, rejecting }) {
         >
           {t('proposal_see_details')}
         </button>
-        {!rejected && (
+        {!cannotReject && (
           <button
             onClick={() => onReject(slot)}
             disabled={rejecting}
@@ -333,6 +334,8 @@ export default function ProposalsPanel({ requestId }) {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['trip_slots_proposals', requestId] }),
       queryClient.invalidateQueries({ queryKey: ['trip_slots_counts'] }),
+      queryClient.invalidateQueries({ queryKey: ['trip_request', requestId] }),
+      queryClient.invalidateQueries({ queryKey: ['trip_request_detail', requestId] }),
     ]);
     toast.success(lang === 'fa' ? 'پیشنهاد رد شد و در فهرست باقی ماند.' : lang === 'ar' ? 'تم رفض العرض وسيبقى في القائمة.' : 'Proposal rejected and kept in the list.');
   };

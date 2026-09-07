@@ -20,6 +20,7 @@ import PublicProfileGallery from '@/components/profile/PublicProfileGallery';
 import PublicLicenseCard from '@/components/profile/PublicLicenseCard';
 import ProfileReviewDialog from '@/components/profile/ProfileReviewDialog';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
+import { selectPublicTours } from '@/lib/publicTours';
 
 const pickTourImage = (tour) =>
   tour.cover_image || tour.image_url || tour.image ||
@@ -255,11 +256,8 @@ export default function AgencyProfile() {
         // Part 1/2/3: profile + published tours (newest first).
         const [{ data: profileData, error: profileErr }, { data: tourData }, reviewResult] = await Promise.all([
           selectPublicProfiles(supabase).eq('id', id).single(),
-          supabase
-            .from('tours')
-            .select('*')
+          selectPublicTours(supabase)
             .or(`guide_id.eq.${id},agency_id.eq.${id}`)
-            .eq('status', 'published')
             .order('created_at', { ascending: false }),
           fetchProfileReviewsSafely(supabase, { targetType: 'agency', profileId: id }),
         ]);
@@ -332,7 +330,6 @@ export default function AgencyProfile() {
   const languages = Array.isArray(agency.languages) ? agency.languages : (agency.languages ? agency.languages.split(',').map((s) => s.trim()) : []);
   const rating = agency.rating ?? null;
   const reviewCount = agency.reviews ?? agency.review_count ?? 0;
-  const licenseId = agency.license_id || agency.license_number || null;
   const licenseVerified = agency.license_status === 'verified';
   const established = agency.established_since || agency.guide_since || agency.created_at?.slice(0, 4) || null;
   const otherCities = Array.isArray(agency.other_cities) ? agency.other_cities : [];
@@ -438,14 +435,6 @@ export default function AgencyProfile() {
                   <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                     {lang === 'fa' ? 'مجوز تأیید شده' : 'Verified'}
                   </span>
-                  {licenseId && (
-                    <span className="font-body text-sm text-foreground">
-                      <span className="text-muted-foreground">
-                        {lang === 'fa' ? 'مجوز آژانس:' : 'Agency License:'}
-                      </span>{' '}
-                      {licenseId}
-                    </span>
-                  )}
                 </div>
               )}
               {established && (

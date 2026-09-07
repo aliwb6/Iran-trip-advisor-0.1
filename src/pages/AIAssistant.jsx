@@ -4,6 +4,7 @@ import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-do
 import { useI18n } from '@/lib/i18n.jsx';
 import { supabase } from '@/supabaseClient';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
+import { selectPublicTours } from '@/lib/publicTours';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, Send, MapPin, Clock, Users, Wallet,
@@ -625,7 +626,7 @@ export default function AIAssistant() {
     let cancelled = false;
     (async () => {
       const [toursRes, guidesRes] = await Promise.all([
-        supabase.from('tours').select('*').eq('status', 'published'),
+        selectPublicTours(supabase),
         selectPublicProfiles(supabase).in('role', ['guide', 'agency']),
       ]);
       if (cancelled) return;

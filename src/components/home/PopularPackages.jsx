@@ -4,6 +4,7 @@ import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import { MapPin, Clock, Loader2 } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
+import { selectPublicTours } from '@/lib/publicTours';
 
 const FALLBACK_IMAGES = [
   'https://images.unsplash.com/photo-1564960723835-2898c9df9297?w=600&h=400&fit=crop',
@@ -16,9 +17,7 @@ export default function PopularPackages() {
   const { data: tours = [], isLoading: loading } = useQuery({
     queryKey: ['homepage-popular-tours'],
     queryFn: async () => {
-        const { data, error } = await supabase
-          .from('tours')
-          .select('id, slug, image_url, gallery, title, cities, location, city, duration, price')
+        const { data, error } = await selectPublicTours(supabase, 'id, slug, image_url, gallery, title, cities, location, city, duration, price')
           .eq('is_platform_tour', true)
           .order('created_at', { ascending: false })
           .limit(3);
