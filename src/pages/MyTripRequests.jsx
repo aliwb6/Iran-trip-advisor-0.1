@@ -77,6 +77,11 @@ const STATUS_CONFIG = {
   },
 };
 
+const formatMoney = (value, currency = 'USD') => new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: currency || 'USD',
+}).format(Number(value) || 0);
+
 const OPEN_REQUEST_STATUSES = new Set(['open', 'active', 'pending', 'proposals_ready']);
 const CANCELLABLE_STATUSES = new Set(['open', 'active', 'pending', 'proposals_ready', 'confirmed', 'booked']);
 
@@ -353,6 +358,33 @@ function TripCard({ trip, onChanged }) {
         <div className="mb-4">
           <ProposalProgress proposalsCount={trip.proposals_count} maxProposals={trip.max_proposals} />
         </div>
+
+        {trip.booking && (
+          <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="font-body text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
+                Confirmed booking snapshot
+              </p>
+              <span className="font-body text-xs text-muted-foreground">
+                Payment: {trip.booking.payment_status}
+              </span>
+            </div>
+            <dl className="mt-3 grid grid-cols-1 gap-3 font-body text-sm sm:grid-cols-3">
+              <div>
+                <dt className="text-xs text-muted-foreground">Total</dt>
+                <dd className="font-semibold text-foreground">{formatMoney(trip.booking.price, trip.booking.currency)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Deposit</dt>
+                <dd className="font-semibold text-foreground">{formatMoney(trip.booking.deposit_amount, trip.booking.currency)}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Balance due</dt>
+                <dd className="font-semibold text-foreground">{formatMoney(trip.booking.balance_due, trip.booking.currency)}</dd>
+              </div>
+            </dl>
+          </div>
+        )}
 
         {activeSlots.length > 0 && (
           <div className="space-y-2 mb-4">

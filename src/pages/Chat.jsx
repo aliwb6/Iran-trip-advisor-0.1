@@ -287,7 +287,11 @@ export default function Chat() {
       setLoading(true);
       try {
         const [guideRes, msgsRes] = await Promise.all([
-          supabase.from('profiles').select('*').eq('id', guideId).single(),
+          supabase
+            .from('profiles')
+            .select('id, full_name, avatar_url, gender, role, city, bio')
+            .eq('id', guideId)
+            .single(),
           supabase
             .from('messages')
             .select('*')

@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { useI18n } from '@/lib/i18n.jsx';
 import { guideSubmitProposal } from '@/api/tourRequestFlow';
+import { calculateProposalEstimate } from '@/lib/proposalPricing';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -295,8 +296,14 @@ export default function SubmitProposalModal({
     setCustomTransport('');
   };
 
-  const priceNum   = parseFloat(price) || 0;
-  const netPayout  = priceNum * (1 - commissionRate);
+  const priceNum = parseFloat(price) || 0;
+  const estimate = calculateProposalEstimate({
+    unitPrice: priceNum,
+    priceType,
+    pricePeriod,
+    request,
+    commissionRate,
+  });
   const pctDisplay = Math.round(commissionRate * 100);
 
   const priceValid     = priceNum > 0;
@@ -426,15 +433,21 @@ export default function SubmitProposalModal({
                 onChange={setPricePeriod}
               />
 
-              <p className="text-xs text-white/50">
-                {t('net_payment_after_fees')
-                  .replace('{pct}', pctDisplay)
-                  .replace('{amount}', '')
-                }
-                <span className="text-[hsl(178,85%,55%)] font-semibold">
-                  ${netPayout.toFixed(2)}
-                </span>
-              </p>
+              <div className="rounded-lg bg-white/[0.04] p-3 text-xs text-white/50 space-y-1">
+                <p>
+                  Estimated booking total: <span className="font-semibold text-white">${estimate.totalEstimate.toFixed(2)}</span>
+                  {' '}(${estimate.quotedUnitPrice.toFixed(2)} × {estimate.peopleMultiplier} traveler multiplier × {estimate.durationMultiplier} duration multiplier)
+                </p>
+                <p>
+                  Estimated commission ({pctDisplay}%): ${estimate.commissionEstimate.toFixed(2)}
+                </p>
+                <p>
+                  Estimated payout: <span className="font-semibold text-[hsl(178,85%,55%)]">${estimate.payoutEstimate.toFixed(2)}</span>
+                </p>
+                <p className="pt-1 text-[10px] text-white/35">
+                  Estimate only. The server calculates and snapshots the authoritative booking total.
+                </p>
+              </div>
             </div>
 
             {/* ITINERARY */}

@@ -20,6 +20,8 @@ import TourForm from '@/components/dashboard/TourForm';
 import MyArticlesSection from '../components/dashboard/MyArticlesSection';
 import GuideRequestsView from '@/components/dashboard/GuideRequestsView';
 import NotificationsView from '@/components/dashboard/NotificationsView';
+import BookingsView from '@/components/dashboard/BookingsView';
+import PaymentHistoryView from '@/components/dashboard/PaymentHistoryView';
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { checkProfileCompletion } from '@/lib/profileCompletion';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
@@ -2447,6 +2449,10 @@ export default function Dashboard() {
         return <MyTripRequestsView userId={authUser?.id} />;
       case 'notifications':
         return <NotificationsView userId={authUser?.id} />;
+      case 'bookings':
+        return <BookingsView />;
+      case 'payment':
+        return <PaymentHistoryView />;
       case 'my-tours':
         return <MyToursView tours={tours} onEdit={setEditingTour} onDelete={handleDeleteTour} />;
       case 'profile':

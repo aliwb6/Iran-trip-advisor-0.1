@@ -6,6 +6,7 @@ import {
   Send, Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
 import {
@@ -178,6 +179,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
 
 function ProposalCard({ entry, onChanged }) {
   const { t } = useI18n();
+  const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
   const req = entry.request;
   const slotInfo = SLOT_STATUS_LABEL[entry.status] || { text: entry.status, color: 'text-white/40', bg: 'bg-white/[0.05]' };
@@ -198,6 +200,13 @@ function ProposalCard({ entry, onChanged }) {
     setConfirming(true);
     try {
       await guideConfirmBooking(entry.trip_request_id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['trip_requests'] }),
+        queryClient.invalidateQueries({ queryKey: ['trip_request', entry.trip_request_id] }),
+        queryClient.invalidateQueries({ queryKey: ['trip_slots_proposals', entry.trip_request_id] }),
+        queryClient.invalidateQueries({ queryKey: ['bookings'] }),
+        queryClient.invalidateQueries({ queryKey: ['booking', entry.trip_request_id] }),
+      ]);
       toast.success('Booking confirmed. The traveler has been notified.');
       await onChanged();
     } catch (err) {

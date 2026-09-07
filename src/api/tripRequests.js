@@ -1,4 +1,6 @@
 import { supabase } from '../supabaseClient';
+import { fetchBookingsByRequestIds } from './bookings';
+import { selectPublicProfiles } from '../lib/publicProfiles';
 
 const toDestinationArray = (value) => {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -137,15 +139,20 @@ export async function getMyTripRequests(travelerId) {
   const guideIds = [...new Set(currentSlots.map(slot => slot.guide_id).filter(Boolean))];
   let guideProfiles = [];
   if (guideIds.length > 0) {
-    const { data, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, full_name, avatar_url, role')
+    const { data, error: profileError } = await selectPublicProfiles(
+      supabase,
+      'id, full_name, avatar_url, role'
+    )
       .in('id', guideIds);
     if (profileError) throw profileError;
     guideProfiles = data || [];
   }
 
   const guideMap = Object.fromEntries(guideProfiles.map(profile => [profile.id, profile]));
+  const bookings = await fetchBookingsByRequestIds(tripIds);
+  const bookingByRequest = Object.fromEntries(
+    bookings.map(booking => [booking.request_id, booking])
+  );
   const slotsByTrip = {};
   currentSlots.forEach(slot => {
     if (!slotsByTrip[slot.trip_request_id]) slotsByTrip[slot.trip_request_id] = [];
@@ -158,6 +165,7 @@ export async function getMyTripRequests(travelerId) {
   return trips.map(trip => ({
     ...trip,
     slots: slotsByTrip[trip.id] || [],
+    booking: bookingByRequest[trip.id] || null,
   }));
 }
 
