@@ -71,6 +71,8 @@ const STATUS_CONFIG = {
   },
 };
 
+const OPEN_REQUEST_STATUSES = new Set(['open', 'active', 'pending', 'proposals_ready']);
+
 const destinationLabel = (destination) => {
   if (Array.isArray(destination)) return destination.filter(Boolean).join(', ');
   return destination || 'Iran';
@@ -81,6 +83,17 @@ const travelerCount = (trip) => {
   const children = Number(trip.children || 0);
   const total = adults + children;
   return total > 0 ? total : Number(trip.num_people || 1);
+};
+
+const effectiveRequestStatus = (trip) => {
+  if (
+    OPEN_REQUEST_STATUSES.has(trip.status) &&
+    trip.expires_at &&
+    new Date(trip.expires_at).getTime() <= Date.now()
+  ) {
+    return 'expired';
+  }
+  return trip.status;
 };
 
 function StatusBadge({ status }) {
@@ -162,7 +175,17 @@ function GuideSlot({ slot }) {
 
 function TripCard({ trip, onRebroadcast }) {
   const [rebroadcasting, setRebroadcasting] = useState(false);
+  const [, refreshExpiry] = useState(0);
 
+  useEffect(() => {
+    if (!OPEN_REQUEST_STATUSES.has(trip.status) || !trip.expires_at) return undefined;
+    const delay = new Date(trip.expires_at).getTime() - Date.now();
+    if (delay <= 0) return undefined;
+    const timer = window.setTimeout(() => refreshExpiry(value => value + 1), delay + 50);
+    return () => window.clearTimeout(timer);
+  }, [trip.expires_at, trip.status]);
+
+  const effectiveStatus = effectiveRequestStatus(trip);
   const startDate = trip.start_date
     ? new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
@@ -192,11 +215,20 @@ function TripCard({ trip, onRebroadcast }) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm"
     >
-      {trip.status === 'completed' && (
+      {effectiveStatus === 'completed' && (
         <div className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span className="font-body text-sm font-medium text-emerald-700 dark:text-emerald-400">
             Trip Finalized — Enjoy your journey!
+          </span>
+        </div>
+      )}
+
+      {effectiveStatus === 'expired' && trip.status !== 'expired' && (
+        <div className="flex items-center gap-2 px-5 py-2.5 bg-red-500/10 border-b border-red-500/20">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+          <span className="font-body text-sm font-medium text-red-700 dark:text-red-400">
+            The proposal window has ended. You can re-broadcast this request now.
           </span>
         </div>
       )}
@@ -212,7 +244,7 @@ function TripCard({ trip, onRebroadcast }) {
               <span className="font-body text-sm">{destinationLabel(trip.destination)}</span>
             </div>
           </div>
-          <StatusBadge status={trip.status} />
+          <StatusBadge status={effectiveStatus} />
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mb-3 font-body text-sm text-muted-foreground">
@@ -252,7 +284,7 @@ function TripCard({ trip, onRebroadcast }) {
           </div>
         )}
 
-        {trip.status === 'expired' && (
+        {effectiveStatus === 'expired' && (
           <Button
             variant="outline"
             size="sm"
