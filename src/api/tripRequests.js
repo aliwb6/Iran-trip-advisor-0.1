@@ -175,7 +175,25 @@ export async function finalizeTripSlot(_guideId, tripRequestId) {
     request_id: tripRequestId,
   });
   if (error) throw error;
-  if (!data) throw new Error('Could not finalize this trip request.');
+  if (!data) throw new Error('Could not confirm this booking.');
+  return data;
+}
+
+export async function completeTripRequest(tripRequestId) {
+  const { data, error } = await supabase.rpc('complete_trip_request', {
+    request_id: tripRequestId,
+  });
+  if (error) throw error;
+  if (!data) throw new Error('Could not complete this trip request.');
+  return data;
+}
+
+export async function cancelTripRequest(tripRequestId) {
+  const { data, error } = await supabase.rpc('cancel_trip_request', {
+    request_id: tripRequestId,
+  });
+  if (error) throw error;
+  if (!data) throw new Error('Could not cancel this trip request.');
   return data;
 }
 
