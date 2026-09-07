@@ -1,5 +1,6 @@
 import { supabase } from '../supabaseClient';
 import { fetchBookingsByRequestIds } from './bookings';
+import { fetchParticipantProfiles } from './participantProfiles';
 import { selectPublicProfiles } from '../lib/publicProfiles';
 
 const toDestinationArray = (value) => {
@@ -94,15 +95,7 @@ export async function getAvailableTripRequests(guideId) {
   if (!availableTrips.length) return [];
 
   const travelerIds = [...new Set(availableTrips.map(trip => trip.user_id).filter(Boolean))];
-  let profiles = [];
-  if (travelerIds.length > 0) {
-    const { data, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, full_name, avatar_url')
-      .in('id', travelerIds);
-    if (profileError) throw profileError;
-    profiles = data || [];
-  }
+  const profiles = await fetchParticipantProfiles(travelerIds);
 
   const profileMap = Object.fromEntries(profiles.map(profile => [profile.id, profile]));
   return availableTrips.map(trip => ({

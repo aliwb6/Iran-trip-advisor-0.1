@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef, useMemo } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
 import { avatarFor } from '@/lib/avatar';
+import { fetchParticipantProfile } from '@/api/participantProfiles';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -286,12 +287,8 @@ export default function Chat() {
     (async () => {
       setLoading(true);
       try {
-        const [guideRes, msgsRes] = await Promise.all([
-          supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url, gender, role, city, bio')
-            .eq('id', guideId)
-            .single(),
+        const [participant, msgsRes] = await Promise.all([
+          fetchParticipantProfile(guideId),
           supabase
             .from('messages')
             .select('*')
@@ -302,10 +299,17 @@ export default function Chat() {
         ]);
 
         if (cancelled) return;
-        if (guideRes.error) throw guideRes.error;
         if (msgsRes.error) throw msgsRes.error;
 
-        setGuide(guideRes.data);
+        setGuide(participant || {
+          id: guideId,
+          full_name: 'User',
+          avatar_url: null,
+          gender: null,
+          role: null,
+          city: null,
+          bio: null,
+        });
         setMessages(msgsRes.data || []);
 
         const unreadIds = (msgsRes.data || [])

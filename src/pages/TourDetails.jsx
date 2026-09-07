@@ -184,17 +184,11 @@ export default function TourDetails() {
 
     setReqLoading(true);
     try {
-      let recipientId = tour.owner_id || null;
-      if (!recipientId) {
-        const { data: admin, error: adminError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('is_admin', true)
-          .limit(1)
-          .maybeSingle();
-        if (adminError) throw adminError;
-        recipientId = admin?.id || null;
-      }
+      const { data: recipientId, error: recipientError } = await supabase.rpc(
+        'resolve_tour_request_recipient',
+        { p_tour_id: tour.id }
+      );
+      if (recipientError) throw recipientError;
 
       if (!recipientId) {
         toast.error(t('request_not_found'));

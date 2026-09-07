@@ -28,6 +28,7 @@ import { fetchProfileReviewsSafely } from '@/lib/reviews';
 import { parseLanguages, popularLanguages } from '@/data/languages';
 import { iranianDestinations } from '@/data/iranianCities';
 import { cancelTripRequest } from '@/api/tripRequests';
+import { fetchParticipantProfiles } from '@/api/participantProfiles';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -521,11 +522,11 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
       const otherIds = [...groups.keys()];
       let profiles = [];
       if (otherIds.length > 0) {
-        const { data: ps } = await supabase
-          .from('profiles')
-          .select('id, full_name, avatar_url, gender, role')
-          .in('id', otherIds);
-        profiles = ps || [];
+        try {
+          profiles = await fetchParticipantProfiles(otherIds);
+        } catch (profileError) {
+          console.error('[Dashboard] participant profiles fetch failed', profileError);
+        }
       }
 
       const list = [...groups.values()].map((g) => ({
@@ -2039,12 +2040,7 @@ function MessagesView({ userId, onOpen }) {
         const otherIds = [...groups.keys()];
         let profiles = [];
         if (otherIds.length > 0) {
-          const { data: ps, error: psErr } = await supabase
-            .from('profiles')
-            .select('id, full_name, avatar_url, gender, city, role')
-            .in('id', otherIds);
-          if (psErr) throw psErr;
-          profiles = ps || [];
+          profiles = await fetchParticipantProfiles(otherIds);
         }
 
         const list = [...groups.values()].map((g) => ({
