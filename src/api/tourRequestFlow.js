@@ -1,5 +1,9 @@
 import { supabase } from '../supabaseClient';
 
+const isExpired = (expiresAt) => Boolean(
+  expiresAt && new Date(expiresAt).getTime() <= Date.now()
+);
+
 // ── Guide: fetch all open requests this guide hasn't applied to this round ────
 
 export async function fetchAvailableRequests(guideId) {
@@ -19,7 +23,10 @@ export async function fetchAvailableRequests(guideId) {
     max_proposals: Math.max(1, Number(request.max_proposals) || 5),
   }));
 
-  const requestIds = normalized.map(request => request.id);
+  const currentRequests = normalized.filter(request => !isExpired(request.expires_at));
+  if (!currentRequests.length) return [];
+
+  const requestIds = currentRequests.map(request => request.id);
   const { data: mySlots, error: slotError } = await supabase
     .from('trip_slots')
     .select('trip_request_id, id, status, price, price_type, price_period, accepted_at, proposal_round')
@@ -33,7 +40,7 @@ export async function fetchAvailableRequests(guideId) {
     mySlotMap[`${slot.trip_request_id}:${Number(slot.proposal_round) || 1}`] = slot;
   });
 
-  return normalized
+  return currentRequests
     .map(request => ({
       ...request,
       my_slot: mySlotMap[`${request.id}:${request.proposal_round}`] || null,
@@ -56,7 +63,7 @@ export async function fetchMyAcceptedRequests(guideId) {
   const reqIds = [...new Set(slots.map(slot => slot.trip_request_id))];
   const { data: requests, error: rErr } = await supabase
     .from('trip_requests')
-    .select('id, destination, start_date, end_date, adults, children, status, proposal_round')
+    .select('id, destination, start_date, end_date, adults, children, status, proposal_round, expires_at')
     .in('id', reqIds);
 
   if (rErr) throw rErr;
@@ -74,15 +81,19 @@ export async function fetchMyAcceptedRequests(guideId) {
 // ── Guide: submit a full proposal ────────────────────────────────────────────
 
 export async function guideSubmitProposal(guideId, requestId, proposal) {
-  // Remote validation/unique constraints are authoritative. This current-round
-  // check only gives the guide a faster, clearer duplicate-submission message.
+  // Remote validation/unique constraints are authoritative. This preflight only
+  // gives the guide faster, clearer feedback for expired/duplicate submissions.
   const { data: request, error: requestError } = await supabase
     .from('trip_requests')
-    .select('proposal_round')
+    .select('proposal_round, status, expires_at')
     .eq('id', requestId)
     .single();
 
   if (requestError) throw requestError;
+  if (isExpired(request?.expires_at)) {
+    throw new Error('This trip request has expired.');
+  }
+
   const proposalRound = Math.max(1, Number(request?.proposal_round) || 1);
 
   const { data: mine, error: mineError } = await supabase
@@ -108,6 +119,9 @@ export async function guideSubmitProposal(guideId, requestId, proposal) {
     .select()
     .single();
   if (error) {
+    if (/expired/i.test(error.message || '')) {
+      throw new Error('This trip request has expired.');
+    }
     if (/proposal limit|not accepting proposals/i.test(error.message || '')) {
       throw new Error('This request is no longer accepting proposals.');
     }
