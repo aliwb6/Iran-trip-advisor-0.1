@@ -6,13 +6,15 @@ Phase 3B uses Stripe-hosted Checkout for the booking **deposit** only. The brows
 
 Configure these as **server-side secrets** for Production (and Preview only if preview payments are intentionally tested):
 
-- `SUPABASE_SERVICE_ROLE_KEY` — backend Supabase service credential. Never prefix this with `VITE_` and never expose it to browser code.
+- `SUPABASE_SECRET_KEY` — recommended current Supabase backend secret (`sb_secret_...`). Never prefix this with `VITE_` and never expose it to browser code. The server also accepts the legacy `SUPABASE_SERVICE_ROLE_KEY` JWT during migration, but do not configure both unless you are deliberately transitioning keys.
 - `STRIPE_SECRET_KEY` — Stripe secret key (`sk_test_...` while testing, production key only when intentionally going live).
 - `STRIPE_WEBHOOK_SECRET` — signing secret for the webhook endpoint (`whsec_...`).
 - `PAYMENT_APP_URL=https://irantripadvisor.net`
 - `PAYMENT_SUPPORTED_CURRENCIES=usd`
 
 The payment functions also need the Supabase project URL and public/anon key. They reuse `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` when those already exist in Vercel. Alternatively set server aliases `SUPABASE_URL` and `SUPABASE_ANON_KEY`.
+
+Current `sb_secret_...` keys are sent on the Supabase `apikey` header only. Legacy `service_role` JWTs continue to use both `apikey` and `Authorization: Bearer ...`. This distinction is intentional because current Supabase secret keys are opaque API keys rather than JWTs.
 
 Do not commit any secret value to GitHub.
 
@@ -62,12 +64,14 @@ After all required server variables are present and Vercel has redeployed, `enab
 - Webhook signatures are verified against the raw request body before database mutation.
 - Provider event ids are stored uniquely for webhook idempotency.
 - Stripe amount and currency are checked against the attached payment attempt before settlement.
+- A booking with an active or settled payment cannot be cancelled directly; a later refund/cancellation workflow must handle that case.
+- A verified payment event is rejected if the booking is no longer payable.
 - `contact_released=true` is set only after a verified paid Checkout event.
 - The Stripe webhook payload is not stored wholesale; only minimal processing metadata is recorded.
 
 ## Test-mode rollout
 
-1. Configure Stripe **test** secret + webhook secret in Vercel.
+1. Configure the Supabase backend secret plus Stripe **test** secret and webhook secret in Vercel.
 2. Keep `PAYMENT_SUPPORTED_CURRENCIES=usd` until additional currencies are intentionally validated.
 3. Verify `/api/payments/config` returns `enabled: true`.
 4. Create a fresh test booking through the real trip-request lifecycle.
@@ -76,5 +80,6 @@ After all required server variables are present and Vercel has redeployed, `enab
 7. Verify `payments.status = paid`, `bookings.payment_status = deposit_paid` (or `paid` if deposit equals total), and `bookings.contact_released = true`.
 8. Verify both booking parties can retrieve only the counterpart contact through `get_booking_contact_details`.
 9. Verify webhook retries do not duplicate notifications or create duplicate settlement rows.
+10. Verify a booking with a pending/settled payment cannot be cancelled directly.
 
-Do not switch to live Stripe keys until the test-mode end-to-end pass is clean.
+Do not switch to live Stripe keys until the test-mode end-to-end pass is clean. Refunds and balance-payment UI are not implemented in Phase 3B yet.
