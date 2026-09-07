@@ -9,21 +9,26 @@ const toDestinationArray = (value) => {
     .filter(Boolean);
 };
 
-const toCanonicalTrip = (trip) => ({
-  ...trip,
-  // Temporary compatibility aliases for legacy page presentation only.
-  // All database reads/writes in this module use canonical columns.
-  travel_dates: {
-    start: trip.start_date ?? null,
-    end: trip.end_date ?? null,
-  },
-  interests: trip.goals ?? trip.holiday_types ?? [],
-  group_size: trip.adults ?? trip.num_people ?? 1,
-  budget_range: trip.budget_tier ?? null,
-  notes: trip.requirements ?? null,
-  slot_count: trip.proposals_count ?? 0,
-  broadcast_count: trip.rebroadcast_count ?? 0,
-});
+const toCanonicalTrip = (trip) => {
+  const destinations = toDestinationArray(trip.destination ?? trip.cities);
+  return {
+    ...trip,
+    destinations,
+    // Temporary compatibility aliases for legacy page presentation only.
+    // All database reads/writes in this module use canonical columns.
+    destination: destinations.join(', '),
+    travel_dates: {
+      start: trip.start_date ?? null,
+      end: trip.end_date ?? null,
+    },
+    interests: trip.goals ?? trip.holiday_types ?? [],
+    group_size: trip.adults ?? trip.num_people ?? 1,
+    budget_range: trip.budget_tier ?? null,
+    notes: trip.requirements ?? null,
+    slot_count: trip.proposals_count ?? 0,
+    broadcast_count: trip.rebroadcast_count ?? 0,
+  };
+};
 
 export async function createTripRequest(travelerId, tripData) {
   const destinations = toDestinationArray(tripData.destination);
