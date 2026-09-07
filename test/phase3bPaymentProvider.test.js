@@ -2,7 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHmac } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
-import { toMinorUnits, verifyStripeSignature } from '../server/payments.js';
+import {
+  supabaseServiceHeaders,
+  toMinorUnits,
+  verifyStripeSignature,
+} from '../server/payments.js';
 
 async function source(path) {
   return readFile(new URL(path, import.meta.url), 'utf8');
@@ -63,6 +67,17 @@ test('Stripe webhook requires raw-body signature verification before service-rol
   assert.match(webhook, /checkout\.session\.async_payment_succeeded/);
   assert.match(webhook, /checkout\.session\.expired/);
   assert.match(webhook, /process_payment_provider_event/);
+  assert.match(webhook, /booking_not_payable/);
+});
+
+test('current Supabase secret keys use apikey only while legacy service-role JWT keeps bearer auth', () => {
+  const modern = supabaseServiceHeaders('sb_secret_example');
+  assert.equal(modern.apikey, 'sb_secret_example');
+  assert.equal('Authorization' in modern, false);
+
+  const legacy = supabaseServiceHeaders('eyJlegacy-service-role-jwt');
+  assert.equal(legacy.apikey, 'eyJlegacy-service-role-jwt');
+  assert.equal(legacy.Authorization, 'Bearer eyJlegacy-service-role-jwt');
 });
 
 test('minor-unit conversion handles two, zero, and three decimal currencies', () => {
