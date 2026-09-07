@@ -52,11 +52,12 @@ export async function createTripRequest(travelerId, tripData) {
 }
 
 export async function getAvailableTripRequests(guideId) {
+  // A guide cannot re-apply to a request while the unique
+  // (trip_request_id, guide_id) slot row exists, even if it was rejected.
   const { data: mySlots, error: slotsError } = await supabase
     .from('trip_slots')
     .select('trip_request_id')
-    .eq('guide_id', guideId)
-    .neq('status', 'rejected');
+    .eq('guide_id', guideId);
 
   if (slotsError) throw slotsError;
   const excludeIds = (mySlots || []).map(slot => slot.trip_request_id);
