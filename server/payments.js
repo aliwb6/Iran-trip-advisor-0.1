@@ -21,7 +21,9 @@ const cleanBaseUrl = value => String(value || '').trim().replace(/\/+$/, '');
 export function getPaymentEnvironment() {
   const supabaseUrl = cleanBaseUrl(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL);
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || '';
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  // Prefer Supabase's current sb_secret_* server key. Keep the legacy
+  // service_role JWT fallback so existing deployments can migrate safely.
+  const supabaseServiceRoleKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || '';
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY || '';
   const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
   const productionHost = process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -117,6 +119,17 @@ export async function getAuthenticatedUser(request, env = getPaymentEnvironment(
   return data;
 }
 
+export function supabaseServiceHeaders(serviceKey) {
+  const key = String(serviceKey || '').trim();
+  if (!key) return {};
+  const headers = { apikey: key };
+  // Current sb_secret_* keys are opaque API keys, not JWTs. Sending one as a
+  // Bearer token can be rejected as an invalid JWT. Legacy service_role keys
+  // are JWTs and still require Authorization to establish that role.
+  if (!key.startsWith('sb_secret_')) headers.Authorization = `Bearer ${key}`;
+  return headers;
+}
+
 export async function serviceRpc(name, payload, env = getPaymentEnvironment()) {
   if (!env.supabaseUrl || !env.supabaseServiceRoleKey) {
     throw new PaymentServerError('Payment database service is not configured', 503, 'database_not_configured');
@@ -125,8 +138,7 @@ export async function serviceRpc(name, payload, env = getPaymentEnvironment()) {
   const response = await fetch(`${env.supabaseUrl}/rest/v1/rpc/${encodeURIComponent(name)}`, {
     method: 'POST',
     headers: {
-      apikey: env.supabaseServiceRoleKey,
-      Authorization: `Bearer ${env.supabaseServiceRoleKey}`,
+      ...supabaseServiceHeaders(env.supabaseServiceRoleKey),
       'Content-Type': 'application/json',
       Prefer: 'return=representation',
     },
