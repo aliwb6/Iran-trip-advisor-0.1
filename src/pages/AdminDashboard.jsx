@@ -1470,9 +1470,7 @@ export default function AdminDashboard() {
           *,
           tours(title),
           target_profile:profiles!reviews_profile_id_fkey(id, full_name, role),
-          guide:profiles!reviews_guide_id_fkey(id, full_name),
-          reviewer:profiles!reviews_reviewer_id_fkey(id, full_name, email),
-          agency:agencies!reviews_agency_id_fkey(id, user_id, agency_name, full_name)
+          reviewer:profiles!reviews_reviewer_id_fkey(id, full_name, email)
         `)
         .order('created_at', { ascending: false });
       if (err) throw err;

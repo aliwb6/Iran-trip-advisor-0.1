@@ -164,7 +164,7 @@ test('moderation detects missing or impossible multi-row updates', async () => {
 
 test('migration enforces pending submissions, public moderation, authorization, and approved aggregates', async () => {
   const sql = await readFile(
-    new URL('../supabase/migrations/20260906130000_add_review_moderation_workflow.sql', import.meta.url),
+    new URL('../supabase/migrations/20260907114250_add_review_moderation_workflow.sql', import.meta.url),
     'utf8',
   );
 
@@ -182,4 +182,27 @@ test('migration enforces pending submissions, public moderation, authorization, 
   assert.match(sql, /UPDATE public\.profiles[\s\S]*review_count = approved_count/);
   assert.doesNotMatch(sql, /INSERT INTO public\.agencies/);
   assert.doesNotMatch(sql, /FOR UPDATE[\s\S]{0,200}reviewer_id = \(SELECT auth\.uid\(\)\)/);
+});
+
+test('admin review loading uses the canonical profile target and does not require agencies rows', async () => {
+  const adminDashboard = await readFile(
+    new URL('../src/pages/AdminDashboard.jsx', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(adminDashboard, /target_profile:profiles!reviews_profile_id_fkey/);
+  assert.doesNotMatch(adminDashboard, /agencies!reviews_agency_id_fkey/);
+});
+
+test('profile moderation target validation is database-enforced for guide and agency roles', async () => {
+  const sql = await readFile(
+    new URL('../supabase/migrations/20260907114250_add_review_moderation_workflow.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(sql, /CREATE OR REPLACE FUNCTION private\.validate_review_profile_target/);
+  assert.match(sql, /target_profile\.role IN \('guide', 'agency'\)/);
+  assert.match(sql, /CREATE TRIGGER trg_validate_review_profile_target/);
+  assert.match(sql, /AFTER INSERT OR DELETE OR UPDATE OF status, rating, profile_id/);
+  assert.match(sql, /review\.status = 'approved'/);
 });

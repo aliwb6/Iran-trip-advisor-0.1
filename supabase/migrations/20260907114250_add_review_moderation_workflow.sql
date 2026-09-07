@@ -24,9 +24,11 @@ ALTER TABLE public.reviews
   ADD CONSTRAINT reviews_status_check
     CHECK (status IN ('pending', 'approved', 'rejected'));
 
--- Backfill legacy guide/agency targets when their corresponding profile can be
--- resolved. Production currently has no review rows, but this keeps the
--- migration non-destructive in other environments.
+-- Backfill legacy guide targets when their corresponding profile can be
+-- resolved. Agency reviews are intentionally not guessed from the empty
+-- legacy agencies table: without a matching profile relationship there is no
+-- safe target to infer. Production currently has no review rows, but this
+-- keeps the migration non-destructive in other environments.
 UPDATE public.reviews AS review
 SET profile_id = profile.id
 FROM public.profiles AS profile
@@ -162,8 +164,8 @@ $$;
 REVOKE ALL ON FUNCTION private.sync_profile_review_aggregates()
   FROM PUBLIC, anon, authenticated, service_role;
 
--- Remove the production triggers that count all statuses and update the empty
--- legacy guides/agencies tables.
+-- Remove the production triggers that count all statuses and update the old
+-- legacy guide/agency tables. Profile aggregates below are now authoritative.
 DROP TRIGGER IF EXISTS trg_agency_rating_delete ON public.reviews;
 DROP TRIGGER IF EXISTS trg_agency_rating_insert ON public.reviews;
 DROP TRIGGER IF EXISTS trg_agency_rating_update ON public.reviews;
@@ -275,6 +277,8 @@ CREATE POLICY "Admins can moderate reviews"
       AND (admin_profile.role = 'admin' OR admin_profile.is_admin IS TRUE)
   ));
 
+-- Restrict the exposed client roles without changing service_role privileges.
+-- The latter is intentionally left alone for operational/admin tooling.
 REVOKE ALL ON TABLE public.reviews FROM anon, authenticated;
 GRANT SELECT ON TABLE public.reviews TO anon;
 GRANT SELECT, INSERT, UPDATE ON TABLE public.reviews TO authenticated;
