@@ -929,7 +929,7 @@ export default function AIAssistant() {
   return (
     <div
       dir={dir}
-      className="flex min-h-screen lg:h-screen w-full lg:overflow-hidden"
+      className="flex h-[100dvh] min-h-[100dvh] w-full overflow-hidden lg:h-screen"
       style={{ background: C.white, color: C.ink }}
     >
       {/* ── Conversation History Sidebar ────────────────────────────────── */}
@@ -948,11 +948,11 @@ export default function AIAssistant() {
       />
 
       {/* ── Main area (Chat + Recommendations) ────────────────────────── */}
-      <div className="flex flex-1 min-w-0 flex-col lg:flex-row lg:h-full">
+      <div className="flex h-full flex-1 min-w-0 flex-col lg:flex-row">
 
         {/* ── Chat column ──────────────────────────────────────────────── */}
         <section
-          className="relative flex flex-col flex-1 min-w-0 lg:border-r lg:h-full"
+          className="relative flex min-h-0 flex-1 flex-col lg:border-r lg:h-full"
           style={{ borderColor: `${C.muted}20` }}
         >
           {/* Header */}
@@ -1126,7 +1126,7 @@ export default function AIAssistant() {
           </div>
 
           {/* Composer */}
-          <div className="relative px-4 pb-6 pt-4 sm:px-8 shrink-0" style={{ background: C.white }}>
+          <div className="relative shrink-0 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:py-6" style={{ background: C.white }}>
             <div className="space-y-2">
               {/* File/image preview */}
               {attachedFile && (
