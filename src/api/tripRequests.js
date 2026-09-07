@@ -9,6 +9,10 @@ const toDestinationArray = (value) => {
     .filter(Boolean);
 };
 
+const isRequestExpired = (trip) => Boolean(
+  trip?.expires_at && new Date(trip.expires_at).getTime() <= Date.now()
+);
+
 const normalizeTripRequest = (trip) => ({
   ...trip,
   destination: toDestinationArray(trip.destination ?? trip.cities),
@@ -64,7 +68,7 @@ export async function getAvailableTripRequests(guideId) {
 
   const trips = rawTrips
     .map(normalizeTripRequest)
-    .filter(trip => trip.proposals_count < trip.max_proposals);
+    .filter(trip => !isRequestExpired(trip) && trip.proposals_count < trip.max_proposals);
 
   if (!trips.length) return [];
 
