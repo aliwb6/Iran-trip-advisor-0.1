@@ -1,5 +1,5 @@
 export const PUBLIC_REVIEW_COLUMNS =
-  'id, profile_id, rating, review_text, title, admin_reply, reviewer_name, created_at, reviewer:profiles!reviews_reviewer_id_fkey(full_name)';
+  'id, profile_id, rating, review_text, title, admin_reply, reviewer_name, created_at';
 
 export function getReviewValidationError({ user, rating, reviewText }) {
   if (!user?.id) return 'You must be signed in to write a review.';
@@ -47,12 +47,12 @@ export async function fetchApprovedProfileReviews(client, { targetType, profileI
   }
   if (!profileId) throw new Error('Review target not found.');
 
-  const { data, error } = await client
-    .from('reviews')
-    .select(PUBLIC_REVIEW_COLUMNS)
-    .eq('profile_id', profileId)
-    .eq('status', 'approved')
-    .order('created_at', { ascending: false });
+  // Public review display must not embed/read raw profiles after profile privacy
+  // lockdown. The SECURITY DEFINER RPC exposes only an approved review plus the
+  // reviewer's display name; no email, phone, license or other private fields.
+  const { data, error } = await client.rpc('get_public_profile_reviews', {
+    p_profile_id: profileId,
+  });
 
   if (error) throw error;
   return data || [];
