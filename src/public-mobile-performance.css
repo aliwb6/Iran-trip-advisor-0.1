@@ -108,6 +108,44 @@
     max-width: calc(100vw - 1rem);
   }
 
+  /* Tour filter bar: stack every control at full width on phones. The tour page
+     owns a local FilterDropdown implementation, so this keeps it in sync with
+     the shared dropdown used by Guides/Agencies without touching desktop. */
+  .public-site-shell main .relative.flex.flex-wrap.gap-3.p-4 > .relative.flex-1 {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .public-site-shell main .relative.flex.flex-wrap.gap-3.p-4 > .relative.flex-1 > button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .public-site-shell main .relative.flex.flex-wrap.gap-3.p-4 > .relative.flex-1 > .absolute.top-full {
+    inset-inline-start: 0;
+    left: auto;
+    right: auto;
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .public-site-shell main .relative.flex.flex-wrap.gap-3.p-4 > .relative.flex-1 > .absolute.top-full input {
+    width: 100%;
+    min-width: 0;
+  }
+
+  /* Result count / clear action gets its own line instead of squeezing beside filters. */
+  .public-site-shell main .relative.flex.flex-wrap.gap-3.p-4 > .ms-auto {
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    margin-inline-start: 0;
+    padding-inline: 0.25rem;
+    justify-content: space-between;
+  }
+
   /* Better tap behavior without changing visual button sizing. */
   .public-site-shell button,
   .public-site-shell a {
