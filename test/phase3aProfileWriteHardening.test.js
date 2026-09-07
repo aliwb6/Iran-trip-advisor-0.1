@@ -22,6 +22,14 @@ test('signup profile creation remains owner-bound', async () => {
   assert.match(signup, /from\('profiles'\)\.upsert/);
 });
 
+test('no frontend profile creation path targets another user or depends on the retired insert policy', async () => {
+  const signup = await source('../src/pages/Signup.jsx');
+  const register = await source('../src/pages/Register.jsx');
+
+  assert.doesNotMatch(signup, /Allow insert for authenticated|WITH CHECK \(true\)/);
+  assert.doesNotMatch(register, /from\('profiles'\)\.(?:insert|upsert)/);
+});
+
 test('register flow relies on server-side profile creation', async () => {
   const register = await source('../src/pages/Register.jsx');
   assert.match(register, /Profile row is created automatically by the handle_new_user DB trigger/);

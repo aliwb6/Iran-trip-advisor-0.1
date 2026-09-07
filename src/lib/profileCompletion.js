@@ -96,7 +96,7 @@ export async function persistGuideReview(client, guideId, updates) {
     .from('profiles')
     .update(updates)
     .eq('id', guideId)
-    .select('*');
+    .select('id, full_name, email, phone, city, bio, languages, avatar_url, role, specialty, specialties, tour_types, license_url, license_status, is_approved, is_rejected, is_published, approval_rejection_reason, approval_reviewed_at');
 
   if (error) throw error;
   if (!Array.isArray(data) || data.length === 0) {

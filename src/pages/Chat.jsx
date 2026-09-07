@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
 import { avatarFor } from '@/lib/avatar';
 import { fetchParticipantProfile } from '@/api/participantProfiles';
+import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft,
@@ -287,8 +288,14 @@ export default function Chat() {
     (async () => {
       setLoading(true);
       try {
-        const [participant, msgsRes] = await Promise.all([
-          fetchParticipantProfile(guideId),
+        const [publicProfileRes, msgsRes] = await Promise.all([
+          // A public guide/agency can be contacted before a message
+          // relationship exists, so resolve published identity through the
+          // public RPC before attempting the relationship-scoped RPC.
+          selectPublicProfiles(
+            supabase,
+            'id, full_name, avatar_url, gender, role, city, bio'
+          ).eq('id', guideId).maybeSingle(),
           supabase
             .from('messages')
             .select('*')
@@ -300,6 +307,9 @@ export default function Chat() {
 
         if (cancelled) return;
         if (msgsRes.error) throw msgsRes.error;
+
+        let participant = publicProfileRes.data;
+        if (!participant) participant = await fetchParticipantProfile(guideId);
 
         setGuide(participant || {
           id: guideId,

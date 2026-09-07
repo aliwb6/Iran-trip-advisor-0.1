@@ -1408,7 +1408,7 @@ export default function AdminDashboard() {
 
         const { data: prof, error: err } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, full_name, role, is_admin')
           .eq('id', user.id)
           .single();
         if (cancelled) return;
@@ -1449,7 +1449,7 @@ export default function AdminDashboard() {
     try {
       const { data, error: err } = await supabase
         .from('profiles')
-        .select('*')
+        .select('id, full_name, email, phone, city, bio, languages, avatar_url, role, specialty, specialties, tour_types, license_url, license_status, is_approved, is_rejected, is_published, approval_rejection_reason, approval_reviewed_at')
         .in('role', ['guide', 'agency'])
         .order('created_at', { ascending: false });
       if (err) throw err;

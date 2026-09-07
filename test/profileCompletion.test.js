@@ -95,7 +95,8 @@ test('approval sends verified/public status changes to the profiles backend', as
               assert.deepEqual([column, value], ['id', completeGuide.id]);
               return {
                 select(columns) {
-                  assert.equal(columns, '*');
+                  assert.match(columns, /id, full_name, email, phone/);
+                  assert.match(columns, /license_url, license_status/);
                   return Promise.resolve({ data: [{ ...completeGuide, ...payload }], error: null });
                 },
               };
@@ -123,7 +124,8 @@ function moderationClientReturning(data, error = null) {
               assert.deepEqual([column, value], ['id', completeGuide.id]);
               return {
                 select(columns) {
-                  assert.equal(columns, '*');
+                  assert.match(columns, /id, full_name, email, phone/);
+                  assert.match(columns, /license_url, license_status/);
                   return Promise.resolve({ data, error });
                 },
               };

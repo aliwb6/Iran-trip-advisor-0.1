@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { TourDetailsSkeleton } from '@/components/ui/Skeletons';
 import { transformImage, imgPresets } from '@/lib/imageTransform';
+import { resolveTourRequestRecipient } from '@/api/participantProfiles';
 
 const purposeBadgeConfig = {
   leisure: { en: 'Leisure', fa: 'تفریحی', ar: 'ترفيه', color: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' },
@@ -184,11 +185,7 @@ export default function TourDetails() {
 
     setReqLoading(true);
     try {
-      const { data: recipientId, error: recipientError } = await supabase.rpc(
-        'resolve_tour_request_recipient',
-        { p_tour_id: tour.id }
-      );
-      if (recipientError) throw recipientError;
+      const recipientId = await resolveTourRequestRecipient(tour.id);
 
       if (!recipientId) {
         toast.error(t('request_not_found'));
