@@ -91,6 +91,10 @@ function NavigationIntentPreloader() {
   return null;
 }
 
+function PublicStandaloneShell({ children }) {
+  return <div className="public-site-shell min-h-screen">{children}</div>;
+}
+
 function RouteFallback() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background">
@@ -144,15 +148,15 @@ const AuthenticatedApp = () => {
             <Route path="/find-jobs" element={<FindJobs />} />
             <Route path="/my-trips" element={<MyTripRequests />} />
           </Route>
-          <Route path="/ai-assistant" element={<AIAssistant />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Signup />} />
+          <Route path="/ai-assistant" element={<PublicStandaloneShell><AIAssistant /></PublicStandaloneShell>} />
+          <Route path="/signup" element={<PublicStandaloneShell><Signup /></PublicStandaloneShell>} />
+          <Route path="/login" element={<PublicStandaloneShell><Login /></PublicStandaloneShell>} />
+          <Route path="/register" element={<PublicStandaloneShell><Signup /></PublicStandaloneShell>} />
           <Route path="/admin" element={<AdminDashboard />} />
-          <Route path="/guide-onboarding" element={<GuideOnboarding />} />
+          <Route path="/guide-onboarding" element={<PublicStandaloneShell><GuideOnboarding /></PublicStandaloneShell>} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/dashboard/:section" element={<Dashboard />} />
-          <Route path="/chat/:guideId" element={<Chat />} />
+          <Route path="/chat/:guideId" element={<PublicStandaloneShell><Chat /></PublicStandaloneShell>} />
           <Route path="/trip-requests" element={<TripRequestsRedirect />} />
           <Route path="*" element={<PageNotFound />} />
         </Routes>
