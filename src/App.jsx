@@ -1,11 +1,12 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query'
-import { queryClientInstance } from '@/lib/query-client'
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClientInstance } from '@/lib/query-client';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { I18nProvider } from '@/lib/i18n.jsx';
 import { ThemeProvider } from '@/lib/ThemeContext.jsx';
+import { NotificationsProvider } from '@/lib/NotificationsContext';
 import { routeLoaders } from '@/lib/route-loaders';
 
 import Layout from '@/components/layout/Layout';
@@ -37,8 +38,6 @@ const MyTripRequests = lazy(routeLoaders.myTrips);
 const RequestDetailPage = lazy(routeLoaders.requestDetails);
 const Signup = lazy(routeLoaders.signup);
 const Login = lazy(routeLoaders.login);
-const Destinations = lazy(routeLoaders.destinations);
-const Search = lazy(routeLoaders.search);
 const GuideOnboarding = lazy(routeLoaders.guideOnboarding);
 const Toaster = lazy(() => import('@/components/ui/toaster').then((module) => ({ default: module.Toaster })));
 const SonnerToaster = lazy(() => import('@/components/ui/sonner').then((module) => ({ default: module.Toaster })));
@@ -47,8 +46,15 @@ function DeferredToasters() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => setReady(true), 1200);
-    return () => window.clearTimeout(timeoutId);
+    const showToasters = () => setReady(true);
+    const idleId = typeof window.requestIdleCallback === 'function'
+      ? window.requestIdleCallback(showToasters, { timeout: 2400 })
+      : window.setTimeout(showToasters, 1400);
+
+    return () => {
+      if (typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(idleId);
+      else window.clearTimeout(idleId);
+    };
   }, []);
 
   if (!ready) return null;
@@ -59,8 +65,6 @@ function DeferredToasters() {
     </Suspense>
   );
 }
-
-import { NotificationsProvider } from '@/lib/NotificationsContext';
 
 function RouteFallback() {
   return (
@@ -83,8 +87,7 @@ function TripRequestsRedirect() {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // ALL roles (tourist, guide, agency) go to /profile/requests — the tourist-style trip request page
-  // Guides use this page as travelers when they want to book a tour for themselves
+  // ALL roles (tourist, guide, agency) go to /profile/requests — the tourist-style trip request page.
   return <Navigate to="/profile/requests" replace />;
 }
 
@@ -103,19 +106,13 @@ const AuthenticatedApp = () => {
           <Route path="/agencies/:id" element={<AgencyProfile />} />
           <Route path="/request-trip/:guideId" element={<TripRequest />} />
           <Route path="/request-trip/agency/:guideId" element={<TripRequest />} />
-          <Route path="/agencies/:id" element={<AgencyProfile />} />
-          <Route path="/request-trip/:guideId" element={<TripRequest />} />
-          <Route path="/request-trip/agency/:guideId" element={<TripRequest />} />
           <Route path="/about" element={<About />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<ArticleDetails />} />
           <Route path="/destinations/:citySlug" element={<CityPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           <Route path="/profile/settings" element={<SettingsPage />} />
-
           <Route path="/profile/requests" element={<RequestsPage />} />
-          <Route path="/find-jobs" element={<FindJobs />} />
-          <Route path="/my-trips" element={<MyTripRequests />} />
           <Route path="/profile/requests/:id" element={<RequestDetailPage />} />
           <Route path="/find-jobs" element={<FindJobs />} />
           <Route path="/my-trips" element={<MyTripRequests />} />
@@ -152,7 +149,7 @@ function App() {
         </QueryClientProvider>
       </NotificationsProvider>
     </AuthProvider>
-  )
+  );
 }
 
-export default App
+export default App;
