@@ -25,7 +25,7 @@ test('available jobs exclude only a guide application in the current proposal ro
 
 test('guide dashboard duplicate checks and accepted requests are current-round aware', async () => {
   const flow = await source('../src/api/tourRequestFlow.js');
-  assert.match(flow, /select\('proposal_round'\)/);
+  assert.match(flow, /select\('proposal_round, status, expires_at'\)/);
   assert.match(flow, /\.eq\('proposal_round', proposalRound\)/);
   assert.match(flow, /request round/);
   assert.match(flow, /proposal_round: Math\.max\(1, Number\(request\.proposal_round\) \|\| 1\)/);
