@@ -1,9 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Plus, MapPin, Calendar, Users, MessageCircle,
   RefreshCw, CheckCircle2, Clock, Zap, AlertCircle, Loader2, XCircle,
+  CreditCard, Contact, Mail, Phone,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
@@ -14,6 +15,8 @@ import {
   cancelTripRequest,
 } from '../api/tripRequests';
 import { touristSelectGuide } from '../api/tourRequestFlow';
+import { fetchPaymentProviderConfig, redirectToDepositCheckout } from '../api/payments';
+import { fetchReleasedBookingContact } from '../api/participantProfiles';
 import TripRequestForm from '../components/trips/TripRequestForm';
 import { Button } from '@/components/ui/button';
 import {
@@ -115,6 +118,10 @@ const canCompleteBookedTrip = (trip) => {
   return end.getTime() <= Date.now();
 };
 
+const friendlyPaymentStatus = (status) => String(status || 'unpaid')
+  .replaceAll('_', ' ')
+  .replace(/\b\w/g, letter => letter.toUpperCase());
+
 function StatusBadge({ status }) {
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
   const Icon = cfg.icon;
@@ -205,11 +212,15 @@ function GuideSlot({ slot, canSelect, onSelect, selecting }) {
   );
 }
 
-function TripCard({ trip, onChanged }) {
+function TripCard({ trip, onChanged, paymentConfig }) {
   const [rebroadcasting, setRebroadcasting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
   const [selectingId, setSelectingId] = useState(null);
+  const [startingPayment, setStartingPayment] = useState(false);
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contact, setContact] = useState(null);
+  const [contactError, setContactError] = useState('');
   const [, refreshExpiry] = useState(0);
 
   useEffect(() => {
@@ -219,6 +230,11 @@ function TripCard({ trip, onChanged }) {
     const timer = window.setTimeout(() => refreshExpiry(value => value + 1), delay + 50);
     return () => window.clearTimeout(timer);
   }, [trip.expires_at, trip.status]);
+
+  useEffect(() => {
+    setContact(null);
+    setContactError('');
+  }, [trip.booking?.id, trip.booking?.contact_released]);
 
   const effectiveStatus = effectiveRequestStatus(trip);
   const startDate = trip.start_date
@@ -232,6 +248,19 @@ function TripCard({ trip, onChanged }) {
   const canComplete = canCompleteBookedTrip(trip);
   const canCancel = CANCELLABLE_STATUSES.has(trip.status) && effectiveStatus !== 'expired';
   const canSelect = OPEN_REQUEST_STATUSES.has(trip.status) && effectiveStatus !== 'expired';
+  const booking = trip.booking || null;
+  const bookingCurrency = String(booking?.currency || '').toLowerCase();
+  const depositPaymentTypeEnabled = Boolean(paymentConfig?.paymentTypes?.includes('deposit'));
+  const paymentCurrencySupported = Boolean(paymentConfig?.supportedCurrencies?.includes(bookingCurrency));
+  const canStartDeposit = Boolean(
+    booking &&
+    trip.status === 'booked' &&
+    paymentConfig?.enabled &&
+    depositPaymentTypeEnabled &&
+    paymentCurrencySupported &&
+    ['unpaid', 'failed'].includes(booking.payment_status)
+  );
+  const paymentPending = ['deposit_pending', 'payment_pending'].includes(booking?.payment_status);
 
   const handleSelect = async (slot) => {
     if (!window.confirm('Select this guide or agency for your trip?')) return;
@@ -285,6 +314,32 @@ function TripCard({ trip, onChanged }) {
       toast.error(err.message || 'Could not cancel this trip request.');
     } finally {
       setCancelling(false);
+    }
+  };
+
+  const handleDepositPayment = async () => {
+    if (!booking?.id || startingPayment) return;
+    setStartingPayment(true);
+    try {
+      await redirectToDepositCheckout(booking.id);
+    } catch (err) {
+      toast.error(err.message || 'Could not start the deposit payment.');
+      setStartingPayment(false);
+    }
+  };
+
+  const handleLoadContact = async () => {
+    if (!booking?.id || !booking.contact_released || contactLoading) return;
+    setContactLoading(true);
+    setContactError('');
+    try {
+      const result = await fetchReleasedBookingContact(booking.id);
+      if (!result) throw new Error('Contact details are not available yet.');
+      setContact(result);
+    } catch (err) {
+      setContactError(err.message || 'Could not load contact details.');
+    } finally {
+      setContactLoading(false);
     }
   };
 
@@ -359,30 +414,99 @@ function TripCard({ trip, onChanged }) {
           <ProposalProgress proposalsCount={trip.proposals_count} maxProposals={trip.max_proposals} />
         </div>
 
-        {trip.booking && (
+        {booking && (
           <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="font-body text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
                 Confirmed booking snapshot
               </p>
               <span className="font-body text-xs text-muted-foreground">
-                Payment: {trip.booking.payment_status}
+                Payment: {friendlyPaymentStatus(booking.payment_status)}
               </span>
             </div>
             <dl className="mt-3 grid grid-cols-1 gap-3 font-body text-sm sm:grid-cols-3">
               <div>
                 <dt className="text-xs text-muted-foreground">Total</dt>
-                <dd className="font-semibold text-foreground">{formatMoney(trip.booking.price, trip.booking.currency)}</dd>
+                <dd className="font-semibold text-foreground">{formatMoney(booking.price, booking.currency)}</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Deposit</dt>
-                <dd className="font-semibold text-foreground">{formatMoney(trip.booking.deposit_amount, trip.booking.currency)}</dd>
+                <dd className="font-semibold text-foreground">{formatMoney(booking.deposit_amount, booking.currency)}</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Balance due</dt>
-                <dd className="font-semibold text-foreground">{formatMoney(trip.booking.balance_due, trip.booking.currency)}</dd>
+                <dd className="font-semibold text-foreground">{formatMoney(booking.balance_due, booking.currency)}</dd>
               </div>
             </dl>
+
+            <div className="mt-4 border-t border-emerald-500/15 pt-4">
+              {canStartDeposit && (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleDepositPayment}
+                  disabled={startingPayment}
+                  className="w-full gap-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
+                >
+                  {startingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                  {startingPayment
+                    ? 'Opening secure checkout…'
+                    : `Pay deposit ${formatMoney(booking.deposit_amount, booking.currency)}`}
+                </Button>
+              )}
+
+              {paymentPending && (
+                <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                  Payment confirmation is pending. The booking will refresh when the verified provider webhook settles it.
+                </div>
+              )}
+
+              {paymentConfig && !paymentConfig.enabled && ['unpaid', 'failed'].includes(booking.payment_status) && (
+                <p className="text-xs text-muted-foreground">
+                  Online deposit payment is not enabled yet. No payment has been recorded.
+                </p>
+              )}
+
+              {paymentConfig?.enabled && !paymentCurrencySupported && ['unpaid', 'failed'].includes(booking.payment_status) && (
+                <p className="text-xs text-muted-foreground">
+                  Online payment is not currently available for {String(booking.currency || '').toUpperCase()} bookings.
+                </p>
+              )}
+
+              {booking.contact_released ? (
+                contact ? (
+                  <div className="mt-3 rounded-xl border border-emerald-500/20 bg-background/70 p-3 text-xs">
+                    <div className="flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-300">
+                      <Contact className="h-4 w-4" />
+                      Guide / agency contact
+                    </div>
+                    <p className="mt-2 font-medium text-foreground">{contact.full_name || 'Provider'}</p>
+                    {contact.email && <p className="mt-1 flex items-center gap-2 text-muted-foreground"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
+                    {contact.phone && <p className="mt-1 flex items-center gap-2 text-muted-foreground"><Phone className="h-3.5 w-3.5" />{contact.phone}</p>}
+                  </div>
+                ) : (
+                  <div className="mt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLoadContact}
+                      disabled={contactLoading}
+                      className="gap-2 rounded-xl"
+                    >
+                      {contactLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Contact className="h-3.5 w-3.5" />}
+                      {contactLoading ? 'Loading contact…' : 'View guide / agency contact'}
+                    </Button>
+                    {contactError && <p className="mt-2 text-xs text-destructive">{contactError}</p>}
+                  </div>
+                )
+              ) : (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Private contact details unlock only after the booking deposit is confirmed by the payment provider.
+                </p>
+              )}
+            </div>
           </div>
         )}
 
@@ -476,10 +600,12 @@ function LoadingSkeleton() {
 export default function MyTripRequests() {
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState(null);
 
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated) navigate('/login');
@@ -501,6 +627,50 @@ export default function MyTripRequests() {
   useEffect(() => {
     if (user?.id) loadTrips();
   }, [user?.id, loadTrips]);
+
+  useEffect(() => {
+    let active = true;
+    fetchPaymentProviderConfig()
+      .then(config => {
+        if (active) setPaymentConfig(config);
+      })
+      .catch(() => {
+        if (active) {
+          setPaymentConfig({
+            provider: null,
+            enabled: false,
+            supportedCurrencies: [],
+            paymentTypes: [],
+            contactReleaseOn: null,
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const paymentResult = searchParams.get('payment');
+    if (!paymentResult) return undefined;
+
+    if (paymentResult === 'success') {
+      toast.success('Payment submitted. Waiting for secure provider confirmation.');
+    } else if (paymentResult === 'cancelled') {
+      toast.info('Payment checkout was cancelled. No successful payment was recorded.');
+    }
+
+    const timers = paymentResult === 'success'
+      ? [500, 2000, 5000].map(delay => window.setTimeout(loadTrips, delay))
+      : [];
+
+    const next = new URLSearchParams(searchParams);
+    next.delete('payment');
+    next.delete('session_id');
+    setSearchParams(next, { replace: true });
+
+    return () => timers.forEach(timer => window.clearTimeout(timer));
+  }, [searchParams, setSearchParams, loadTrips]);
 
   if (isLoadingAuth) {
     return (
@@ -550,7 +720,14 @@ export default function MyTripRequests() {
           </div>
         ) : (
           <div className="space-y-4">
-            {trips.map(trip => <TripCard key={trip.id} trip={trip} onChanged={loadTrips} />)}
+            {trips.map(trip => (
+              <TripCard
+                key={trip.id}
+                trip={trip}
+                onChanged={loadTrips}
+                paymentConfig={paymentConfig}
+              />
+            ))}
           </div>
         )}
       </div>
