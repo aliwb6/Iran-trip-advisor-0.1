@@ -50,6 +50,20 @@
     overscroll-behavior-inline: contain;
     -webkit-overflow-scrolling: touch;
   }
+
+  /* On the mobile homepage the three primary discovery destinations are kept
+     visible at the top, so the legacy hamburger is replaced by the dedicated
+     three-dot trigger and those destinations are removed from the overflow menu. */
+  html.mobile-home-primary-nav-active .public-site-shell > nav button[class~="lg:hidden"] {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  html.mobile-home-primary-nav-active .public-site-shell > nav + div.fixed.inset-0 a[href="/tours"],
+  html.mobile-home-primary-nav-active .public-site-shell > nav + div.fixed.inset-0 a[href="/guides"],
+  html.mobile-home-primary-nav-active .public-site-shell > nav + div.fixed.inset-0 a[href="/agencies"] {
+    display: none;
+  }
 }
 
 @media (max-width: 767px) {
