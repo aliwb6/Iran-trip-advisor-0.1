@@ -9,26 +9,18 @@ const toDestinationArray = (value) => {
     .filter(Boolean);
 };
 
-const toCanonicalTrip = (trip) => {
-  const destinations = toDestinationArray(trip.destination ?? trip.cities);
-  return {
-    ...trip,
-    destinations,
-    // Temporary compatibility aliases for legacy page presentation only.
-    // All database reads/writes in this module use canonical columns.
-    destination: destinations.join(', '),
-    travel_dates: {
-      start: trip.start_date ?? null,
-      end: trip.end_date ?? null,
-    },
-    interests: trip.goals ?? trip.holiday_types ?? [],
-    group_size: trip.adults ?? trip.num_people ?? 1,
-    budget_range: trip.budget_tier ?? null,
-    notes: trip.requirements ?? null,
-    slot_count: trip.proposals_count ?? 0,
-    broadcast_count: trip.rebroadcast_count ?? 0,
-  };
-};
+const normalizeTripRequest = (trip) => ({
+  ...trip,
+  destination: toDestinationArray(trip.destination ?? trip.cities),
+  goals: Array.isArray(trip.goals)
+    ? trip.goals
+    : Array.isArray(trip.holiday_types)
+      ? trip.holiday_types
+      : [],
+  proposals_count: Number(trip.proposals_count) || 0,
+  max_proposals: Math.max(1, Number(trip.max_proposals) || 5),
+  rebroadcast_count: Number(trip.rebroadcast_count) || 0,
+});
 
 export async function createTripRequest(travelerId, tripData) {
   const destinations = toDestinationArray(tripData.destination);
@@ -56,7 +48,7 @@ export async function createTripRequest(travelerId, tripData) {
     .single();
 
   if (error) throw error;
-  return toCanonicalTrip(data);
+  return normalizeTripRequest(data);
 }
 
 export async function getAvailableTripRequests(guideId) {
@@ -83,9 +75,9 @@ export async function getAvailableTripRequests(guideId) {
   if (error) throw error;
   if (!trips?.length) return [];
 
-  const availableTrips = trips.filter(trip => (
-    (trip.proposals_count ?? 0) < (trip.max_proposals ?? 5)
-  ));
+  const availableTrips = trips
+    .map(normalizeTripRequest)
+    .filter(trip => trip.proposals_count < trip.max_proposals);
 
   const travelerIds = [...new Set(availableTrips.map(trip => trip.user_id).filter(Boolean))];
   let profiles = [];
@@ -100,7 +92,7 @@ export async function getAvailableTripRequests(guideId) {
 
   const profileMap = Object.fromEntries(profiles.map(profile => [profile.id, profile]));
   return availableTrips.map(trip => ({
-    ...toCanonicalTrip(trip),
+    ...trip,
     traveler: profileMap[trip.user_id] || null,
   }));
 }
@@ -144,7 +136,7 @@ export async function getMyTripRequests(travelerId) {
   });
 
   return trips.map(trip => ({
-    ...toCanonicalTrip(trip),
+    ...normalizeTripRequest(trip),
     slots: slotsByTrip[trip.id] || [],
   }));
 }
