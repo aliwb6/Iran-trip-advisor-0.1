@@ -28,31 +28,36 @@ const INTEREST_COLORS = {
 const ALL_INTERESTS = Object.keys(INTEREST_COLORS);
 const BUDGET_OPTIONS = ['', 'Budget', 'Mid-range', 'Luxury'];
 
-function SlotIndicator({ slotCount }) {
-  const taken = slotCount || 0;
-  const available = 3 - taken;
-  const isYellow = available === 1;
+const destinationLabel = (destination) => {
+  if (Array.isArray(destination)) return destination.filter(Boolean).join(', ');
+  return destination || 'Iran';
+};
+
+const requestInterests = (trip) => (
+  Array.isArray(trip.goals) ? trip.goals : Array.isArray(trip.holiday_types) ? trip.holiday_types : []
+);
+
+const requestPeople = (trip) => {
+  const adults = Number(trip.adults || 0);
+  const children = Number(trip.children || 0);
+  const total = adults + children;
+  return total > 0 ? total : Number(trip.num_people || 1);
+};
+
+function SlotIndicator({ proposalsCount, maxProposals }) {
+  const max = Math.max(1, Number(maxProposals) || 5);
+  const taken = Math.max(0, Math.min(Number(proposalsCount) || 0, max));
+  const available = Math.max(0, max - taken);
+  const percent = Math.round((taken / max) * 100);
+  const nearlyFull = available === 1;
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex gap-1">
-        {[0, 1, 2].map(i => (
-          <span
-            key={i}
-            className={`text-base leading-none ${
-              i < taken
-                ? isYellow
-                  ? 'text-yellow-500'
-                  : 'text-emerald-500'
-                : 'text-muted-foreground/30'
-            }`}
-          >
-            {i < taken ? '●' : '○'}
-          </span>
-        ))}
+    <div className="flex items-center gap-3">
+      <div className="h-1.5 flex-1 rounded-full bg-border/50 overflow-hidden" aria-hidden="true">
+        <div className="h-full bg-accent transition-all" style={{ width: `${percent}%` }} />
       </div>
-      <span className={`font-body text-xs font-medium ${
-        isYellow ? 'text-yellow-600 dark:text-yellow-400' : 'text-emerald-600 dark:text-emerald-400'
+      <span className={`font-body text-xs font-medium whitespace-nowrap ${
+        nearlyFull ? 'text-yellow-600 dark:text-yellow-400' : 'text-emerald-600 dark:text-emerald-400'
       }`}>
         {available} spot{available !== 1 ? 's' : ''} left
       </span>
@@ -64,13 +69,18 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const startDate = trip.travel_dates?.start
-    ? new Date(trip.travel_dates.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+  const startDate = trip.start_date
+    ? new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
     : null;
-  const endDate = trip.travel_dates?.end
-    ? new Date(trip.travel_dates.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const endDate = trip.end_date
+    ? new Date(trip.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
-  const dateLabel = startDate && endDate ? `${startDate} – ${endDate}` : startDate || 'Dates flexible';
+  const dateLabel = startDate && endDate ? `${startDate} – ${endDate}` : startDate || endDate || 'Dates flexible';
+  const interests = requestInterests(trip);
+  const people = requestPeople(trip);
+  const maxProposals = Math.max(1, Number(trip.max_proposals) || 5);
+  const proposalsCount = Math.max(0, Number(trip.proposals_count) || 0);
+  const isFull = proposalsCount >= maxProposals;
 
   const travelerName = trip.traveler?.full_name?.split(' ')[0] || 'Traveler';
   const avatarUrl = trip.traveler?.avatar_url;
@@ -90,19 +100,17 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
       className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="p-5">
-        {/* Header row */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-heading text-base font-semibold text-foreground leading-snug truncate">
-              {trip.title}
+              {trip.title || 'Custom trip request'}
             </h3>
             <div className="flex items-center gap-1.5 mt-1 text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 shrink-0 text-gold" />
-              <span className="font-body text-sm truncate">{trip.destination}</span>
+              <span className="font-body text-sm truncate">{destinationLabel(trip.destination)}</span>
             </div>
           </div>
 
-          {/* Traveler avatar */}
           <div className="flex items-center gap-2 shrink-0">
             <div className="w-9 h-9 rounded-full overflow-hidden bg-accent/20 border border-border/50 flex items-center justify-center">
               {avatarUrl ? (
@@ -115,30 +123,26 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
           </div>
         </div>
 
-        {/* Meta row */}
         <div className="flex flex-wrap items-center gap-3 mb-3 text-sm font-body text-muted-foreground">
-          {(startDate || endDate) && (
-            <span className="flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5 shrink-0" />
-              {dateLabel}
-            </span>
-          )}
+          <span className="flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5 shrink-0" />
+            {dateLabel}
+          </span>
           <span className="flex items-center gap-1">
             <Users className="w-3.5 h-3.5 shrink-0" />
-            {trip.group_size || 1} {(trip.group_size || 1) === 1 ? 'person' : 'people'}
+            {people} {people === 1 ? 'person' : 'people'}
           </span>
-          {trip.budget_range && (
+          {trip.budget_tier && (
             <span className="flex items-center gap-1">
               <Wallet className="w-3.5 h-3.5 shrink-0" />
-              {trip.budget_range}
+              {trip.budget_tier}
             </span>
           )}
         </div>
 
-        {/* Interests */}
-        {trip.interests && trip.interests.length > 0 && (
+        {interests.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-3">
-            {trip.interests.map(interest => (
+            {interests.map(interest => (
               <span
                 key={interest}
                 className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium font-body ${
@@ -151,26 +155,25 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
           </div>
         )}
 
-        {/* Slot indicator */}
         <div className="mb-4">
-          <SlotIndicator slotCount={trip.slot_count} />
+          <SlotIndicator proposalsCount={proposalsCount} maxProposals={maxProposals} />
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
           <Button
             size="sm"
             onClick={() => setModalOpen(true)}
-            className="flex-1 bg-accent hover:bg-accent/90 text-white font-body font-semibold rounded-xl h-9"
+            disabled={isFull}
+            className="flex-1 bg-accent hover:bg-accent/90 text-white font-body font-semibold rounded-xl h-9 disabled:opacity-50"
           >
-            Accept & Propose
+            {isFull ? 'Proposal limit reached' : 'Accept & Propose'}
           </Button>
 
-          {trip.notes && (
+          {trip.requirements && (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => setExpanded(e => !e)}
+              onClick={() => setExpanded(value => !value)}
               className="font-body text-xs rounded-xl h-9 border-border/60"
             >
               View Details
@@ -180,9 +183,8 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
         </div>
       </div>
 
-      {/* Accordion: notes */}
       <AnimatePresence>
-        {expanded && trip.notes && (
+        {expanded && trip.requirements && (
           <motion.div
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
@@ -195,7 +197,7 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
                 Special Requirements
               </p>
               <p className="font-body text-sm text-foreground/80 leading-relaxed">
-                {trip.notes}
+                {trip.requirements}
               </p>
             </div>
           </motion.div>
@@ -243,15 +245,12 @@ export default function FindJobs() {
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  // Filters
   const [destFilter, setDestFilter] = useState('');
   const [interestFilter, setInterestFilter] = useState([]);
   const [budgetFilter, setBudgetFilter] = useState('');
 
   const role = profile?.role || user?.user_metadata?.role;
 
-  // Redirect non-guides
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated && role && role !== 'guide' && role !== 'agency') {
       navigate('/');
@@ -290,17 +289,20 @@ export default function FindJobs() {
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, loadRequests]);
 
-  // Filtered results
   const filtered = trips.filter(trip => {
-    if (destFilter && !trip.destination.toLowerCase().includes(destFilter.toLowerCase())) return false;
-    if (interestFilter.length > 0 && !interestFilter.every(i => trip.interests?.includes(i))) return false;
-    if (budgetFilter && trip.budget_range !== budgetFilter) return false;
+    const destinations = destinationLabel(trip.destination).toLowerCase();
+    const interests = requestInterests(trip);
+    if (destFilter && !destinations.includes(destFilter.toLowerCase())) return false;
+    if (interestFilter.length > 0 && !interestFilter.every(item => interests.includes(item))) return false;
+    if (budgetFilter && trip.budget_tier !== budgetFilter) return false;
     return true;
   });
 
   const toggleInterestFilter = (interest) => {
-    setInterestFilter(prev =>
-      prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]
+    setInterestFilter(previous =>
+      previous.includes(interest)
+        ? previous.filter(item => item !== interest)
+        : [...previous, interest]
     );
   };
 
@@ -310,7 +312,7 @@ export default function FindJobs() {
     setBudgetFilter('');
   };
 
-  const hasFilters = destFilter || interestFilter.length > 0 || budgetFilter;
+  const hasFilters = Boolean(destFilter || interestFilter.length > 0 || budgetFilter);
 
   if (isLoadingAuth || (isAuthenticated && !role)) {
     return (
@@ -323,8 +325,6 @@ export default function FindJobs() {
   return (
     <div className="min-h-screen bg-background pt-20 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Page header */}
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
@@ -334,33 +334,30 @@ export default function FindJobs() {
           </div>
           <h1 className="font-heading text-3xl font-bold text-foreground">Find Jobs</h1>
           <p className="font-body text-muted-foreground mt-1.5">
-            Browse open trip requests from travelers. Only 3 guides can accept each request.
+            Browse open trip requests from travelers. Each request closes when its proposal limit is reached.
           </p>
         </div>
 
-        {/* Filter bar */}
         <div className="bg-card border border-border/50 rounded-2xl p-4 mb-6 space-y-4">
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Destination search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
                 placeholder="Filter by destination…"
                 value={destFilter}
-                onChange={e => setDestFilter(e.target.value)}
+                onChange={event => setDestFilter(event.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/60 bg-background font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition"
               />
             </div>
 
-            {/* Budget filter */}
             <select
               value={budgetFilter}
-              onChange={e => setBudgetFilter(e.target.value)}
+              onChange={event => setBudgetFilter(event.target.value)}
               className="px-3 py-2.5 rounded-xl border border-border/60 bg-background font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition min-w-[140px]"
             >
-              {BUDGET_OPTIONS.map(opt => (
-                <option key={opt} value={opt}>{opt || 'Any budget'}</option>
+              {BUDGET_OPTIONS.map(option => (
+                <option key={option} value={option}>{option || 'Any budget'}</option>
               ))}
             </select>
 
@@ -375,7 +372,6 @@ export default function FindJobs() {
             )}
           </div>
 
-          {/* Interest tag filters */}
           <div className="flex flex-wrap gap-1.5">
             {ALL_INTERESTS.map(interest => (
               <button
@@ -393,7 +389,6 @@ export default function FindJobs() {
           </div>
         </div>
 
-        {/* Results count */}
         {!loading && (
           <p className="font-body text-sm text-muted-foreground mb-4">
             {filtered.length === 0
@@ -403,7 +398,6 @@ export default function FindJobs() {
           </p>
         )}
 
-        {/* Content */}
         {error ? (
           <div className="text-center py-16">
             <p className="font-body text-sm text-destructive mb-4">{error}</p>
