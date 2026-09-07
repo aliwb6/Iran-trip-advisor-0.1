@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Loader2, Users, Wallet } from 'lucide-react';
+import { CalendarDays, Contact, Loader2, Mail, Phone, Users, Wallet } from 'lucide-react';
 import { fetchMyBookings } from '@/api/bookings';
+import { fetchReleasedBookingContact } from '@/api/participantProfiles';
 
 const money = (value, currency = 'USD') => new Intl.NumberFormat('en-US', {
   style: 'currency',
@@ -12,6 +14,24 @@ const percent = (value) => `${Math.round((Number(value) || 0) * 100)}%`;
 function BookingCard({ booking }) {
   const currency = booking.currency || 'USD';
   const dates = [booking.start_date, booking.end_date].filter(Boolean).join(' → ') || 'Dates not set';
+  const [contact, setContact] = useState(null);
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactError, setContactError] = useState('');
+
+  const loadContact = async () => {
+    if (!booking.contact_released || contactLoading) return;
+    setContactLoading(true);
+    setContactError('');
+    try {
+      const result = await fetchReleasedBookingContact(booking.id);
+      if (!result) throw new Error('Contact details are not available yet.');
+      setContact(result);
+    } catch (error) {
+      setContactError(error.message || 'Could not load contact details.');
+    } finally {
+      setContactLoading(false);
+    }
+  };
 
   return (
     <article className="rounded-2xl border border-white/[0.08] bg-[hsl(222,45%,14%)] p-5">
@@ -57,6 +77,37 @@ function BookingCard({ booking }) {
         <div><dt className="text-white/40">Deposit ({percent(booking.deposit_percentage)})</dt><dd className="mt-0.5 font-medium text-white">{money(booking.deposit_amount, currency)}</dd></div>
         <div><dt className="text-white/40">Balance due</dt><dd className="mt-0.5 font-medium text-white">{money(booking.balance_due, currency)}</dd></div>
       </dl>
+
+      <div className="mt-4 border-t border-white/[0.07] pt-4">
+        {booking.contact_released ? (
+          contact ? (
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs">
+              <div className="flex items-center gap-2 text-emerald-300">
+                <Contact className="h-4 w-4" />
+                <span className="font-semibold">Traveler contact</span>
+              </div>
+              <p className="mt-2 font-medium text-white">{contact.full_name || 'Traveler'}</p>
+              {contact.email && <p className="mt-1 flex items-center gap-2 text-white/60"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
+              {contact.phone && <p className="mt-1 flex items-center gap-2 text-white/60"><Phone className="h-3.5 w-3.5" />{contact.phone}</p>}
+            </div>
+          ) : (
+            <div>
+              <button
+                type="button"
+                onClick={loadContact}
+                disabled={contactLoading}
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/15 disabled:opacity-60"
+              >
+                {contactLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Contact className="h-3.5 w-3.5" />}
+                {contactLoading ? 'Loading contact…' : 'View traveler contact'}
+              </button>
+              {contactError && <p className="mt-2 text-xs text-red-300">{contactError}</p>}
+            </div>
+          )
+        ) : (
+          <p className="text-xs text-white/35">Private traveler contact unlocks only after the booking deposit is confirmed.</p>
+        )}
+      </div>
     </article>
   );
 }
