@@ -19,6 +19,11 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 
 const STATUS_CONFIG = {
+  open: {
+    label: 'Open',
+    icon: Zap,
+    classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  },
   pending: {
     label: 'Pending',
     icon: Clock,
@@ -29,8 +34,18 @@ const STATUS_CONFIG = {
     icon: Zap,
     classes: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
   },
-  matched: {
-    label: 'Matched',
+  proposals_ready: {
+    label: 'Proposals ready',
+    icon: CheckCircle2,
+    classes: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
+  },
+  confirmed: {
+    label: 'Guide selected',
+    icon: CheckCircle2,
+    classes: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
+  },
+  booked: {
+    label: 'Booked',
     icon: CheckCircle2,
     classes: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300',
   },
@@ -44,6 +59,28 @@ const STATUS_CONFIG = {
     icon: AlertCircle,
     classes: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
   },
+  cancelled: {
+    label: 'Cancelled',
+    icon: AlertCircle,
+    classes: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
+  },
+  closed: {
+    label: 'Closed',
+    icon: CheckCircle2,
+    classes: 'bg-muted text-muted-foreground',
+  },
+};
+
+const destinationLabel = (destination) => {
+  if (Array.isArray(destination)) return destination.filter(Boolean).join(', ');
+  return destination || 'Iran';
+};
+
+const travelerCount = (trip) => {
+  const adults = Number(trip.adults || 0);
+  const children = Number(trip.children || 0);
+  const total = adults + children;
+  return total > 0 ? total : Number(trip.num_people || 1);
 };
 
 function StatusBadge({ status }) {
@@ -57,28 +94,24 @@ function StatusBadge({ status }) {
   );
 }
 
-function SlotBar({ slotCount }) {
-  const taken = slotCount || 0;
+function ProposalProgress({ proposalsCount, maxProposals }) {
+  const max = Math.max(1, Number(maxProposals) || 5);
+  const count = Math.max(0, Math.min(Number(proposalsCount) || 0, max));
+  const percent = Math.round((count / max) * 100);
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex gap-1">
-        {[0, 1, 2].map(i => (
-          <div
-            key={i}
-            className={`w-6 h-1.5 rounded-full transition-colors ${
-              i < taken ? 'bg-accent' : 'bg-border/50'
-            }`}
-          />
-        ))}
+    <div className="flex items-center gap-3">
+      <div className="h-1.5 flex-1 rounded-full bg-border/50 overflow-hidden" aria-hidden="true">
+        <div className="h-full bg-accent transition-all" style={{ width: `${percent}%` }} />
       </div>
-      <span className="font-body text-xs text-muted-foreground">
-        {taken}/3 guide{taken !== 1 ? 's' : ''}
+      <span className="font-body text-xs text-muted-foreground whitespace-nowrap">
+        {count}/{max} proposal{max !== 1 ? 's' : ''}
       </span>
     </div>
   );
 }
 
-function GuideSlot({ slot, tripId }) {
+function GuideSlot({ slot }) {
   const navigate = useNavigate();
   const guideName = slot.guide?.full_name || 'Guide';
   const avatarUrl = slot.guide?.avatar_url;
@@ -90,9 +123,11 @@ function GuideSlot({ slot, tripId }) {
     .toUpperCase();
 
   const slotStatusLabel = {
+    accepted:  { label: 'Proposal received', color: 'text-muted-foreground' },
     chatting:  { label: 'Chatting', color: 'text-accent' },
-    rejected:  { label: 'Declined', color: 'text-muted-foreground line-through' },
+    selected:  { label: 'Selected', color: 'text-emerald-600' },
     finalized: { label: 'Finalized', color: 'text-emerald-600' },
+    closed:    { label: 'Closed', color: 'text-muted-foreground' },
   }[slot.status] || { label: slot.status, color: 'text-muted-foreground' };
 
   if (slot.status === 'rejected') return null;
@@ -128,14 +163,14 @@ function GuideSlot({ slot, tripId }) {
 function TripCard({ trip, onRebroadcast }) {
   const [rebroadcasting, setRebroadcasting] = useState(false);
 
-  const startDate = trip.travel_dates?.start
-    ? new Date(trip.travel_dates.start).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const startDate = trip.start_date
+    ? new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
-  const endDate = trip.travel_dates?.end
-    ? new Date(trip.travel_dates.end).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  const endDate = trip.end_date
+    ? new Date(trip.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
-
-  const activeSlots = (trip.slots || []).filter(s => s.status !== 'rejected');
+  const people = travelerCount(trip);
+  const activeSlots = (trip.slots || []).filter(slot => slot.status !== 'rejected');
 
   const handleRebroadcast = async () => {
     setRebroadcasting(true);
@@ -157,7 +192,6 @@ function TripCard({ trip, onRebroadcast }) {
       animate={{ opacity: 1, y: 0 }}
       className="bg-card border border-border/50 rounded-2xl overflow-hidden shadow-sm"
     >
-      {/* Completed banner */}
       {trip.status === 'completed' && (
         <div className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
@@ -168,21 +202,19 @@ function TripCard({ trip, onRebroadcast }) {
       )}
 
       <div className="p-5">
-        {/* Header */}
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-heading text-base font-semibold text-foreground leading-snug">
-              {trip.title}
+              {trip.title || 'Custom trip request'}
             </h3>
             <div className="flex items-center gap-1.5 mt-1 text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 shrink-0 text-gold" />
-              <span className="font-body text-sm">{trip.destination}</span>
+              <span className="font-body text-sm">{destinationLabel(trip.destination)}</span>
             </div>
           </div>
           <StatusBadge status={trip.status} />
         </div>
 
-        {/* Meta */}
         <div className="flex flex-wrap items-center gap-3 mb-3 font-body text-sm text-muted-foreground">
           {(startDate || endDate) && (
             <span className="flex items-center gap-1">
@@ -192,34 +224,34 @@ function TripCard({ trip, onRebroadcast }) {
           )}
           <span className="flex items-center gap-1">
             <Users className="w-3.5 h-3.5 shrink-0" />
-            {trip.group_size || 1} {(trip.group_size || 1) === 1 ? 'person' : 'people'}
+            {people} {people === 1 ? 'person' : 'people'}
           </span>
-          {trip.broadcast_count > 0 && (
+          {trip.rebroadcast_count > 0 && (
             <span className="flex items-center gap-1 text-xs">
               <RefreshCw className="w-3 h-3 shrink-0" />
-              Re-broadcast ×{trip.broadcast_count}
+              Re-broadcast ×{trip.rebroadcast_count}
             </span>
           )}
         </div>
 
-        {/* Slot bar */}
         <div className="mb-4">
-          <SlotBar slotCount={trip.slot_count} />
+          <ProposalProgress
+            proposalsCount={trip.proposals_count}
+            maxProposals={trip.max_proposals}
+          />
         </div>
 
-        {/* Guide slots */}
         {activeSlots.length > 0 && (
           <div className="space-y-2 mb-4">
             <p className="font-body text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Guides Connected
+              Guide proposals
             </p>
             {activeSlots.map(slot => (
-              <GuideSlot key={slot.id} slot={slot} tripId={trip.id} />
+              <GuideSlot key={slot.id} slot={slot} />
             ))}
           </div>
         )}
 
-        {/* Re-broadcast for expired */}
         {trip.status === 'expired' && (
           <Button
             variant="outline"
@@ -262,14 +294,12 @@ function LoadingSkeleton() {
 }
 
 export default function MyTripRequests() {
-  const { user, profile, isAuthenticated, isLoadingAuth } = useAuth();
+  const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  const role = profile?.role || user?.user_metadata?.role;
 
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated) navigate('/login');
@@ -303,8 +333,6 @@ export default function MyTripRequests() {
   return (
     <div className="min-h-screen bg-background pt-20 pb-24">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Header */}
         <div className="mb-8">
           <p className="font-body text-xs uppercase tracking-widest text-gold mb-1">Travel Planning</p>
           <h1 className="font-heading text-3xl font-bold text-foreground">My Trip Requests</h1>
@@ -313,7 +341,6 @@ export default function MyTripRequests() {
           </p>
         </div>
 
-        {/* Content */}
         {error ? (
           <div className="text-center py-16">
             <p className="font-body text-sm text-destructive mb-4">{error}</p>
@@ -352,7 +379,6 @@ export default function MyTripRequests() {
         )}
       </div>
 
-      {/* Floating action button */}
       {trips.length > 0 && (
         <div className="fixed bottom-6 right-6 z-40">
           <motion.button
@@ -367,7 +393,6 @@ export default function MyTripRequests() {
         </div>
       )}
 
-      {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
