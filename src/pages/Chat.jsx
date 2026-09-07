@@ -456,22 +456,22 @@ export default function Chat() {
   return (
     <div
       dir={dir}
-      className="min-h-screen w-full"
+      className="h-[100dvh] min-h-[100dvh] w-full overflow-hidden"
       style={{
         background: C.white,
         fontFamily: "'Khamenei', 'Segoe UI', system-ui, -apple-system, sans-serif",
         color: C.ink,
       }}
     >
-      <div className="mx-auto flex min-h-screen max-w-[1480px] flex-col lg:flex-row">
+      <div className="mx-auto flex h-full max-w-[1480px] flex-col lg:flex-row">
         {/* Chat column */}
         <section
-          className="relative flex w-full flex-col lg:w-[60%] lg:border-r"
+          className="relative flex min-h-0 w-full flex-1 flex-col lg:w-[60%] lg:border-r"
           style={{ borderColor: `${C.muted}20` }}
         >
           {/* Header */}
           <header
-            className="relative overflow-hidden px-6 pt-8 pb-7 sm:px-10 sm:pt-10 sm:pb-9"
+            className="relative shrink-0 overflow-hidden px-4 pt-5 pb-4 sm:px-10 sm:pt-10 sm:pb-9"
             style={{ borderBottom: `1px solid ${C.muted}20` }}
           >
             <PersianPattern opacity={0.055} color={C.turq} size={64} />
@@ -482,7 +482,7 @@ export default function Chat() {
               }}
             />
             <div className="relative flex items-start justify-between gap-4">
-              <div className="flex items-center gap-3.5">
+              <div className="flex min-w-0 items-center gap-3.5">
                 <button
                   onClick={() => navigate(-1)}
                   className="inline-flex items-center justify-center w-10 h-10 rounded-lg transition-colors -ml-2"
@@ -491,7 +491,7 @@ export default function Chat() {
                 >
                   <BackArrow className="w-5 h-5" />
                 </button>
-                <div>
+                <div className="min-w-0">
                   <div
                     className="text-[10.5px] font-semibold uppercase tracking-[0.18em]"
                     style={{ color: C.turq }}
@@ -499,7 +499,7 @@ export default function Chat() {
                     Chat with Guide
                   </div>
                   <h1
-                    className="mt-1 text-xl font-bold leading-tight sm:text-2xl"
+                    className="mt-1 truncate text-xl font-bold leading-tight sm:text-2xl"
                     style={{ color: C.teal }}
                   >
                     {guide.full_name || 'Guide'}
@@ -530,8 +530,7 @@ export default function Chat() {
           {/* Messages */}
           <div
             ref={scrollerRef}
-            className="flex-1 overflow-y-auto px-6 py-6 sm:px-10"
-            style={{ minHeight: 360 }}
+            className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-10 sm:py-6"
           >
             <div className="mx-auto flex max-w-[680px] flex-col gap-5">
               {messages.length === 0 ? (
@@ -574,7 +573,7 @@ export default function Chat() {
           {/* Input form */}
           <form
             onSubmit={handleSend}
-            className="border-t px-6 py-4 sm:px-10"
+            className="shrink-0 border-t px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-10 sm:py-4"
             style={{ borderColor: `${C.muted}20`, background: `${C.white}` }}
           >
             <div className="mx-auto flex max-w-[680px] items-center gap-3">
