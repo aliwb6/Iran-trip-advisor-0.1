@@ -20,6 +20,7 @@ const normalizeTripRequest = (trip) => ({
   proposals_count: Number(trip.proposals_count) || 0,
   max_proposals: Math.max(1, Number(trip.max_proposals) || 5),
   rebroadcast_count: Number(trip.rebroadcast_count) || 0,
+  proposal_round: Math.max(1, Number(trip.proposal_round) || 1),
 });
 
 export async function createTripRequest(travelerId, tripData) {
@@ -52,33 +53,39 @@ export async function createTripRequest(travelerId, tripData) {
 }
 
 export async function getAvailableTripRequests(guideId) {
-  // A guide cannot re-apply to a request while the unique
-  // (trip_request_id, guide_id) slot row exists, even if it was rejected.
-  const { data: mySlots, error: slotsError } = await supabase
-    .from('trip_slots')
-    .select('trip_request_id')
-    .eq('guide_id', guideId);
-
-  if (slotsError) throw slotsError;
-  const excludeIds = (mySlots || []).map(slot => slot.trip_request_id);
-
-  let query = supabase
+  const { data: rawTrips, error } = await supabase
     .from('trip_requests')
     .select('*')
     .in('status', ['open', 'active', 'pending'])
     .order('created_at', { ascending: false });
 
-  if (excludeIds.length > 0) {
-    query = query.not('id', 'in', `(${excludeIds.join(',')})`);
-  }
-
-  const { data: trips, error } = await query;
   if (error) throw error;
-  if (!trips?.length) return [];
+  if (!rawTrips?.length) return [];
 
-  const availableTrips = trips
+  const trips = rawTrips
     .map(normalizeTripRequest)
     .filter(trip => trip.proposals_count < trip.max_proposals);
+
+  if (!trips.length) return [];
+
+  const requestIds = trips.map(trip => trip.id);
+  const { data: mySlots, error: slotsError } = await supabase
+    .from('trip_slots')
+    .select('trip_request_id, proposal_round')
+    .eq('guide_id', guideId)
+    .in('trip_request_id', requestIds);
+
+  if (slotsError) throw slotsError;
+
+  const currentRoundApplications = new Set(
+    (mySlots || []).map(slot => `${slot.trip_request_id}:${Number(slot.proposal_round) || 1}`)
+  );
+
+  const availableTrips = trips.filter(
+    trip => !currentRoundApplications.has(`${trip.id}:${trip.proposal_round}`)
+  );
+
+  if (!availableTrips.length) return [];
 
   const travelerIds = [...new Set(availableTrips.map(trip => trip.user_id).filter(Boolean))];
   let profiles = [];
@@ -99,15 +106,16 @@ export async function getAvailableTripRequests(guideId) {
 }
 
 export async function getMyTripRequests(travelerId) {
-  const { data: trips, error } = await supabase
+  const { data: rawTrips, error } = await supabase
     .from('trip_requests')
     .select('*')
     .eq('user_id', travelerId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
-  if (!trips?.length) return [];
+  if (!rawTrips?.length) return [];
 
+  const trips = rawTrips.map(normalizeTripRequest);
   const tripIds = trips.map(trip => trip.id);
   const { data: slots, error: slotsError } = await supabase
     .from('trip_slots')
@@ -115,7 +123,14 @@ export async function getMyTripRequests(travelerId) {
     .in('trip_request_id', tripIds);
   if (slotsError) throw slotsError;
 
-  const guideIds = [...new Set((slots || []).map(slot => slot.guide_id).filter(Boolean))];
+  const currentRoundByTrip = Object.fromEntries(
+    trips.map(trip => [trip.id, trip.proposal_round])
+  );
+  const currentSlots = (slots || []).filter(
+    slot => (Number(slot.proposal_round) || 1) === currentRoundByTrip[slot.trip_request_id]
+  );
+
+  const guideIds = [...new Set(currentSlots.map(slot => slot.guide_id).filter(Boolean))];
   let guideProfiles = [];
   if (guideIds.length > 0) {
     const { data, error: profileError } = await supabase
@@ -128,7 +143,7 @@ export async function getMyTripRequests(travelerId) {
 
   const guideMap = Object.fromEntries(guideProfiles.map(profile => [profile.id, profile]));
   const slotsByTrip = {};
-  (slots || []).forEach(slot => {
+  currentSlots.forEach(slot => {
     if (!slotsByTrip[slot.trip_request_id]) slotsByTrip[slot.trip_request_id] = [];
     slotsByTrip[slot.trip_request_id].push({
       ...slot,
@@ -137,7 +152,7 @@ export async function getMyTripRequests(travelerId) {
   });
 
   return trips.map(trip => ({
-    ...normalizeTripRequest(trip),
+    ...trip,
     slots: slotsByTrip[trip.id] || [],
   }));
 }
