@@ -7,7 +7,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { I18nProvider } from '@/lib/i18n.jsx';
 import { ThemeProvider } from '@/lib/ThemeContext.jsx';
 import { NotificationsProvider } from '@/lib/NotificationsContext';
-import { routeLoaders } from '@/lib/route-loaders';
+import { preloadRoute, routeLoaders } from '@/lib/route-loaders';
 
 import Layout from '@/components/layout/Layout';
 // Home is the landing route — kept eager so first paint never waits on a chunk.
@@ -66,6 +66,31 @@ function DeferredToasters() {
   );
 }
 
+function NavigationIntentPreloader() {
+  useEffect(() => {
+    const warmRoute = (event) => {
+      const link = event.target?.closest?.('a[href]');
+      if (!link) return;
+      try {
+        const url = new URL(link.href, window.location.href);
+        if (url.origin !== window.location.origin) return;
+        preloadRoute(url.pathname);
+      } catch {
+        // Ignore malformed/non-navigational href values.
+      }
+    };
+
+    document.addEventListener('pointerdown', warmRoute, { passive: true });
+    document.addEventListener('focusin', warmRoute);
+    return () => {
+      document.removeEventListener('pointerdown', warmRoute);
+      document.removeEventListener('focusin', warmRoute);
+    };
+  }, []);
+
+  return null;
+}
+
 function RouteFallback() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background">
@@ -93,43 +118,46 @@ function TripRequestsRedirect() {
 
 const AuthenticatedApp = () => {
   return (
-    <Suspense fallback={<RouteFallback />}>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/tours" element={<Tours />} />
-          <Route path="/tours/:slug" element={<TourDetails />} />
-          <Route path="/package/:id" element={<PackageDetails />} />
-          <Route path="/guides" element={<Guides />} />
-          <Route path="/guides/:id" element={<GuideDetails />} />
-          <Route path="/agencies" element={<Agencies />} />
-          <Route path="/agencies/:id" element={<AgencyProfile />} />
-          <Route path="/request-trip/:guideId" element={<TripRequest />} />
-          <Route path="/request-trip/agency/:guideId" element={<TripRequest />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/blog" element={<Blog />} />
-          <Route path="/blog/:slug" element={<ArticleDetails />} />
-          <Route path="/destinations/:citySlug" element={<CityPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
-          <Route path="/profile/settings" element={<SettingsPage />} />
-          <Route path="/profile/requests" element={<RequestsPage />} />
-          <Route path="/profile/requests/:id" element={<RequestDetailPage />} />
-          <Route path="/find-jobs" element={<FindJobs />} />
-          <Route path="/my-trips" element={<MyTripRequests />} />
-        </Route>
-        <Route path="/ai-assistant" element={<AIAssistant />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Signup />} />
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/guide-onboarding" element={<GuideOnboarding />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/:section" element={<Dashboard />} />
-        <Route path="/chat/:guideId" element={<Chat />} />
-        <Route path="/trip-requests" element={<TripRequestsRedirect />} />
-        <Route path="*" element={<PageNotFound />} />
-      </Routes>
-    </Suspense>
+    <>
+      <NavigationIntentPreloader />
+      <Suspense fallback={<RouteFallback />}>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/tours" element={<Tours />} />
+            <Route path="/tours/:slug" element={<TourDetails />} />
+            <Route path="/package/:id" element={<PackageDetails />} />
+            <Route path="/guides" element={<Guides />} />
+            <Route path="/guides/:id" element={<GuideDetails />} />
+            <Route path="/agencies" element={<Agencies />} />
+            <Route path="/agencies/:id" element={<AgencyProfile />} />
+            <Route path="/request-trip/:guideId" element={<TripRequest />} />
+            <Route path="/request-trip/agency/:guideId" element={<TripRequest />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:slug" element={<ArticleDetails />} />
+            <Route path="/destinations/:citySlug" element={<CityPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/settings" element={<SettingsPage />} />
+            <Route path="/profile/requests" element={<RequestsPage />} />
+            <Route path="/profile/requests/:id" element={<RequestDetailPage />} />
+            <Route path="/find-jobs" element={<FindJobs />} />
+            <Route path="/my-trips" element={<MyTripRequests />} />
+          </Route>
+          <Route path="/ai-assistant" element={<AIAssistant />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Signup />} />
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/guide-onboarding" element={<GuideOnboarding />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/:section" element={<Dashboard />} />
+          <Route path="/chat/:guideId" element={<Chat />} />
+          <Route path="/trip-requests" element={<TripRequestsRedirect />} />
+          <Route path="*" element={<PageNotFound />} />
+        </Routes>
+      </Suspense>
+    </>
   );
 };
 
