@@ -74,3 +74,16 @@ test('Phase 2B migration mirrors the canonical RPC and profile columns', async (
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.guide_reject_trip_slot\(request_id uuid\)/);
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.finalize_selected_trip_slot\(request_id uuid\)/);
 });
+
+test('live trip request code does not query or write legacy lifecycle columns', async () => {
+  const files = await Promise.all([
+    source('../src/hooks/useSupabase.js'),
+    source('../src/pages/GuideDetails.jsx'),
+    source('../src/pages/AgencyProfile.jsx'),
+  ]);
+  const liveCode = files.join('\n');
+
+  assert.doesNotMatch(liveCode, /\btraveler_id\b|\bdestination_city\b|\badult_count\b|\bchild_count\b/);
+  assert.match(liveCode, /user_id/);
+  assert.match(liveCode, /selected_guide_id/);
+});

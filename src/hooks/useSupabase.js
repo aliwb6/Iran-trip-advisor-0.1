@@ -540,23 +540,28 @@ export function useSubmitTripRequest() {
     setLoading(true);
     setError(null);
     try {
+      if (!payload.travelerId) throw new Error('Please sign in to submit a trip request.');
+
+      const destination = payload.destinationCity ? [payload.destinationCity] : [];
+      const adults = Math.max(1, Number(payload.adults) || 1);
+      const children = Math.max(0, Number(payload.children) || 0);
+      const assistance = [
+        payload.needsTransport ? 'Transportation' : null,
+        payload.needsAccommodation ? 'Accommodation' : null,
+      ].filter(Boolean);
+
       const { error: supabaseError } = await supabase.from('trip_requests').insert([{
-        guide_id: payload.guideId || null,
-        agency_id: payload.agencyId || null,
-        traveler_id: payload.travelerId || null,
-        traveler_name: payload.travelerName || null,
-        traveler_email: payload.travelerEmail || null,
-        traveler_phone: payload.travelerPhone || null,
-        country: payload.country || null,
-        destination_city: payload.destinationCity || null,
-        adult_count: payload.adults || 1,
-        child_count: payload.children || 0,
-        language: payload.language || null,
-        needs_transport: payload.needsTransport || false,
-        needs_accommodation: payload.needsAccommodation || false,
-        accommodation_type: payload.accommodationType || null,
+        user_id: payload.travelerId,
+        destination,
+        start_date: payload.startDate || null,
+        end_date: payload.endDate || null,
+        adults,
+        children,
+        num_people: adults + children,
+        guide_languages: payload.language ? [payload.language] : [],
+        assistance,
         requirements: payload.requirements || null,
-        status: 'pending',
+        status: 'active',
       }]);
 
       if (supabaseError) throw supabaseError;

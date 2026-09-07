@@ -44,3 +44,14 @@ test('selection, rejection and finalization operate only on the current round', 
   assert.match(migration, /proposal_round = v_request\.proposal_round/);
   assert.match(migration, /proposal_round = v_round/);
 });
+
+test('traveler proposal views use the current round and canonical request count', async () => {
+  const requestsPage = await source('../src/pages/profile/RequestsPage.jsx');
+  const requestCard = await source('../src/components/profile/RequestCard.jsx');
+  const proposals = await source('../src/components/profile/ProposalsPanel.jsx');
+
+  assert.match(requestsPage, /slotCount=\{Number\(r\.proposals_count\) \|\| 0\}/);
+  assert.doesNotMatch(requestsPage, /\.neq\('status', 'rejected'\)/);
+  assert.match(requestCard, /proposalRound=\{request\.proposalRound\}/);
+  assert.match(proposals, /\.eq\('proposal_round', proposalRound\)/);
+});

@@ -147,7 +147,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
               }`}
             >
               {isFull ? (
-                <><AlertCircle className="w-4 h-4" /> {t('request_closed_5_5')}</>
+                <><AlertCircle className="w-4 h-4" /> Request closed ({req.accepted_count}/{maxProposals})</>
               ) : (
                 <><Send className="w-4 h-4" /> {t('apply')}</>
               )}

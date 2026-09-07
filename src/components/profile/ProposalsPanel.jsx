@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
 import { toast } from 'sonner';
+import { touristSelectGuide } from '@/api/tourRequestFlow';
 import {
   Dialog,
   DialogContent,
@@ -230,7 +231,7 @@ function ProposalDetailModal({ slot, onClose }) {
 
 // ── Level 2: single proposal row ─────────────────────────────────────────────
 
-function ProposalRow({ slot, onReject, rejecting }) {
+function ProposalRow({ slot, onReject, onSelect, rejecting, selecting, canSelect }) {
   const { t, lang, dir } = useI18n();
   const [showDetail, setShowDetail] = useState(false);
   const guide = slot.guide || {};
@@ -290,6 +291,16 @@ function ProposalRow({ slot, onReject, rejecting }) {
             {lang === 'fa' ? 'رد' : lang === 'ar' ? 'رفض' : 'Reject'}
           </button>
         )}
+        {canSelect && ['accepted', 'chatting'].includes(slot.status) && (
+          <button
+            onClick={() => onSelect(slot)}
+            disabled={selecting}
+            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+          >
+            {selecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+            {selecting ? 'Selecting…' : 'Select guide'}
+          </button>
+        )}
       </div>
 
       {showDetail && (
@@ -301,18 +312,21 @@ function ProposalRow({ slot, onReject, rejecting }) {
 
 // ── Level 2: proposals list panel ────────────────────────────────────────────
 
-export default function ProposalsPanel({ requestId }) {
+export default function ProposalsPanel({ requestId, proposalRound = 1, requestStatus }) {
   const { t, lang, dir } = useI18n();
   const queryClient = useQueryClient();
   const [rejectingId, setRejectingId] = useState(null);
+  const [selectingId, setSelectingId] = useState(null);
+  const canSelect = ['open', 'active', 'pending', 'proposals_ready'].includes(requestStatus);
 
   const { data: slots = [], isLoading } = useQuery({
-    queryKey: ['trip_slots_proposals', requestId],
+    queryKey: ['trip_slots_proposals', requestId, proposalRound],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('trip_slots')
         .select('*, guide:profiles!trip_slots_guide_id_fkey(id, full_name, avatar_url, rating, role, city)')
         .eq('trip_request_id', requestId)
+        .eq('proposal_round', proposalRound)
         .order('accepted_at', { ascending: false });
       if (error) throw error;
       return data ?? [];
@@ -340,6 +354,25 @@ export default function ProposalsPanel({ requestId }) {
     toast.success(lang === 'fa' ? 'پیشنهاد رد شد و در فهرست باقی ماند.' : lang === 'ar' ? 'تم رفض العرض وسيبقى في القائمة.' : 'Proposal rejected and kept in the list.');
   };
 
+  const selectProposal = async (slot) => {
+    if (!window.confirm('Select this guide or agency for your trip?')) return;
+    setSelectingId(slot.id);
+    try {
+      await touristSelectGuide(requestId, slot.guide_id);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['trip_slots_proposals', requestId] }),
+        queryClient.invalidateQueries({ queryKey: ['trip_requests'] }),
+        queryClient.invalidateQueries({ queryKey: ['trip_request', requestId] }),
+        queryClient.invalidateQueries({ queryKey: ['trip_request_detail', requestId] }),
+      ]);
+      toast.success('Guide selected. Waiting for the provider to confirm the booking.');
+    } catch (error) {
+      toast.error(error?.message || 'Could not select this guide.');
+    } finally {
+      setSelectingId(null);
+    }
+  };
+
   return (
     <div className="pt-4 border-t border-border/30" dir={dir}>
       <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
@@ -357,7 +390,15 @@ export default function ProposalsPanel({ requestId }) {
       ) : (
         <div className="space-y-2">
           {slots.map(slot => (
-            <ProposalRow key={slot.id} slot={slot} onReject={rejectProposal} rejecting={rejectingId === slot.id} />
+            <ProposalRow
+              key={slot.id}
+              slot={slot}
+              onReject={rejectProposal}
+              onSelect={selectProposal}
+              rejecting={rejectingId === slot.id}
+              selecting={selectingId === slot.id}
+              canSelect={canSelect}
+            />
           ))}
         </div>
       )}

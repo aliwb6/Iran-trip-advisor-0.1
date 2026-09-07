@@ -11,6 +11,9 @@ const STATUS_STYLES = {
   waiting:   'bg-amber-500/15 text-amber-500 border-amber-400/30',
   received:  'bg-accent/15 text-accent border-accent/30',
   completed: 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30',
+  confirmed: 'bg-emerald-500/15 text-emerald-400 border-emerald-400/30',
+  booked:    'bg-emerald-500/15 text-emerald-400 border-emerald-400/30',
+  cancelled: 'bg-red-500/15 text-red-500 border-red-400/30',
   expired:   'bg-muted/40 text-muted-foreground border-border/40',
 };
 
@@ -19,18 +22,27 @@ const STATUS_LABELS = {
     waiting:   'Waiting For Proposals',
     received:  'Proposals Received',
     completed: 'Completed',
+    confirmed: 'Guide Selected',
+    booked:    'Booked',
+    cancelled: 'Cancelled',
     expired:   'Expired',
   },
   fa: {
     waiting:   'در انتظار پیشنهاد',
     received:  'پیشنهاد دریافت شد',
     completed: 'انجام شده',
+    confirmed: 'راهنما انتخاب شد',
+    booked:    'رزرو شد',
+    cancelled: 'لغو شد',
     expired:   'منقضی',
   },
   ar: {
     waiting:   'بانتظار العروض',
     received:  'تم استلام العروض',
     completed: 'مكتمل',
+    confirmed: 'تم اختيار المرشد',
+    booked:    'محجوز',
+    cancelled: 'ملغى',
     expired:   'منتهي',
   },
 };
@@ -71,7 +83,9 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
     seeDetails:     lang === 'fa' ? 'مشاهده جزئیات' : lang === 'ar' ? 'عرض التفاصيل' : 'See Details',
   };
 
-  const guidesAcceptedLabel = t('card_guides_accepted').replace('{n}', slotCount);
+  const guidesAcceptedLabel = t('card_guides_accepted')
+    .replace('{n}', slotCount)
+    .replace('{max}', request.maxProposals);
   const proposalsBtnLabel   = proposalsOpen ? t('card_hide_proposals') : t('card_view_proposals');
 
   return (
@@ -211,7 +225,11 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
             style={{ overflow: 'hidden' }}
           >
             <div className="mt-4">
-              <ProposalsPanel requestId={request.id} />
+              <ProposalsPanel
+                requestId={request.id}
+                proposalRound={request.proposalRound}
+                requestStatus={request.canonicalStatus}
+              />
             </div>
           </motion.div>
         )}

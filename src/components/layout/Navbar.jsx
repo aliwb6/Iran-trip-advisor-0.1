@@ -42,19 +42,17 @@ export default function Navbar() {
 
     async function fetchCount() {
       try {
-        const { count, error } = await supabase
+        const { data, error } = await supabase
           .from('trip_requests')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'open');
-        if (error) {
-          // status column may not exist — fallback to total count
-          const { count: totalCount } = await supabase
-            .from('trip_requests')
-            .select('id', { count: 'exact', head: true });
-          if (!cancelled) setOpenRequestCount(totalCount || 0);
-        } else {
-          if (!cancelled) setOpenRequestCount(count || 0);
-        }
+          .select('id, expires_at, proposals_count, max_proposals')
+          .in('status', ['open', 'active', 'pending']);
+        if (error) throw error;
+        const availableCount = (data || []).filter(request => {
+          const expired = request.expires_at && new Date(request.expires_at).getTime() <= Date.now();
+          const max = Math.max(1, Number(request.max_proposals) || 5);
+          return !expired && (Number(request.proposals_count) || 0) < max;
+        }).length;
+        if (!cancelled) setOpenRequestCount(availableCount);
       } catch (e) {
         // silently fail
       }

@@ -13,6 +13,7 @@ import {
   completeTripRequest,
   cancelTripRequest,
 } from '../api/tripRequests';
+import { touristSelectGuide } from '../api/tourRequestFlow';
 import TripRequestForm from '../components/trips/TripRequestForm';
 import { Button } from '@/components/ui/button';
 import {
@@ -137,7 +138,7 @@ function ProposalProgress({ proposalsCount, maxProposals }) {
   );
 }
 
-function GuideSlot({ slot }) {
+function GuideSlot({ slot, canSelect, onSelect, selecting }) {
   const navigate = useNavigate();
   const guideName = slot.guide?.full_name || 'Guide';
   const avatarUrl = slot.guide?.avatar_url;
@@ -173,15 +174,28 @@ function GuideSlot({ slot }) {
           <p className={`font-body text-xs ${slotStatusLabel.color}`}>{slotStatusLabel.label}</p>
         </div>
       </div>
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() => navigate(`/chat/${slot.guide_id}`)}
-        className="font-body text-xs rounded-lg h-7 border-border/60 gap-1"
-      >
-        <MessageCircle className="w-3 h-3" />
-        Message
-      </Button>
+      <div className="flex items-center gap-2">
+        {canSelect && ['accepted', 'chatting'].includes(slot.status) && (
+          <Button
+            size="sm"
+            onClick={() => onSelect(slot)}
+            disabled={selecting}
+            className="font-body text-xs rounded-lg h-7 bg-emerald-600 hover:bg-emerald-700 text-white"
+          >
+            {selecting ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
+            {selecting ? 'Selecting…' : 'Select'}
+          </Button>
+        )}
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => navigate(`/chat/${slot.guide_id}`)}
+          className="font-body text-xs rounded-lg h-7 border-border/60 gap-1"
+        >
+          <MessageCircle className="w-3 h-3" />
+          Message
+        </Button>
+      </div>
     </div>
   );
 }
@@ -190,6 +204,7 @@ function TripCard({ trip, onChanged }) {
   const [rebroadcasting, setRebroadcasting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [selectingId, setSelectingId] = useState(null);
   const [, refreshExpiry] = useState(0);
 
   useEffect(() => {
@@ -211,6 +226,21 @@ function TripCard({ trip, onChanged }) {
   const activeSlots = (trip.slots || []).filter(slot => slot.status !== 'rejected');
   const canComplete = canCompleteBookedTrip(trip);
   const canCancel = CANCELLABLE_STATUSES.has(trip.status) && effectiveStatus !== 'expired';
+  const canSelect = OPEN_REQUEST_STATUSES.has(trip.status) && effectiveStatus !== 'expired';
+
+  const handleSelect = async (slot) => {
+    if (!window.confirm('Select this guide or agency for your trip?')) return;
+    setSelectingId(slot.id);
+    try {
+      await touristSelectGuide(trip.id, slot.guide_id);
+      toast.success('Guide selected. Waiting for the provider to confirm the booking.');
+      await onChanged();
+    } catch (err) {
+      toast.error(err.message || 'Could not select this guide.');
+    } finally {
+      setSelectingId(null);
+    }
+  };
 
   const handleRebroadcast = async () => {
     setRebroadcasting(true);
@@ -329,7 +359,15 @@ function TripCard({ trip, onChanged }) {
             <p className="font-body text-xs font-medium text-muted-foreground uppercase tracking-wider">
               Guide proposals
             </p>
-            {activeSlots.map(slot => <GuideSlot key={slot.id} slot={slot} />)}
+            {activeSlots.map(slot => (
+              <GuideSlot
+                key={slot.id}
+                slot={slot}
+                canSelect={canSelect}
+                onSelect={handleSelect}
+                selecting={selectingId === slot.id}
+              />
+            ))}
           </div>
         )}
 

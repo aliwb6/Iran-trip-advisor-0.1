@@ -25,6 +25,7 @@ import { checkProfileCompletion } from '@/lib/profileCompletion';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
 import { parseLanguages, popularLanguages } from '@/data/languages';
 import { iranianDestinations } from '@/data/iranianCities';
+import { cancelTripRequest } from '@/api/tripRequests';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -2218,7 +2219,6 @@ function EmptySection({ section }) {
 function MyTripRequestsView({ userId }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingRequest, setEditingRequest] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
 
   useEffect(() => {
@@ -2236,11 +2236,17 @@ function MyTripRequestsView({ userId }) {
     load();
   }, [userId]);
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Delete this trip request?')) return;
-    await supabase.from('trip_requests').delete().eq('id', id);
-    setRequests(prev => prev.filter(r => r.id !== id));
-    toast.success('Trip request deleted.');
+  const handleCancel = async (id) => {
+    if (!window.confirm('Cancel this trip request?')) return;
+    try {
+      await cancelTripRequest(id);
+      setRequests(prev => prev.map(request => (
+        request.id === id ? { ...request, status: 'cancelled' } : request
+      )));
+      toast.success('Trip request cancelled.');
+    } catch (error) {
+      toast.error(error?.message || 'Could not cancel this trip request.');
+    }
   };
 
   const statusColor = (s) => {
@@ -2254,7 +2260,7 @@ function MyTripRequestsView({ userId }) {
       <div className="flex items-center justify-between">
         <h2 className="text-white font-bold text-xl">My Trip Requests</h2>
         <button
-          onClick={() => { setEditingRequest(null); setFormOpen(true); }}
+          onClick={() => setFormOpen(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(178,85%,32%)] text-white text-sm font-medium hover:bg-[hsl(178,85%,28%)] transition"
         >
           <Plus className="w-4 h-4" />
@@ -2299,20 +2305,16 @@ function MyTripRequestsView({ userId }) {
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={() => { setEditingRequest(req); setFormOpen(true); }}
-                  className="p-2 rounded-lg bg-white/[0.06] text-white/50 hover:text-white hover:bg-white/10 transition"
-                  title="Edit"
-                >
-                  <Edit2 className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  onClick={() => handleDelete(req.id)}
-                  className="p-2 rounded-lg bg-white/[0.06] text-white/50 hover:text-red-400 hover:bg-red-500/10 transition"
-                  title="Delete"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                {['open', 'active', 'pending', 'proposals_ready', 'confirmed', 'booked'].includes(req.status) &&
+                  (!req.expires_at || new Date(req.expires_at).getTime() > Date.now()) && (
+                  <button
+                    onClick={() => handleCancel(req.id)}
+                    className="p-2 rounded-lg bg-white/[0.06] text-white/50 hover:text-red-400 hover:bg-red-500/10 transition"
+                    title="Cancel"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -2321,7 +2323,7 @@ function MyTripRequestsView({ userId }) {
 
       <TripRequestForm
         isOpen={formOpen}
-        onClose={() => { setFormOpen(false); setEditingRequest(null); }}
+        onClose={() => setFormOpen(false)}
         onSuccess={async () => {
           const { data } = await supabase
             .from('trip_requests')
@@ -2330,7 +2332,6 @@ function MyTripRequestsView({ userId }) {
             .order('created_at', { ascending: false });
           setRequests(data || []);
         }}
-        initialData={editingRequest}
       />
     </div>
   );

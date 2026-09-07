@@ -55,29 +55,15 @@ export default function RequestsPage() {
     enabled: !!user?.id,
   });
 
-  // Batched slot-count query: one round-trip for ALL requests
-  const { data: slotCountMap = {} } = useQuery({
-    queryKey: ['trip_slots_counts', requests.map(r => r.id)],
-    queryFn: async () => {
-      const ids = requests.map(r => r.id);
-      if (ids.length === 0) return {};
-      const { data } = await supabase
-        .from('trip_slots')
-        .select('trip_request_id')
-        .in('trip_request_id', ids)
-        .neq('status', 'rejected');
-      const map = {};
-      (data || []).forEach(row => {
-        map[row.trip_request_id] = (map[row.trip_request_id] || 0) + 1;
-      });
-      return map;
-    },
-    enabled: requests.length > 0,
-    staleTime: 30_000,
-  });
+  const isOverdue = (r) => Boolean(
+    r.expires_at &&
+    ['open', 'active', 'pending', 'proposals_ready'].includes(r.status) &&
+    new Date(r.expires_at).getTime() <= Date.now()
+  );
 
   const isActiveRequest = (r) =>
-    ['active', 'waiting', 'received'].includes(r.status) || r.status == null;
+    !isOverdue(r) &&
+    (['open', 'active', 'pending', 'proposals_ready', 'confirmed', 'booked', 'waiting', 'received'].includes(r.status) || r.status == null);
 
   const filtered = useMemo(() => {
     return requests
@@ -98,6 +84,8 @@ export default function RequestsPage() {
       ? (tourLabel ? `${holidayLabel} · ${tourLabel}` : holidayLabel)
       : tourLabel;
 
+    const effectiveStatus = isOverdue(r) ? 'expired' : r.status;
+
     return {
       id:            r.id,
       title:         r.title
@@ -115,7 +103,12 @@ export default function RequestsPage() {
       accommodation:  hasAccomm    ? (lang === 'fa' ? 'بله' : lang === 'ar' ? 'نعم' : 'Yes') : null,
       tourType:       displayType  || null,
       requirements:  r.requirements || r.notes,
-      status:        (['active', 'waiting'].includes(r.status)) ? 'waiting' : (r.status || 'waiting'),
+      status:        (['open', 'active', 'pending', 'waiting'].includes(effectiveStatus))
+        ? 'waiting'
+        : effectiveStatus === 'proposals_ready' ? 'received' : (effectiveStatus || 'waiting'),
+      canonicalStatus: effectiveStatus || 'active',
+      proposalRound: Math.max(1, Number(r.proposal_round) || 1),
+      maxProposals: Math.max(1, Number(r.max_proposals) || 5),
     };
   };
 
@@ -239,7 +232,7 @@ export default function RequestsPage() {
               <RequestCard
                 key={r.id}
                 request={mapToCard(r)}
-                slotCount={slotCountMap[r.id] ?? 0}
+                slotCount={Number(r.proposals_count) || 0}
                 onOpen={req => navigate(`/profile/requests/${req.id}`)}
               />
             ))}

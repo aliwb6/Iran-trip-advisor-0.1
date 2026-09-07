@@ -1281,7 +1281,7 @@ export default function AIAssistant() {
           if (activeId) {
             appendMessage(activeId, {
               role: 'assistant',
-              content: "Done! 🎉 Guides will reach out soon — the first 5 to accept can message you directly.",
+              content: "Done! 🎉 Guides will reach out soon, up to the request's proposal limit.",
             });
           }
         }}

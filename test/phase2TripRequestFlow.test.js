@@ -8,11 +8,15 @@ async function source(path) {
 
 test('guide selection uses the atomic RPC and never directly updates trip_requests', async () => {
   const flow = await source('../src/api/tourRequestFlow.js');
+  const proposals = await source('../src/components/profile/ProposalsPanel.jsx');
+  const trips = await source('../src/pages/MyTripRequests.jsx');
   assert.match(flow, /rpc\('select_trip_guide', \{\s*request_id: requestId,\s*selected_guide_id: selectedGuideId,/);
   const selection = flow.slice(flow.indexOf('export async function touristSelectGuide'));
   assert.doesNotMatch(selection, /from\('trip_requests'\)\s*\.update/);
   assert.match(selection, /if \(error\) throw error/);
   assert.match(selection, /if \(!data\) throw new Error/);
+  assert.match(proposals, /touristSelectGuide\(requestId, slot\.guide_id\)/);
+  assert.match(trips, /touristSelectGuide\(trip\.id, slot\.guide_id\)/);
 });
 
 test('proposal availability uses max_proposals and leaves cap/expiry enforcement to Remote', async () => {
@@ -22,7 +26,9 @@ test('proposal availability uses max_proposals and leaves cap/expiry enforcement
   assert.match(flow, /!isExpired\(request\.expires_at\)/);
   const submit = flow.slice(flow.indexOf('export async function guideSubmitProposal'), flow.indexOf('export async function touristSelectGuide'));
   assert.doesNotMatch(submit, />= 5/);
-  assert.match(submit, /Remote validation\/unique constraints are authoritative/i);
+  assert.match(submit, /\.eq\('proposal_round', proposalRound\)/);
+  assert.match(submit, /trip_slots_request_guide_round_unique\|duplicate key/);
+  assert.match(submit, /proposal limit\|not accepting proposals/);
 });
 
 test('reject UI and canonical RPC block terminal proposal states and refresh request state', async () => {

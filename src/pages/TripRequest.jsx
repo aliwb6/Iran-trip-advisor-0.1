@@ -576,6 +576,7 @@ export default function TripRequest() {
     agencyId: isAgencyRoute ? guideId : null,
     ...traveler,
     destinationCity: initialDestination || null,
+    startDate: initialDate || null,
     adults: initialAdults,
     children: initialChildren,
     language: s1.language || null,

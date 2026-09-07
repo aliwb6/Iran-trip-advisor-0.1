@@ -302,9 +302,9 @@ export default function GuideDetails() {
           const { data: tripData } = await supabase
             .from('trip_requests')
             .select('id')
-            .or(`guide_id.eq.${id},agency_id.eq.${id}`)
-            .eq('traveler_id', user.id)
-            .in('status', ['confirmed', 'completed'])
+            .eq('selected_guide_id', id)
+            .eq('user_id', user.id)
+            .in('status', ['confirmed', 'booked', 'completed'])
             .limit(1);
           unlocked = Array.isArray(tripData) && tripData.length > 0;
         }
