@@ -19,7 +19,7 @@ export default function PaymentHistoryView() {
   return (
     <section>
       <h2 className="text-xl font-bold text-white">Payment History</h2>
-      <p className="mt-1 text-sm text-white/40">Server-recorded transactions only. Payment processing is not yet available.</p>
+      <p className="mt-1 text-sm text-white/40">Server-recorded payment attempts and verified provider transactions only.</p>
       {payments.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] py-16 text-center">
           <CreditCard className="mx-auto h-8 w-8 text-white/20" />
