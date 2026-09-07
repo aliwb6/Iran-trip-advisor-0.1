@@ -22,6 +22,7 @@ const SECURITY_FAILURES = new Set([
   'amount_mismatch',
   'currency_mismatch',
   'booking_not_found',
+  'booking_not_payable',
 ]);
 
 export const config = {
