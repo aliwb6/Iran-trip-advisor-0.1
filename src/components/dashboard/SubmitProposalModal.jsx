@@ -308,6 +308,7 @@ export default function SubmitProposalModal({
   const destStr     = cityList(request?.destination).join(', ');
   const duration    = daysBetween(request?.start_date, request?.end_date);
   const totalPeople = (request?.adults ?? 0) + (request?.children ?? 0);
+  const maxProposals = Math.max(1, Number(request?.max_proposals) || 5);
   const subtitleParts = [
     destStr || null,
     duration ? `${duration} days` : null,
@@ -385,7 +386,7 @@ export default function SubmitProposalModal({
             </DialogHeader>
             <p className="text-white/50 text-sm mt-1">{subtitle}</p>
             <span className="inline-block mt-2 text-[10px] font-medium text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-full px-3 py-1">
-              Request closes when 5 guides apply
+              Request closes when {maxProposals} guide{maxProposals === 1 ? '' : 's'} apply
             </span>
           </div>
 
