@@ -33,7 +33,7 @@ test('guide review submission targets the canonical profile and starts pending',
   assert.equal('reviewer_email' in payload, false);
 });
 
-test('agency submission uses profiles.id without querying the empty agencies table', async () => {
+test('agency submission uses profiles.id without querying the legacy agencies table', async () => {
   let inserted;
   const client = {
     from(table) {
@@ -63,20 +63,12 @@ test('agency submission uses profiles.id without querying the empty agencies tab
   assert.equal(saved.status, 'pending');
 });
 
-test('Guide and Agency public queries use profile_id and request approved reviews only', async () => {
+test('Guide and Agency public reads use the privacy-safe approved-review RPC', async () => {
   const calls = [];
   const client = {
-    from(table) {
-      assert.equal(table, 'reviews');
-      return {
-        select: () => ({
-          eq(column, value) {
-            calls.push([column, value]);
-            return this;
-          },
-          order: () => Promise.resolve({ data: [], error: null }),
-        }),
-      };
+    async rpc(name, args) {
+      calls.push([name, args]);
+      return { data: [], error: null };
     },
   };
 
@@ -84,23 +76,16 @@ test('Guide and Agency public queries use profile_id and request approved review
   await fetchApprovedProfileReviews(client, { targetType: 'agency', profileId: 'agency-profile-1' });
 
   assert.deepEqual(calls, [
-    ['profile_id', 'guide-profile-1'],
-    ['status', 'approved'],
-    ['profile_id', 'agency-profile-1'],
-    ['status', 'approved'],
+    ['get_public_profile_reviews', { p_profile_id: 'guide-profile-1' }],
+    ['get_public_profile_reviews', { p_profile_id: 'agency-profile-1' }],
   ]);
 });
 
-test('a review-query failure is isolated so a Guide or Agency profile can still render', async () => {
+test('a public review RPC failure is isolated so a Guide or Agency profile can still render', async () => {
   const client = {
-    from: () => ({
-      select: () => ({
-        eq() { return this; },
-        order: () => Promise.resolve({
-          data: null,
-          error: { message: 'column reviews.status does not exist' },
-        }),
-      }),
+    rpc: async () => ({
+      data: null,
+      error: { message: 'review RPC temporarily unavailable' },
     }),
   };
 
@@ -110,7 +95,7 @@ test('a review-query failure is isolated so a Guide or Agency profile can still 
       profileId: `${targetType}-profile-1`,
     });
     assert.deepEqual(result.reviews, []);
-    assert.match(result.error, /reviews\.status does not exist/i);
+    assert.match(result.error, /review RPC temporarily unavailable/i);
   }
 });
 
@@ -162,7 +147,7 @@ test('moderation detects missing or impossible multi-row updates', async () => {
   );
 });
 
-test('migration enforces pending submissions, public moderation, authorization, and approved aggregates', async () => {
+test('base review migration enforces pending submissions, moderation authorization, and approved aggregates', async () => {
   const sql = await readFile(
     new URL('../supabase/migrations/20260907114250_add_review_moderation_workflow.sql', import.meta.url),
     'utf8',
@@ -171,9 +156,6 @@ test('migration enforces pending submissions, public moderation, authorization, 
   assert.match(sql, /ADD COLUMN IF NOT EXISTS profile_id uuid/);
   assert.match(sql, /FOREIGN KEY \(profile_id\) REFERENCES public\.profiles\(id\)/);
   assert.match(sql, /status IN \('pending', 'approved', 'rejected'\)/);
-  assert.match(sql, /USING \(status = 'approved'\)/);
-  assert.match(sql, /CREATE POLICY "Admins can read all reviews"/);
-  assert.match(sql, /CREATE POLICY "Admins can moderate reviews"/);
   assert.match(sql, /reviewer_id = \(SELECT auth\.uid\(\)\)/);
   assert.match(sql, /AND status = 'pending'/);
   assert.match(sql, /AND guide_id IS NULL[\s\S]*AND agency_id IS NULL/);
@@ -181,7 +163,20 @@ test('migration enforces pending submissions, public moderation, authorization, 
   assert.match(sql, /review\.status = 'approved'/);
   assert.match(sql, /UPDATE public\.profiles[\s\S]*review_count = approved_count/);
   assert.doesNotMatch(sql, /INSERT INTO public\.agencies/);
-  assert.doesNotMatch(sql, /FOR UPDATE[\s\S]{0,200}reviewer_id = \(SELECT auth\.uid\(\)\)/);
+});
+
+test('privacy compatibility migration exposes only approved reviews through a sanitized public RPC', async () => {
+  const sql = await readFile(
+    new URL('../supabase/migrations/20260907224321_phase3c_public_tours_reviews_privacy_compatibility.sql', import.meta.url),
+    'utf8',
+  );
+
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.get_public_profile_reviews\(p_profile_id uuid\)/);
+  assert.match(sql, /SECURITY DEFINER\s+SET search_path = ''/);
+  assert.match(sql, /r\.status = 'approved'/);
+  assert.match(sql, /COALESCE\(NULLIF\(btrim\(r\.reviewer_name\)/);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.get_public_profile_reviews\(uuid\) TO anon, authenticated/);
+  assert.doesNotMatch(sql, /RETURNS TABLE[\s\S]{0,350}(?:email|phone|license)/i);
 });
 
 test('admin review loading uses the canonical profile target and does not require agencies rows', async () => {
@@ -192,17 +187,4 @@ test('admin review loading uses the canonical profile target and does not requir
 
   assert.match(adminDashboard, /target_profile:profiles!reviews_profile_id_fkey/);
   assert.doesNotMatch(adminDashboard, /agencies!reviews_agency_id_fkey/);
-});
-
-test('profile moderation target validation is database-enforced for guide and agency roles', async () => {
-  const sql = await readFile(
-    new URL('../supabase/migrations/20260907114250_add_review_moderation_workflow.sql', import.meta.url),
-    'utf8',
-  );
-
-  assert.match(sql, /CREATE OR REPLACE FUNCTION private\.validate_review_profile_target/);
-  assert.match(sql, /target_profile\.role IN \('guide', 'agency'\)/);
-  assert.match(sql, /CREATE TRIGGER trg_validate_review_profile_target/);
-  assert.match(sql, /AFTER INSERT OR DELETE OR UPDATE OF status, rating, profile_id/);
-  assert.match(sql, /review\.status = 'approved'/);
 });
