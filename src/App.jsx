@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClientInstance } from '@/lib/query-client';
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { I18nProvider } from '@/lib/i18n.jsx';
@@ -93,6 +93,35 @@ function NavigationIntentPreloader() {
   return null;
 }
 
+function PostLoginReturn() {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const from = location.state?.from;
+    if (!isAuthenticated && location.pathname === '/login' && typeof from === 'string') {
+      // Store only safe same-origin app paths. This survives Login's existing navigate('/').
+      if (from.startsWith('/') && !from.startsWith('//')) {
+        sessionStorage.setItem('ita-post-login-return', from);
+      }
+      return;
+    }
+
+    if (isLoadingAuth || !isAuthenticated) return;
+
+    const target = sessionStorage.getItem('ita-post-login-return');
+    if (!target) return;
+    sessionStorage.removeItem('ita-post-login-return');
+
+    if (target.startsWith('/') && !target.startsWith('//')) {
+      navigate(target, { replace: true });
+    }
+  }, [isAuthenticated, isLoadingAuth, location.pathname, location.state, navigate]);
+
+  return null;
+}
+
 function PublicStandaloneShell({ children }) {
   return <div className="public-site-shell min-h-screen">{children}</div>;
 }
@@ -129,6 +158,7 @@ function TripRequestsRedirect() {
 const AuthenticatedApp = () => {
   return (
     <>
+      <PostLoginReturn />
       <NavigationIntentPreloader />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
