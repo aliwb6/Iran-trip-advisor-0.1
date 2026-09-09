@@ -1,0 +1,1 @@
+-- No-op migration retained solely for exact local/remote migration-version parity.
