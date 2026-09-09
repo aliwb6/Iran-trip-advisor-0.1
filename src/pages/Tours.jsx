@@ -7,10 +7,15 @@ import { useTours, FALLBACK_IMAGE } from '@/hooks/useSupabase';
 import { matchesAnySelection, recommendedComparator } from '@/lib/listingFilters';
 import { destinationSelectionAliases } from '@/data/iranianCities';
 
-const DEFAULT_FILTERS = { purpose: 'all', theme: 'all', duration: 'all', city: [], price: 'all' };
+const DEFAULT_FILTERS = {
+  purpose: 'all',
+  theme: 'all',
+  duration: 'all',
+  city: [],
+  price: 'all',
+  tourType: 'all',
+};
 
-// TourCard expects multilingual objects ({ en, fa, ar }) for title/desc/cities/highlights.
-// Supabase stores flat strings, so we wrap them here without changing the TourCard UI.
 const toMultilangText = (val) => {
   if (val && typeof val === 'object' && !Array.isArray(val)) return val;
   const v = val ?? '';
@@ -41,22 +46,30 @@ const pickImage = (tour) => {
   return FALLBACK_IMAGE;
 };
 
-// Difficulty ordering, easiest → hardest. Tours with an unknown/missing
-// difficulty sort to the end on "easiest" and to the front on "hardest" via
-// the rank fallback below.
 const DIFFICULTY_RANK = { easy: 1, moderate: 2, challenging: 3 };
-
-// Pull a numeric value for sorting, with safe fallbacks.
-const priceOf = (t) => Number(t.priceFrom ?? t.price_from ?? t.price) || 0;
-const durationOf = (t) => Number(t.duration) || 0;
-const difficultyRankOf = (t) => DIFFICULTY_RANK[t.difficulty] ?? Object.keys(DIFFICULTY_RANK).length + 1;
-const createdOf = (t) => {
-  const v = t.created_at ?? t.id;
-  return v == null ? 0 : v;
+const priceOf = (tour) => Number(tour.priceFrom ?? tour.price_from ?? tour.price) || 0;
+const durationOf = (tour) => Number(tour.duration) || 0;
+const difficultyRankOf = (tour) => DIFFICULTY_RANK[tour.difficulty] ?? Object.keys(DIFFICULTY_RANK).length + 1;
+const createdOf = (tour) => {
+  const value = tour.created_at ?? tour.id;
+  return value == null ? 0 : value;
 };
 
-// Sort after filtering. Recommended prioritizes the average traveler rating,
-// positive reviews and review volume; the other comparators use tour fields.
+const normalizedTourTypeOf = (tour) => String(tour.tour_type ?? tour.tourType ?? '')
+  .trim()
+  .toLocaleLowerCase()
+  .replaceAll('-', ' ')
+  .replaceAll('_', ' ');
+
+const matchesTourType = (tour, selectedType) => {
+  if (!selectedType || selectedType === 'all') return true;
+  const actual = normalizedTourTypeOf(tour);
+  if (!actual) return false;
+  if (selectedType === 'private') return actual === 'private' || actual.includes('private tour');
+  if (selectedType === 'group') return actual === 'group' || actual.includes('group tour');
+  return actual === selectedType;
+};
+
 const SORTERS = {
   recommended: recommendedComparator,
   price_asc: (a, b) => priceOf(a) - priceOf(b),
@@ -69,7 +82,7 @@ const SORTERS = {
     const av = createdOf(a);
     const bv = createdOf(b);
     if (av === bv) return 0;
-    return av < bv ? 1 : -1; // descending
+    return av < bv ? 1 : -1;
   },
 };
 
@@ -79,27 +92,27 @@ export default function Tours() {
   const [sortBy, setSortBy] = useState('recommended');
   const { tours: rawTours, loading, error } = useTours(filters);
   const selectedCities = destinationSelectionAliases(filters.city);
-  const tours = rawTours.filter(t => {
-    if (!matchesAnySelection([t.cities, t.city, t.location, t.destinations], selectedCities)) return false;
+
+  const tours = rawTours.filter((tour) => {
+    if (!matchesAnySelection([tour.cities, tour.city, tour.location, tour.destinations], selectedCities)) return false;
+    if (!matchesTourType(tour, filters.tourType)) return false;
+
     if (filters.price && filters.price !== 'all') {
-      const p = t.priceFrom || t.price_from || t.price || 0;
-      if (filters.price === 'budget' && p >= 1200) return false;
-      if (filters.price === 'mid' && (p < 1200 || p >= 2500)) return false;
-      if (filters.price === 'luxury' && p < 2500) return false;
+      const price = tour.priceFrom || tour.price_from || tour.price || 0;
+      if (filters.price === 'budget' && price >= 1200) return false;
+      if (filters.price === 'mid' && (price < 1200 || price >= 2500)) return false;
+      if (filters.price === 'luxury' && price < 2500) return false;
     }
     return true;
   });
 
   const sortedTours = SORTERS[sortBy] ? [...tours].sort(SORTERS[sortBy]) : tours;
-
   const loadingText = lang === 'fa' ? 'در حال بارگذاری تورها...' : lang === 'ar' ? 'جار تحميل الرحلات...' : 'Loading tours...';
   const errorTitle = lang === 'fa' ? 'بارگذاری تورها با خطا مواجه شد' : lang === 'ar' ? 'فشل تحميل الرحلات' : 'Failed to load tours';
 
   return (
     <div dir={dir} className="pt-24 pb-20 min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-        {/* Filters */}
         <TourFilters
           filters={filters}
           onChange={setFilters}
@@ -108,7 +121,6 @@ export default function Tours() {
           onSortChange={setSortBy}
         />
 
-        {/* States */}
         {loading ? (
           <div className="text-center py-24">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full border-2 border-border flex items-center justify-center animate-pulse">
@@ -125,52 +137,29 @@ export default function Tours() {
             <p className="font-body text-sm text-destructive mt-2">{error}</p>
           </div>
         ) : (
-          /* Tour Grid */
           <AnimatePresence mode="wait">
             {sortedTours.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center py-24"
-              >
-                {/* Persian carpet medallion decoration */}
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center py-24">
                 <div className="w-20 h-20 mx-auto mb-6 rounded-full border-2 border-border flex items-center justify-center">
                   <span className="text-3xl text-accent/40">❋</span>
                 </div>
                 <p className="font-heading text-2xl text-muted-foreground font-light">
                   {lang === 'fa' ? 'توری با این فیلترها یافت نشد' : lang === 'ar' ? 'لا توجد رحلات بهذه المعايير' : 'No tours match these filters'}
                 </p>
-                <button
-                  onClick={() => setFilters(DEFAULT_FILTERS)}
-                  className="mt-4 text-sm font-body text-accent hover:underline"
-                >
+                <button type="button" onClick={() => setFilters(DEFAULT_FILTERS)} className="mt-4 text-sm font-body text-accent hover:underline">
                   {lang === 'fa' ? 'پاک کردن فیلترها' : lang === 'ar' ? 'مسح الفلاتر' : 'Clear all filters'}
                 </button>
               </motion.div>
             ) : (
-              <motion.div
-                key="grid"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
-              >
-                {sortedTours.map((tour, i) => (
-                  <TourCard
-                    key={tour.id}
-                    tour={normalizeTour(tour)}
-                    image={pickImage(tour)}
-                    index={i}
-                  />
+              <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                {sortedTours.map((tour, index) => (
+                  <TourCard key={tour.id} tour={normalizeTour(tour)} image={pickImage(tour)} index={index} />
                 ))}
               </motion.div>
             )}
           </AnimatePresence>
         )}
 
-        {/* Bottom Persian carpet border */}
         {!loading && !error && tours.length > 0 && (
           <div className="mt-16 flex items-center gap-4">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
