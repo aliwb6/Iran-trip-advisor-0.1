@@ -41,7 +41,6 @@ const tourTypeOptions = [
 
 const sortOptions = [
   { key: 'recommended',     en: 'Highest Review',                 fa: 'بالاترین امتیاز نظرات',       ar: 'أعلى التقييمات' },
-  { key: 'newest',          en: 'Newest First',                   fa: 'جدیدترین اول',                 ar: 'الأحدث أولاً' },
   { key: 'price_asc',       en: 'Price: Low to High',             fa: 'قیمت: کم به زیاد',             ar: 'السعر: من الأقل للأعلى' },
   { key: 'price_desc',      en: 'Price: High to Low',             fa: 'قیمت: زیاد به کم',             ar: 'السعر: من الأعلى للأقل' },
   { key: 'duration_asc',    en: 'Duration: Shortest First',       fa: 'مدت: کوتاه‌ترین اول',          ar: 'المدة: الأقصر أولاً' },
