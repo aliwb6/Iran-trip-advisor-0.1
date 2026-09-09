@@ -86,8 +86,9 @@ test('booking surfaces use server snapshots and payment history contains no fake
   assert.match(bookings, /booking\.commission_amount/);
   assert.match(bookings, /booking\.deposit_amount/);
   assert.match(bookings, /booking\.guide_payout/);
-  assert.match(traveler, /trip\.booking\.price/);
-  assert.match(traveler, /trip\.booking\.deposit_amount/);
+  assert.match(traveler, /const booking = trip\.booking \|\| null/);
+  assert.match(traveler, /formatMoney\(booking\.price, booking\.currency\)/);
+  assert.match(traveler, /formatMoney\(booking\.deposit_amount, booking\.currency\)/);
   assert.match(payments, /fetchMyPayments/);
   assert.match(payments, /No payment transactions have been recorded/);
   assert.doesNotMatch(payments, /mock|fake|mark as paid|pay now/i);
