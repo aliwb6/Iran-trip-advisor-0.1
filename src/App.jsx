@@ -8,6 +8,7 @@ import { I18nProvider } from '@/lib/i18n.jsx';
 import { ThemeProvider } from '@/lib/ThemeContext.jsx';
 import { NotificationsProvider } from '@/lib/NotificationsContext';
 import { preloadRoute, routeLoaders } from '@/lib/route-loaders';
+import './public-profile-layout.css';
 
 import Layout from '@/components/layout/Layout';
 // Home is the landing route — kept eager so first paint never waits on a chunk.
@@ -95,6 +96,10 @@ function PublicStandaloneShell({ children }) {
   return <div className="public-site-shell min-h-screen">{children}</div>;
 }
 
+function PublicProfileShell({ children }) {
+  return <div className="public-profile-shell">{children}</div>;
+}
+
 function RouteFallback() {
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-background">
@@ -132,9 +137,9 @@ const AuthenticatedApp = () => {
             <Route path="/tours/:slug" element={<TourDetails />} />
             <Route path="/package/:id" element={<PackageDetails />} />
             <Route path="/guides" element={<Guides />} />
-            <Route path="/guides/:id" element={<GuideDetails />} />
+            <Route path="/guides/:id" element={<PublicProfileShell><GuideDetails /></PublicProfileShell>} />
             <Route path="/agencies" element={<Agencies />} />
-            <Route path="/agencies/:id" element={<AgencyProfile />} />
+            <Route path="/agencies/:id" element={<PublicProfileShell><AgencyProfile /></PublicProfileShell>} />
             <Route path="/request-trip/:guideId" element={<TripRequest />} />
             <Route path="/request-trip/agency/:guideId" element={<TripRequest />} />
             <Route path="/about" element={<About />} />

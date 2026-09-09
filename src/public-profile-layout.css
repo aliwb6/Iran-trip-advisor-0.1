@@ -1,0 +1,5 @@
+/* Guide/agency public profiles no longer show the legacy sidebar quick-request form.
+   The primary "Request A Trip" CTA remains available and routes to the dedicated request flow. */
+.public-profile-shell .self-start.space-y-6 > .p-6.rounded-2xl.bg-card.border.border-border\/50.shadow-md:first-child {
+  display: none;
+}
