@@ -51,10 +51,15 @@ export const DIFFICULTY_OPTIONS = [
   { value: 'challenging', en: 'Challenging', fa: 'دشوار',  ar: 'صعب' },
 ];
 
+export const TOUR_TYPE_OPTIONS = [
+  { value: 'private', en: 'Private', fa: 'خصوصی', ar: 'خاصة' },
+  { value: 'group', en: 'Group', fa: 'گروهی', ar: 'جماعية' },
+];
+
 export const EMPTY_TOUR = {
   title: '', slug: '', description: '', duration: '', price: '',
   highlights: '', itinerary: '',
-  image_url: '', gallery: '', status: 'draft', difficulty: '',
+  image_url: '', gallery: '', status: 'draft', difficulty: '', tour_type: '',
 };
 
 export default function TourForm({ editing, onDone, onCancel, isPlatform = false }) {
@@ -76,6 +81,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
       itinerary:   editing.itinerary || '',
       status:      editing.status || initialStatus,
       difficulty:  editing.difficulty || '',
+      tour_type:   editing.tour_type || '',
     };
   });
 
@@ -291,6 +297,15 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
     e.preventDefault();
     setError('');
 
+    if (!form.tour_type) {
+      setError(
+        lang === 'fa' ? 'لطفاً نوع تور را انتخاب کنید.'
+        : lang === 'ar' ? 'يرجى اختيار نوع الرحلة.'
+        : 'Please select a tour type.'
+      );
+      return;
+    }
+
     if (!form.difficulty) {
       setError(
         lang === 'fa' ? 'لطفاً سطح دشواری را انتخاب کنید.'
@@ -311,6 +326,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
         description: form.description,
         duration:    form.duration ? Number(form.duration) : null,
         price:       form.price ? Number(form.price) : null,
+        tour_type:   form.tour_type,
         // Keep the legacy single-value fields in sync for older listing/detail
         // consumers while Cities remains the only editable source of truth.
         location:    cities.join(', ') || null,
@@ -502,44 +518,93 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           </datalist>
         </div>
 
-        {/* Difficulty (required) */}
-        <div>
-          <label htmlFor="tour-difficulty" className={labelClass}>
-            {lang === 'fa' ? 'سطح دشواری' : lang === 'ar' ? 'مستوى الصعوبة' : 'Difficulty'} <span className="text-red-400">*</span>
-            <span className="ms-1 text-white/40 text-[10px] font-normal">
-              {lang === 'fa' ? '(الزامی)' : lang === 'ar' ? '(مطلوب)' : '(Required)'}
-            </span>
-          </label>
-          <Select
-            value={form.difficulty}
-            onValueChange={value => setForm(prev => ({ ...prev, difficulty: value }))}
-            dir={dir}
-          >
-            <SelectTrigger
-              id="tour-difficulty"
-              aria-required="true"
-              className="w-full md:w-72 h-11 rounded-xl border-white/10 bg-white/[0.05] px-3.5 text-sm text-white shadow-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 data-[placeholder]:text-white/35"
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Tour Type (required) */}
+          <div>
+            <label htmlFor="tour-type" className={labelClass}>
+              {lang === 'fa' ? 'نوع تور' : lang === 'ar' ? 'نوع الرحلة' : 'Tour Type'} <span className="text-red-400">*</span>
+              <span className="ms-1 text-white/40 text-[10px] font-normal">
+                {lang === 'fa' ? '(الزامی)' : lang === 'ar' ? '(مطلوب)' : '(Required)'}
+              </span>
+            </label>
+            <Select
+              value={form.tour_type}
+              onValueChange={value => setForm(prev => ({ ...prev, tour_type: value }))}
+              dir={dir}
             >
-              <SelectValue
-                placeholder={lang === 'fa'
-                  ? 'سطح دشواری را انتخاب کنید…'
-                  : lang === 'ar'
-                  ? 'اختر مستوى الصعوبة…'
-                  : 'Select a difficulty level…'}
-              />
-            </SelectTrigger>
-            <SelectContent className="border-white/15 bg-[hsl(222,45%,14%)] text-white shadow-xl">
-              {DIFFICULTY_OPTIONS.map(opt => (
-                <SelectItem
-                  key={opt.value}
-                  value={opt.value}
-                  className="cursor-pointer focus:bg-teal-400/20 focus:text-white"
-                >
-                  {opt[lang] || opt.en}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+              <SelectTrigger
+                id="tour-type"
+                aria-required="true"
+                className="w-full h-11 rounded-xl border-white/10 bg-white/[0.05] px-3.5 text-sm text-white shadow-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 data-[placeholder]:text-white/35"
+              >
+                <SelectValue
+                  placeholder={lang === 'fa'
+                    ? 'خصوصی یا گروهی را انتخاب کنید…'
+                    : lang === 'ar'
+                    ? 'اختر خاصة أو جماعية…'
+                    : 'Select Private or Group…'}
+                />
+              </SelectTrigger>
+              <SelectContent className="border-white/15 bg-[hsl(222,45%,14%)] text-white shadow-xl">
+                {TOUR_TYPE_OPTIONS.map(opt => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="cursor-pointer focus:bg-teal-400/20 focus:text-white"
+                  >
+                    {opt[lang] || opt.en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-white/30 text-[10px] mt-1.5">
+              {lang === 'fa'
+                ? 'خصوصی: رزرو برای همان مسافر/گروه اوست. گروهی: مسافران مختلف می‌توانند در یک تور شرکت کنند.'
+                : lang === 'ar'
+                ? 'خاصة: الحجز مخصص للمسافر أو مجموعته. جماعية: يمكن لمسافرين مختلفين الانضمام إلى نفس الجولة.'
+                : 'Private: one booking reserves the tour for that traveler/party. Group: different travelers may join the same tour.'}
+            </p>
+          </div>
+
+          {/* Difficulty (required) */}
+          <div>
+            <label htmlFor="tour-difficulty" className={labelClass}>
+              {lang === 'fa' ? 'سطح دشواری' : lang === 'ar' ? 'مستوى الصعوبة' : 'Difficulty'} <span className="text-red-400">*</span>
+              <span className="ms-1 text-white/40 text-[10px] font-normal">
+                {lang === 'fa' ? '(الزامی)' : lang === 'ar' ? '(مطلوب)' : '(Required)'}
+              </span>
+            </label>
+            <Select
+              value={form.difficulty}
+              onValueChange={value => setForm(prev => ({ ...prev, difficulty: value }))}
+              dir={dir}
+            >
+              <SelectTrigger
+                id="tour-difficulty"
+                aria-required="true"
+                className="w-full h-11 rounded-xl border-white/10 bg-white/[0.05] px-3.5 text-sm text-white shadow-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 data-[placeholder]:text-white/35"
+              >
+                <SelectValue
+                  placeholder={lang === 'fa'
+                    ? 'سطح دشواری را انتخاب کنید…'
+                    : lang === 'ar'
+                    ? 'اختر مستوى الصعوبة…'
+                    : 'Select a difficulty level…'}
+                />
+              </SelectTrigger>
+              <SelectContent className="border-white/15 bg-[hsl(222,45%,14%)] text-white shadow-xl">
+                {DIFFICULTY_OPTIONS.map(opt => (
+                  <SelectItem
+                    key={opt.value}
+                    value={opt.value}
+                    className="cursor-pointer focus:bg-teal-400/20 focus:text-white"
+                  >
+                    {opt[lang] || opt.en}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
         {/* Theme tag chips */}
