@@ -29,6 +29,12 @@ import { parseLanguages, popularLanguages } from '@/data/languages';
 import { iranianDestinations } from '@/data/iranianCities';
 import { cancelTripRequest } from '@/api/tripRequests';
 import { fetchParticipantProfiles } from '@/api/participantProfiles';
+import {
+  MAX_SPECIAL_ABILITY_LENGTH,
+  PROVIDER_SPECIAL_ABILITY_OPTIONS,
+  addProviderAbility,
+  normalizeProviderAbilities,
+} from '@/lib/providerCapabilities';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -1020,12 +1026,15 @@ function ProfileView({ profile, userId, onSave }) {
     avatar_url: profile?.avatar_url || '',
     languages:  parseLanguages(profile?.languages),
     tourTypes:  initialTourTypes,
+    specialAbilities: normalizeProviderAbilities(profile?.special_abilities),
+    hasVehicle: typeof profile?.has_vehicle === 'boolean' ? profile.has_vehicle : null,
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
   const [otherLanguage, setOtherLanguage] = useState('');
   const [otherTourType, setOtherTourType] = useState('');
+  const [otherSpecialAbility, setOtherSpecialAbility] = useState('');
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [avatarDragActive, setAvatarDragActive] = useState(false);
   const avatarFileRef = useRef(null);
@@ -1039,6 +1048,8 @@ function ProfileView({ profile, userId, onSave }) {
         languages: form.languages.join(', '),
         specialties: isAgency ? profile?.specialties : form.tourTypes,
         tour_types: isAgency ? form.tourTypes : profile?.tour_types,
+        special_abilities: form.specialAbilities,
+        has_vehicle: form.hasVehicle,
       })
     : null;
   const completionFields = PROFILE_FIELDS.filter(field => field !== 'languages' && field !== 'city');
@@ -1094,6 +1105,30 @@ function ProfileView({ profile, userId, onSave }) {
     setOtherTourType('');
   };
 
+  const toggleSpecialAbility = (ability) => {
+    setForm(prev => {
+      const selected = prev.specialAbilities.some(
+        item => item.toLocaleLowerCase() === ability.toLocaleLowerCase(),
+      );
+      return {
+        ...prev,
+        specialAbilities: selected
+          ? prev.specialAbilities.filter(item => item.toLocaleLowerCase() !== ability.toLocaleLowerCase())
+          : addProviderAbility(prev.specialAbilities, ability),
+      };
+    });
+  };
+
+  const addOtherSpecialAbility = () => {
+    const ability = otherSpecialAbility.trim();
+    if (!ability) return;
+    setForm(prev => ({
+      ...prev,
+      specialAbilities: addProviderAbility(prev.specialAbilities, ability),
+    }));
+    setOtherSpecialAbility('');
+  };
+
   const handleAvatarUpload = async (file) => {
     if (!file || !userId) return;
     setError('');
@@ -1141,13 +1176,15 @@ function ProfileView({ profile, userId, onSave }) {
     setError('');
     setSaving(true);
     try {
-      const { tourTypes, cities, ...profileFields } = form;
+      const { tourTypes, cities, specialAbilities, hasVehicle, ...profileFields } = form;
       const profilePayload = {
         ...profileFields,
         city: cities.join(', '),
         primary_city: cities[0] || null,
         other_cities: cities.length ? cities : null,
         languages: form.languages.join(', '),
+        special_abilities: normalizeProviderAbilities(specialAbilities),
+        has_vehicle: hasVehicle,
         ...(isAgency ? { tour_types: tourTypes } : { specialties: tourTypes }),
       };
       const { error: err } = await supabase
@@ -1406,6 +1443,120 @@ function ProfileView({ profile, userId, onSave }) {
               </button>
             </div>
           </div>
+        )}
+
+        {/* Provider abilities are distinct from tour types / specialties. */}
+        {isGuideOrAgencyProfile && (
+          <div className="border-t border-white/[0.07] pt-5">
+            <label className={labelClass}>
+              {lang === 'fa' ? 'توانایی‌های ویژه' : lang === 'ar' ? 'المهارات الخاصة' : 'Special Abilities'} *
+            </label>
+            <p className="text-white/35 text-xs mb-3">
+              {lang === 'fa' ? 'حداقل یک توانایی را انتخاب یا اضافه کنید.' : lang === 'ar' ? 'اختر أو أضف مهارة واحدة على الأقل.' : 'Choose or add at least one ability.'}
+            </p>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {PROVIDER_SPECIAL_ABILITY_OPTIONS.map(option => {
+                const selected = form.specialAbilities.some(
+                  item => item.toLocaleLowerCase() === option.value.toLocaleLowerCase(),
+                );
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => toggleSpecialAbility(option.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs border transition ${selected
+                      ? 'bg-violet-500/20 border-violet-400/60 text-violet-200'
+                      : 'bg-white/[0.03] border-white/10 text-white/55 hover:border-white/25'
+                    }`}
+                  >
+                    {selected && <span className="me-1">✓</span>}{option[lang] || option.en}
+                  </button>
+                );
+              })}
+            </div>
+
+            {form.specialAbilities.filter(ability => !PROVIDER_SPECIAL_ABILITY_OPTIONS.some(
+              option => option.value.toLocaleLowerCase() === ability.toLocaleLowerCase(),
+            )).length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {form.specialAbilities
+                  .filter(ability => !PROVIDER_SPECIAL_ABILITY_OPTIONS.some(
+                    option => option.value.toLocaleLowerCase() === ability.toLocaleLowerCase(),
+                  ))
+                  .map(ability => (
+                    <button
+                      key={ability}
+                      type="button"
+                      onClick={() => toggleSpecialAbility(ability)}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-violet-500/20 border border-violet-400/60 text-violet-200"
+                      title={lang === 'fa' ? 'حذف توانایی' : lang === 'ar' ? 'إزالة المهارة' : 'Remove ability'}
+                    >
+                      {ability}<X className="w-3 h-3" />
+                    </button>
+                  ))}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <input
+                value={otherSpecialAbility}
+                onChange={event => setOtherSpecialAbility(event.target.value)}
+                onKeyDown={event => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    addOtherSpecialAbility();
+                  }
+                }}
+                className={inputClass}
+                placeholder={lang === 'fa' ? 'توانایی دیگر' : lang === 'ar' ? 'مهارة أخرى' : 'Custom ability'}
+                maxLength={MAX_SPECIAL_ABILITY_LENGTH}
+              />
+              <button
+                type="button"
+                onClick={addOtherSpecialAbility}
+                disabled={!otherSpecialAbility.trim()}
+                className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-white/10 text-white/70 text-xs hover:bg-white/15 disabled:opacity-40"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                {lang === 'fa' ? 'افزودن' : lang === 'ar' ? 'إضافة' : 'Add'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {isGuideOrAgencyProfile && (
+          <fieldset>
+            <legend className={labelClass}>
+              {lang === 'fa'
+                ? 'آیا وسیله نقلیه برای تورها در اختیار دارید؟'
+                : lang === 'ar'
+                  ? 'هل لديك مركبة متاحة للجولات؟'
+                  : 'Do you have a vehicle available for tours?'} *
+            </legend>
+            <div className="grid grid-cols-2 gap-3 max-w-sm">
+              {[
+                { value: true, label: lang === 'fa' ? 'بله' : lang === 'ar' ? 'نعم' : 'Yes' },
+                { value: false, label: lang === 'fa' ? 'خیر' : lang === 'ar' ? 'لا' : 'No' },
+              ].map(option => {
+                const selected = form.hasVehicle === option.value;
+                return (
+                  <button
+                    key={String(option.value)}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => setForm(prev => ({ ...prev, hasVehicle: option.value }))}
+                    className={`px-4 py-2.5 rounded-xl text-sm border transition ${selected
+                      ? 'bg-[hsl(178,85%,32%)]/20 border-[hsl(178,85%,40%)] text-teal-200'
+                      : 'bg-white/[0.03] border-white/10 text-white/55 hover:border-white/25'
+                    }`}
+                  >
+                    {selected && <span className="me-1.5">✓</span>}{option.label}
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
         )}
 
         {/* Bio */}

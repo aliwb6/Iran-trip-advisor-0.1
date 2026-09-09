@@ -11,6 +11,8 @@ const FIELD_LABELS = {
   languages:   { en: 'Languages (at least 1)',  fa: 'زبان‌ها (حداقل ۱)',    ar: 'اللغات (لغة واحدة على الأقل)' },
   specialty:   { en: 'Specialty',               fa: 'تخصص',                 ar: 'التخصص' },
   tour_types:  { en: 'Tour Types',              fa: 'نوع تور',              ar: 'أنواع الجولات' },
+  special_abilities: { en: 'Special Abilities (at least 1)', fa: 'توانایی‌های ویژه (حداقل ۱)', ar: 'المهارات الخاصة (واحدة على الأقل)' },
+  has_vehicle: { en: 'Vehicle Availability', fa: 'وضعیت وسیله نقلیه', ar: 'توفر المركبة' },
   license_url: { en: 'License Uploaded',        fa: 'مجوز آپلود شده',      ar: 'تم رفع الرخصة' },
 };
 
