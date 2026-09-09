@@ -11,10 +11,8 @@ import { preloadRoute, routeLoaders } from '@/lib/route-loaders';
 import './public-profile-layout.css';
 
 import Layout from '@/components/layout/Layout';
-// Home is the landing route — kept eager so first paint never waits on a chunk.
 import Home from '@/pages/Home';
 
-// Heavy / secondary routes are code-split so they don't bloat the initial bundle.
 const Tours = lazy(routeLoaders.tours);
 const TourDetails = lazy(routeLoaders.tourDetails);
 const PackageDetails = lazy(routeLoaders.packageDetails);
@@ -100,8 +98,12 @@ function PostLoginReturn() {
 
   useEffect(() => {
     const from = location.state?.from;
-    if (!isAuthenticated && location.pathname === '/login' && typeof from === 'string') {
-      // Store only safe same-origin app paths. This survives Login's existing navigate('/').
+    const isAuthEntry = ['/login', '/signup', '/register'].includes(location.pathname);
+
+    if (!isAuthenticated && isAuthEntry && typeof from === 'string') {
+      // Store only safe same-origin app paths. This survives the existing
+      // Signup/Login success redirects and takes the user back to what they
+      // originally selected.
       if (from.startsWith('/') && !from.startsWith('//')) {
         sessionStorage.setItem('ita-post-login-return', from);
       }
@@ -140,6 +142,20 @@ function RouteFallback() {
   );
 }
 
+function SignupRequiredRoute({ children }) {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+  const location = useLocation();
+
+  if (isLoadingAuth) return <RouteFallback />;
+
+  if (!isAuthenticated) {
+    const from = `${location.pathname}${location.search}${location.hash}`;
+    return <Navigate to="/signup" replace state={{ from }} />;
+  }
+
+  return children;
+}
+
 function TripRequestsRedirect() {
   const { isAuthenticated, isLoadingAuth } = useAuth();
 
@@ -151,7 +167,6 @@ function TripRequestsRedirect() {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
-  // ALL roles (tourist, guide, agency) go to /profile/requests — the tourist-style trip request page.
   return <Navigate to="/profile/requests" replace />;
 }
 
@@ -165,14 +180,33 @@ const AuthenticatedApp = () => {
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/tours" element={<Tours />} />
-            <Route path="/tours/:slug" element={<TourDetails />} />
-            <Route path="/package/:id" element={<PackageDetails />} />
+            <Route
+              path="/tours/:slug"
+              element={<SignupRequiredRoute><TourDetails /></SignupRequiredRoute>}
+            />
+            <Route
+              path="/package/:id"
+              element={<SignupRequiredRoute><PackageDetails /></SignupRequiredRoute>}
+            />
             <Route path="/guides" element={<Guides />} />
-            <Route path="/guides/:id" element={<PublicProfileShell><GuideDetails /></PublicProfileShell>} />
+            <Route
+              path="/guides/:id"
+              element={(
+                <SignupRequiredRoute>
+                  <PublicProfileShell><GuideDetails /></PublicProfileShell>
+                </SignupRequiredRoute>
+              )}
+            />
             <Route path="/agencies" element={<Agencies />} />
             <Route path="/agencies/:id" element={<PublicProfileShell><AgencyProfile /></PublicProfileShell>} />
-            <Route path="/request-trip/:guideId" element={<TripRequest />} />
-            <Route path="/request-trip/agency/:guideId" element={<TripRequest />} />
+            <Route
+              path="/request-trip/:guideId"
+              element={<SignupRequiredRoute><TripRequest /></SignupRequiredRoute>}
+            />
+            <Route
+              path="/request-trip/agency/:guideId"
+              element={<SignupRequiredRoute><TripRequest /></SignupRequiredRoute>}
+            />
             <Route path="/about" element={<About />} />
             <Route path="/blog" element={<Blog />} />
             <Route path="/blog/:slug" element={<ArticleDetails />} />
