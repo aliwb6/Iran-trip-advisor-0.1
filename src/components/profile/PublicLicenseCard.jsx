@@ -1,22 +1,10 @@
 import { useEffect, useState } from 'react';
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 import { BadgeCheck, ExternalLink, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
-=======
-import { BadgeCheck, FileText, Loader2, ShieldCheck } from 'lucide-react';
-import { isPdfLicensePath, resolvePublicLicenseUrl } from '@/lib/publicLicense';
->>>>>>> Stashed changes
-=======
-import { BadgeCheck, FileText, Loader2, ShieldCheck } from 'lucide-react';
-import { isPdfLicensePath, resolvePublicLicenseUrl } from '@/lib/publicLicense';
->>>>>>> Stashed changes
 
 const copy = {
   en: {
     title: 'License',
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
     loading: 'Loading verified license…',
     unavailable: 'The verified license preview is temporarily unavailable.',
     open: 'View license',
@@ -38,40 +26,6 @@ const copy = {
     open: 'عرض الرخصة',
     verifiedGuide: 'مرشد موثق',
     verifiedAgency: 'وكالة موثقة',
-=======
-    loading: 'Preparing license preview…',
-    unavailable: 'License preview is temporarily unavailable.',
-    view: 'View license',
-=======
-    loading: 'Preparing license preview…',
-    unavailable: 'License preview is temporarily unavailable.',
-    view: 'View license',
-  },
-  fa: {
-    title: 'مجوز',
-    loading: 'در حال آماده‌سازی پیش‌نمایش مجوز…',
-    unavailable: 'پیش‌نمایش مجوز موقتاً در دسترس نیست.',
-    view: 'مشاهده مجوز',
-  },
-  ar: {
-    title: 'الرخصة',
-    loading: 'جارٍ تجهيز معاينة الرخصة…',
-    unavailable: 'معاينة الرخصة غير متاحة مؤقتاً.',
-    view: 'عرض الرخصة',
->>>>>>> Stashed changes
-  },
-  fa: {
-    title: 'مجوز',
-    loading: 'در حال آماده‌سازی پیش‌نمایش مجوز…',
-    unavailable: 'پیش‌نمایش مجوز موقتاً در دسترس نیست.',
-    view: 'مشاهده مجوز',
-  },
-  ar: {
-    title: 'الرخصة',
-    loading: 'جارٍ تجهيز معاينة الرخصة…',
-    unavailable: 'معاينة الرخصة غير متاحة مؤقتاً.',
-    view: 'عرض الرخصة',
->>>>>>> Stashed changes
   },
 };
 
@@ -87,8 +41,6 @@ const isPdfPath = (value) => {
 
 export default function PublicLicenseCard({ profile, lang = 'en', className = '' }) {
   const labels = copy[lang] || copy.en;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
   const licensePath = typeof profile?.public_license_path === 'string'
     ? profile.public_license_path.trim()
     : '';
@@ -154,114 +106,6 @@ export default function PublicLicenseCard({ profile, lang = 'en', className = ''
             <FileText className="h-5 w-5" />
           </div>
           <h2 className="font-heading text-lg font-semibold text-foreground">{labels.title}</h2>
-=======
-  const publicLicensePath = profile?.public_license_path;
-  const shouldShow = Boolean(
-    ['guide', 'agency'].includes(profile?.role)
-    && profile?.is_approved
-    && profile?.is_published
-    && profile?.is_public
-    && profile?.license_status === 'verified'
-    && publicLicensePath
-  );
-  const [state, setState] = useState({ loading: false, signedUrl: null, unavailable: false });
-
-=======
-  const publicLicensePath = profile?.public_license_path;
-  const shouldShow = Boolean(
-    ['guide', 'agency'].includes(profile?.role)
-    && profile?.is_approved
-    && profile?.is_published
-    && profile?.is_public
-    && profile?.license_status === 'verified'
-    && publicLicensePath
-  );
-  const [state, setState] = useState({ loading: false, signedUrl: null, unavailable: false });
-
->>>>>>> Stashed changes
-  useEffect(() => {
-    if (!shouldShow) {
-      setState({ loading: false, signedUrl: null, unavailable: false });
-      return undefined;
-    }
-
-    let active = true;
-    setState({ loading: true, signedUrl: null, unavailable: false });
-
-    resolvePublicLicenseUrl(publicLicensePath).then(({ signedUrl }) => {
-      if (!active) return;
-      setState({ loading: false, signedUrl, unavailable: !signedUrl });
-    }).catch(() => {
-      if (active) setState({ loading: false, signedUrl: null, unavailable: true });
-    });
-
-    return () => { active = false; };
-  }, [publicLicensePath, shouldShow]);
-
-  if (!shouldShow) return null;
-
-  const providerLabel = profile.role === 'agency'
-    ? (lang === 'fa' ? 'آژانس تأییدشده' : lang === 'ar' ? 'وكالة موثقة' : 'Verified Agency')
-    : (lang === 'fa' ? 'راهنمای تأییدشده' : lang === 'ar' ? 'مرشد موثق' : 'Verified Guide');
-  const isPdf = isPdfLicensePath(publicLicensePath);
-
-  return (
-    <section className={`${className} overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm`}>
-      <div className="flex items-center justify-between gap-3 border-b border-border/50 px-5 py-4">
-        <h2 className="flex items-center gap-2 font-heading text-lg font-semibold text-foreground">
-          <FileText className="h-4 w-4 text-gold" />
-          {labels.title}
-        </h2>
-        <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2 py-1 font-body text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-          <BadgeCheck className="h-3.5 w-3.5" />
-          {lang === 'fa' ? 'تأییدشده' : lang === 'ar' ? 'موثقة' : 'Verified'}
-        </span>
-      </div>
-
-      <div className="p-4 sm:p-5">
-        <div className="flex min-h-[15rem] items-center justify-center overflow-hidden rounded-xl border border-border/60 bg-muted/30 p-3 sm:min-h-[19rem]">
-          {state.loading && (
-            <div className="flex flex-col items-center gap-3 text-center text-muted-foreground">
-              <Loader2 className="h-6 w-6 animate-spin text-gold" />
-              <p className="font-body text-xs">{labels.loading}</p>
-            </div>
-          )}
-
-          {!state.loading && state.signedUrl && !isPdf && (
-            <img
-              src={state.signedUrl}
-              alt={lang === 'fa' ? 'مجوز تأییدشده' : lang === 'ar' ? 'الرخصة الموثقة' : 'Verified license'}
-              className="h-full max-h-[30rem] w-full object-contain"
-            />
-          )}
-
-          {!state.loading && state.signedUrl && isPdf && (
-            <div className="flex h-full w-full flex-col items-center justify-center gap-4 text-center">
-              <object
-                data={state.signedUrl}
-                type="application/pdf"
-                aria-label={lang === 'fa' ? 'پیش‌نمایش مجوز PDF' : lang === 'ar' ? 'معاينة الرخصة PDF' : 'PDF license preview'}
-                className="hidden h-[19rem] w-full rounded-lg border border-border/50 bg-background sm:block"
-              />
-              <a
-                href={state.signedUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-gold/30 px-4 py-2 font-body text-sm font-semibold text-gold transition hover:bg-gold/5"
-              >
-                {labels.view}
-              </a>
-            </div>
-          )}
-
-          {!state.loading && state.unavailable && (
-            <div className="flex flex-col items-center gap-3 text-center text-muted-foreground">
-              <FileText className="h-7 w-7 text-gold" />
-              <p className="font-body text-xs">{labels.unavailable}</p>
-            </div>
-          )}
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
         </div>
         <BadgeCheck className="h-5 w-5 flex-shrink-0 text-emerald-500" aria-label={providerLabel} />
       </div>
@@ -346,16 +190,6 @@ export default function PublicLicenseCard({ profile, lang = 'en', className = ''
             <ExternalLink className="h-3.5 w-3.5" />
           </a>
         )}
-      </div>
-
-=======
-        </div>
-      </div>
-
->>>>>>> Stashed changes
-      <div className="flex items-center gap-2 border-t border-border/50 px-5 py-3 text-emerald-700 dark:text-emerald-400">
-        <ShieldCheck className="h-4 w-4 flex-shrink-0" />
-        <p className="font-body text-xs font-semibold">{providerLabel}</p>
       </div>
     </section>
   );
