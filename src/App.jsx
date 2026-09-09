@@ -37,6 +37,7 @@ const CityPage = lazy(routeLoaders.city);
 const FindJobs = lazy(routeLoaders.findJobs);
 const MyTripRequests = lazy(routeLoaders.myTrips);
 const RequestDetailPage = lazy(routeLoaders.requestDetails);
+const GuideRequestEmailPage = lazy(() => import('@/pages/GuideRequestEmailPage'));
 const Signup = lazy(routeLoaders.signup);
 const Login = lazy(routeLoaders.login);
 const GuideOnboarding = lazy(routeLoaders.guideOnboarding);
@@ -160,6 +161,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/guide-onboarding" element={<PublicStandaloneShell><GuideOnboarding /></PublicStandaloneShell>} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/requests/:requestId" element={<GuideRequestEmailPage />} />
           <Route path="/dashboard/:section" element={<Dashboard />} />
           <Route path="/chat/:guideId" element={<PublicStandaloneShell><Chat /></PublicStandaloneShell>} />
           <Route path="/trip-requests" element={<TripRequestsRedirect />} />
