@@ -7,6 +7,7 @@ async function source(path) {
 }
 
 const migrationPath = '../supabase/migrations/20260909200742_public_verified_license_previews.sql';
+const hardeningMigrationPath = '../supabase/migrations/20260909201724_harden_public_license_profile_surface.sql';
 
 test('verified public license migration keeps the licenses bucket private and narrowly scoped', async () => {
   const sql = await source(migrationPath);
@@ -21,10 +22,21 @@ test('verified public license migration keeps the licenses bucket private and na
   assert.match(sql, /FOR SELECT\s+TO anon, authenticated/s);
   assert.match(sql, /bucket_id = 'licenses'/);
   assert.match(sql, /pp\.public_license_path = storage\.objects\.name/);
-  assert.match(sql, /FROM public\.public_profiles AS pp/);
 
   assert.doesNotMatch(sql, /SET\s+public\s*=\s*true/i);
   assert.doesNotMatch(sql, /GRANT\s+SELECT\s+ON\s+TABLE\s+public\.profiles\s+TO\s+anon/i);
+});
+
+test('public profile surface hardening makes the view security-invoker and keeps storage behind the public RPC', async () => {
+  const sql = await source(hardeningMigrationPath);
+
+  assert.match(sql, /ALTER VIEW public\.public_profiles SET \(security_invoker = true\)/);
+  assert.match(sql, /REVOKE ALL ON TABLE public\.public_profiles FROM anon, authenticated/);
+  assert.match(sql, /CREATE POLICY licenses_public_verified_select/);
+  assert.match(sql, /FROM public\.get_public_profiles\(\) AS pp/);
+  assert.match(sql, /pp\.public_license_path = storage\.objects\.name/);
+  assert.match(sql, /pp\.license_status = 'verified'/);
+  assert.doesNotMatch(sql, /FROM public\.profiles/);
 });
 
 test('public profile RPC exposes only the semantic verified-license path', async () => {
