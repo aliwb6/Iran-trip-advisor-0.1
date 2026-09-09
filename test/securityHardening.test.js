@@ -36,10 +36,9 @@ test('public guide and agency pages use the public profile RPC abstraction only'
   }
 });
 
-test('public license card uses only the conditional public license path', async () => {
+test('public license card contains no document access or private license fields', async () => {
   const card = await source('../src/components/profile/PublicLicenseCard.jsx');
-  assert.match(card, /public_license_path/);
-  assert.match(card, /license_status === 'verified'/);
+  assert.match(card, /license_status !== 'verified'/);
   assert.doesNotMatch(card, /license_url|license_id|license_number|createSignedUrl|storage\.from|window\.open/);
 
   for (const path of ['../src/pages/GuideDetails.jsx', '../src/pages/AgencyProfile.jsx']) {
