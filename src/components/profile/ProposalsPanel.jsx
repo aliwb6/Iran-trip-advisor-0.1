@@ -6,6 +6,7 @@ import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
 import { toast } from 'sonner';
 import { touristSelectGuide } from '@/api/tourRequestFlow';
+import { fetchParticipantProfiles } from '@/api/participantProfiles';
 import {
   Dialog,
   DialogContent,
@@ -82,8 +83,6 @@ function DetailBlock({ label, children }) {
   );
 }
 
-// ── Level 3: full proposal detail modal ───────────────────────────────────────
-
 function ProposalDetailModal({ slot, onClose }) {
   const { t, lang, dir } = useI18n();
   const guide = slot.guide || {};
@@ -109,7 +108,6 @@ function ProposalDetailModal({ slot, onClose }) {
               {lang === 'fa' ? 'این پیشنهاد رد شده و فقط برای سابقه نگه‌داری می‌شود.' : lang === 'ar' ? 'تم رفض هذا العرض وهو محفوظ للرجوع إليه.' : 'This proposal was rejected and is kept for your records.'}
             </div>
           )}
-          {/* Guide header — always shown */}
           <Link to={path} className="flex items-center gap-3 hover:opacity-80 transition-opacity w-fit">
             <GuideAvatar guide={guide} size="lg" />
             <div>
@@ -132,19 +130,16 @@ function ProposalDetailModal({ slot, onClose }) {
             </div>
           </Link>
 
-          {/* Empty state — accepted but no details yet */}
           {!submitted ? (
             <p className="text-sm text-muted-foreground italic py-2">
               {t('slot_not_submitted')}
             </p>
           ) : (
             <>
-              {/* 1. PRICE */}
               <DetailBlock label={t('proposal_price_label')}>
                 <p className="text-sm font-semibold text-foreground">{formatPrice(slot, t)}</p>
               </DetailBlock>
 
-              {/* 2. ITINERARY */}
               {slot.itinerary?.trim() && (
                 <DetailBlock label={t('proposal_itinerary')}>
                   <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
@@ -153,7 +148,6 @@ function ProposalDetailModal({ slot, onClose }) {
                 </DetailBlock>
               )}
 
-              {/* 3. WHAT'S INCLUDED */}
               {slot.included?.length > 0 && (
                 <DetailBlock label={t('proposal_included')}>
                   <ul className="space-y-1.5">
@@ -169,7 +163,6 @@ function ProposalDetailModal({ slot, onClose }) {
                 </DetailBlock>
               )}
 
-              {/* 4. WHAT'S NOT INCLUDED */}
               {slot.excluded?.length > 0 && (
                 <DetailBlock label={t('proposal_excluded')}>
                   <ul className="space-y-1.5">
@@ -185,7 +178,6 @@ function ProposalDetailModal({ slot, onClose }) {
                 </DetailBlock>
               )}
 
-              {/* 5. MESSAGE FROM THE GUIDE */}
               {slot.message?.trim() && (
                 <DetailBlock label={t('proposal_message')}>
                   <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-line">
@@ -194,7 +186,6 @@ function ProposalDetailModal({ slot, onClose }) {
                 </DetailBlock>
               )}
 
-              {/* 6. IMAGES */}
               {slot.images?.length > 0 && (
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-2">
@@ -216,7 +207,6 @@ function ProposalDetailModal({ slot, onClose }) {
             </>
           )}
 
-          {/* View profile — always shown */}
           <Link
             to={path}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
@@ -229,10 +219,8 @@ function ProposalDetailModal({ slot, onClose }) {
   );
 }
 
-// ── Level 2: single proposal row ─────────────────────────────────────────────
-
 function ProposalRow({ slot, onReject, onSelect, rejecting, selecting, canSelect }) {
-  const { t, lang, dir } = useI18n();
+  const { t, lang } = useI18n();
   const [showDetail, setShowDetail] = useState(false);
   const guide = slot.guide || {};
   const path  = profilePath(guide);
@@ -310,8 +298,6 @@ function ProposalRow({ slot, onReject, onSelect, rejecting, selecting, canSelect
   );
 }
 
-// ── Level 2: proposals list panel ────────────────────────────────────────────
-
 export default function ProposalsPanel({ requestId, proposalRound = 1, requestStatus }) {
   const { t, lang, dir } = useI18n();
   const queryClient = useQueryClient();
@@ -324,12 +310,26 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
     queryFn: async () => {
       const { data, error } = await supabase
         .from('trip_slots')
-        .select('*, guide:profiles!trip_slots_guide_id_fkey(id, full_name, avatar_url, rating, role, city)')
+        .select('*')
         .eq('trip_request_id', requestId)
         .eq('proposal_round', proposalRound)
         .order('accepted_at', { ascending: false });
       if (error) throw error;
-      return data ?? [];
+
+      const rawSlots = data ?? [];
+      if (rawSlots.length === 0) return rawSlots;
+
+      const profiles = await fetchParticipantProfiles(rawSlots.map(slot => slot.guide_id));
+      const profileById = new Map(profiles.map(profile => [profile.id, profile]));
+
+      return rawSlots.map(slot => ({
+        ...slot,
+        guide: profileById.get(slot.guide_id) || {
+          id: slot.guide_id,
+          full_name: 'Provider',
+          role: 'guide',
+        },
+      }));
     },
     enabled: !!requestId,
     staleTime: 30_000,
