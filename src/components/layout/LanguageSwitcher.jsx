@@ -1,4 +1,6 @@
 import { useI18n } from '@/lib/i18n.jsx';
+import { useAuth } from '@/lib/AuthContext';
+import { supabase } from '@/supabaseClient';
 import { useState, useRef, useEffect } from 'react';
 import { Globe } from 'lucide-react';
 
@@ -10,6 +12,7 @@ const languages = [
 
 export default function LanguageSwitcher() {
   const { lang, switchLang } = useI18n();
+  const { isAuthenticated } = useAuth();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -22,6 +25,17 @@ export default function LanguageSwitcher() {
   }, []);
 
   const current = languages.find(l => l.code === lang);
+
+  const handleLanguageChange = (code) => {
+    switchLang(code);
+    setOpen(false);
+
+    if (isAuthenticated) {
+      void supabase.rpc('set_preferred_language', { language: code }).then(({ error }) => {
+        if (error) console.warn('Could not persist preferred language for transactional emails:', error.message);
+      });
+    }
+  };
 
   return (
     <div className="relative" ref={ref}>
@@ -41,7 +55,7 @@ export default function LanguageSwitcher() {
             {languages.map((l) => (
               <button
                 key={l.code}
-                onClick={() => { switchLang(l.code); setOpen(false); }}
+                onClick={() => handleLanguageChange(l.code)}
                 className={`w-full px-4 py-3 flex items-center justify-between text-sm font-body hover:bg-accent/5 transition-colors ${
                   lang === l.code ? 'text-accent font-medium bg-accent/5' : 'text-gray-900 dark:text-gray-100'
                 }`}
