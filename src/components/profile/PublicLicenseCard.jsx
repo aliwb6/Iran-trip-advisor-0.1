@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react';
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 import { BadgeCheck, ExternalLink, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
+=======
+import { BadgeCheck, FileText, Loader2, ShieldCheck } from 'lucide-react';
+import { isPdfLicensePath, resolvePublicLicenseUrl } from '@/lib/publicLicense';
+>>>>>>> Stashed changes
 =======
 import { BadgeCheck, FileText, Loader2, ShieldCheck } from 'lucide-react';
 import { isPdfLicensePath, resolvePublicLicenseUrl } from '@/lib/publicLicense';
@@ -10,6 +15,7 @@ import { isPdfLicensePath, resolvePublicLicenseUrl } from '@/lib/publicLicense';
 const copy = {
   en: {
     title: 'License',
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     loading: 'Loading verified license…',
     unavailable: 'The verified license preview is temporarily unavailable.',
@@ -36,6 +42,23 @@ const copy = {
     loading: 'Preparing license preview…',
     unavailable: 'License preview is temporarily unavailable.',
     view: 'View license',
+=======
+    loading: 'Preparing license preview…',
+    unavailable: 'License preview is temporarily unavailable.',
+    view: 'View license',
+  },
+  fa: {
+    title: 'مجوز',
+    loading: 'در حال آماده‌سازی پیش‌نمایش مجوز…',
+    unavailable: 'پیش‌نمایش مجوز موقتاً در دسترس نیست.',
+    view: 'مشاهده مجوز',
+  },
+  ar: {
+    title: 'الرخصة',
+    loading: 'جارٍ تجهيز معاينة الرخصة…',
+    unavailable: 'معاينة الرخصة غير متاحة مؤقتاً.',
+    view: 'عرض الرخصة',
+>>>>>>> Stashed changes
   },
   fa: {
     title: 'مجوز',
@@ -64,6 +87,7 @@ const isPdfPath = (value) => {
 
 export default function PublicLicenseCard({ profile, lang = 'en', className = '' }) {
   const labels = copy[lang] || copy.en;
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
   const licensePath = typeof profile?.public_license_path === 'string'
     ? profile.public_license_path.trim()
@@ -142,6 +166,19 @@ export default function PublicLicenseCard({ profile, lang = 'en', className = ''
   );
   const [state, setState] = useState({ loading: false, signedUrl: null, unavailable: false });
 
+=======
+  const publicLicensePath = profile?.public_license_path;
+  const shouldShow = Boolean(
+    ['guide', 'agency'].includes(profile?.role)
+    && profile?.is_approved
+    && profile?.is_published
+    && profile?.is_public
+    && profile?.license_status === 'verified'
+    && publicLicensePath
+  );
+  const [state, setState] = useState({ loading: false, signedUrl: null, unavailable: false });
+
+>>>>>>> Stashed changes
   useEffect(() => {
     if (!shouldShow) {
       setState({ loading: false, signedUrl: null, unavailable: false });
@@ -223,6 +260,7 @@ export default function PublicLicenseCard({ profile, lang = 'en', className = ''
               <p className="font-body text-xs">{labels.unavailable}</p>
             </div>
           )}
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes
         </div>
         <BadgeCheck className="h-5 w-5 flex-shrink-0 text-emerald-500" aria-label={providerLabel} />
@@ -310,6 +348,11 @@ export default function PublicLicenseCard({ profile, lang = 'en', className = ''
         )}
       </div>
 
+=======
+        </div>
+      </div>
+
+>>>>>>> Stashed changes
       <div className="flex items-center gap-2 border-t border-border/50 px-5 py-3 text-emerald-700 dark:text-emerald-400">
         <ShieldCheck className="h-4 w-4 flex-shrink-0" />
         <p className="font-body text-xs font-semibold">{providerLabel}</p>
