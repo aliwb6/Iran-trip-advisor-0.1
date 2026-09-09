@@ -1,0 +1,7 @@
+-- Remote migration-history reconciliation note.
+--
+-- Phase 4F was applied twice on production with semantically identical,
+-- idempotent SQL. The authoritative schema-changing migration is preserved in
+-- 20260909191647_phase4f_security_integrity_hardening.sql. This second version
+-- is intentionally a no-op locally so a fresh database reaches the same final
+-- schema while local/remote migration versions stay aligned.
