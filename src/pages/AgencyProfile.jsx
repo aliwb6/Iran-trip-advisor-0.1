@@ -6,6 +6,7 @@ import {
   Star, MapPin, Globe, Calendar, BadgeCheck, ChevronLeft, ChevronRight,
   ArrowRight, Map, PenLine, Plus, Minus, ChevronDown, Building2,
   Lock, MessageCircle, Copy,
+  Car,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/supabaseClient';
@@ -21,6 +22,7 @@ import PublicLicenseCard from '@/components/profile/PublicLicenseCard';
 import ProfileReviewDialog from '@/components/profile/ProfileReviewDialog';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
 import { selectPublicTours } from '@/lib/publicTours';
+import { getProviderAbilityLabel, normalizeProviderAbilities } from '@/lib/providerCapabilities';
 
 const pickTourImage = (tour) =>
   tour.cover_image || tour.image_url || tour.image ||
@@ -328,6 +330,8 @@ export default function AgencyProfile() {
   const bio = agency.bio || '';
   const tourTypes = Array.isArray(agency.tour_types) ? agency.tour_types : Array.isArray(agency.specialties) ? agency.specialties : (agency.specialty ? [agency.specialty] : []);
   const languages = Array.isArray(agency.languages) ? agency.languages : (agency.languages ? agency.languages.split(',').map((s) => s.trim()) : []);
+  const specialAbilities = normalizeProviderAbilities(agency.special_abilities);
+  const hasVehicle = typeof agency.has_vehicle === 'boolean' ? agency.has_vehicle : null;
   const rating = agency.rating ?? null;
   const reviewCount = agency.reviews ?? agency.review_count ?? 0;
   const licenseVerified = agency.license_status === 'verified';
@@ -459,6 +463,19 @@ export default function AgencyProfile() {
                   </span>
                 </div>
               )}
+              {hasVehicle !== null && (
+                <div className="flex items-center gap-3">
+                  <Car className="w-5 h-5 text-gold flex-shrink-0" />
+                  <span className="font-body text-sm text-foreground">
+                    <span className="text-muted-foreground">
+                      {lang === 'fa' ? 'وسیله نقلیه در دسترس:' : lang === 'ar' ? 'المركبة متاحة:' : 'Vehicle available:'}
+                    </span>{' '}
+                    {hasVehicle
+                      ? (lang === 'fa' ? 'بله' : lang === 'ar' ? 'نعم' : 'Yes')
+                      : (lang === 'fa' ? 'خیر' : lang === 'ar' ? 'لا' : 'No')}
+                  </span>
+                </div>
+              )}
               {city && (
                 <div className="flex items-center gap-3">
                   <MapPin className="w-5 h-5 text-gold flex-shrink-0" />
@@ -482,6 +499,21 @@ export default function AgencyProfile() {
                 </div>
               )}
             </div>
+
+            {specialAbilities.length > 0 && (
+              <div className="mt-5">
+                <p className="font-body text-xs font-medium text-muted-foreground mb-2">
+                  {lang === 'fa' ? 'توانایی‌های ویژه' : lang === 'ar' ? 'المهارات الخاصة' : 'Special Abilities'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {specialAbilities.map(ability => (
+                    <span key={ability} className="px-3 py-1 rounded-full border border-gold/20 bg-gold/10 text-gold text-xs font-body font-medium">
+                      {getProviderAbilityLabel(ability, lang)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mt-8">

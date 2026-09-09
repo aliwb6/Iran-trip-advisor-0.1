@@ -17,6 +17,8 @@ export function getRequiredGuideApprovalItems(profile) {
     { label: 'city', ok: hasText(profile?.city) },
     { label: 'languages', ok: hasListValue(profile?.languages) },
     { label: profile?.role === 'agency' ? 'tour_types' : 'specialty', ok: hasTourTypes },
+    { label: 'special_abilities', ok: hasListValue(profile?.special_abilities) },
+    { label: 'has_vehicle', ok: typeof profile?.has_vehicle === 'boolean' },
     { label: 'bio', ok: hasText(profile?.bio) },
     { label: 'license_url', ok: hasText(profile?.license_url) },
   ];
@@ -96,7 +98,7 @@ export async function persistGuideReview(client, guideId, updates) {
     .from('profiles')
     .update(updates)
     .eq('id', guideId)
-    .select('id, full_name, email, phone, city, bio, languages, avatar_url, role, specialty, specialties, tour_types, license_url, license_status, is_approved, is_rejected, is_published, approval_rejection_reason, approval_reviewed_at');
+    .select('id, full_name, email, phone, city, bio, languages, avatar_url, role, specialty, specialties, tour_types, special_abilities, has_vehicle, license_url, license_status, is_approved, is_rejected, is_published, approval_rejection_reason, approval_reviewed_at');
 
   if (error) throw error;
   if (!Array.isArray(data) || data.length === 0) {

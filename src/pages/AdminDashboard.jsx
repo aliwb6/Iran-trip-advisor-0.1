@@ -818,6 +818,13 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
   };
   const approvalEligibility = getGuideApprovalEligibility(reviewProfile, { submitting: busy });
   const completion = approvalEligibility;
+  const missingRequirementLabels = {
+    special_abilities: 'Special Abilities',
+    has_vehicle: 'Vehicle Availability',
+  };
+  const missingRequirements = completion.items
+    .filter(item => !item.ok)
+    .map(item => missingRequirementLabels[item.label] || item.label.replaceAll('_', ' '));
   const profileHref = guide.role === 'agency' ? `/agencies/${guide.id}` : `/guides/${guide.id}`;
   const inputClass = 'w-full px-3 py-2 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)]/60';
 
@@ -893,6 +900,12 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
             <div className="text-xs text-white/50">Profile completion: <span className={completion.completed ? 'text-emerald-400' : 'text-amber-400'}>{completion.percentage}%</span></div>
             <Link to={profileHref} target="_blank" rel="noreferrer" className="text-xs text-[hsl(178,85%,55%)] hover:underline">Open public profile</Link>
           </div>
+
+          {!completion.completed && (
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-300">
+              Missing requirements: {missingRequirements.join(', ')}
+            </div>
+          )}
 
           <div className="grid sm:grid-cols-2 gap-4">
             <label className="text-xs text-white/50">Full name<input value={form.full_name} onChange={e => set('full_name', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
@@ -1449,7 +1462,7 @@ export default function AdminDashboard() {
     try {
       const { data, error: err } = await supabase
         .from('profiles')
-        .select('id, full_name, email, phone, city, bio, languages, avatar_url, role, specialty, specialties, tour_types, license_url, license_status, is_approved, is_rejected, is_published, approval_rejection_reason, approval_reviewed_at')
+        .select('id, full_name, email, phone, city, bio, languages, avatar_url, role, specialty, specialties, tour_types, special_abilities, has_vehicle, license_url, license_status, is_approved, is_rejected, is_published, approval_rejection_reason, approval_reviewed_at')
         .in('role', ['guide', 'agency'])
         .order('created_at', { ascending: false });
       if (err) throw err;

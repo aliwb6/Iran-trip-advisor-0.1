@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import {
   Star, MapPin, Globe, Calendar, BadgeCheck, ChevronLeft, ChevronRight,
   ArrowRight, Map, PenLine, Plus, Minus, ChevronDown, Copy, Lock, MessageCircle,
+  Car,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/supabaseClient';
@@ -20,6 +21,7 @@ import PublicLicenseCard from '@/components/profile/PublicLicenseCard';
 import ProfileReviewDialog from '@/components/profile/ProfileReviewDialog';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
 import { selectPublicTours } from '@/lib/publicTours';
+import { getProviderAbilityLabel, normalizeProviderAbilities } from '@/lib/providerCapabilities';
 
 const FALLBACK_IMG = 'https://images.unsplash.com/photo-1589562784072-9ede7d082e5e?w=800&h=1000&fit=crop';
 
@@ -359,6 +361,8 @@ export default function GuideDetails() {
   const bio = guide.bio || '';
   const specialties = Array.isArray(guide.specialties) ? guide.specialties : (guide.specialty ? [guide.specialty] : []);
   const languages = Array.isArray(guide.languages) ? guide.languages : (guide.languages ? guide.languages.split(',').map((s) => s.trim()) : []);
+  const specialAbilities = normalizeProviderAbilities(guide.special_abilities);
+  const hasVehicle = typeof guide.has_vehicle === 'boolean' ? guide.has_vehicle : null;
   const rating = guide.rating ?? null;
   const reviewCount = guide.reviews ?? guide.review_count ?? 0;
   const otherCities = Array.isArray(guide.other_cities) ? guide.other_cities : [];
@@ -491,6 +495,19 @@ export default function GuideDetails() {
                   </span>
                 </div>
               )}
+              {hasVehicle !== null && (
+                <div className="flex items-center gap-3">
+                  <Car className="w-5 h-5 text-gold flex-shrink-0" />
+                  <span className="font-body text-sm text-foreground">
+                    <span className="text-muted-foreground">
+                      {lang === 'fa' ? 'وسیله نقلیه در دسترس:' : lang === 'ar' ? 'المركبة متاحة:' : 'Vehicle available:'}
+                    </span>{' '}
+                    {hasVehicle
+                      ? (lang === 'fa' ? 'بله' : lang === 'ar' ? 'نعم' : 'Yes')
+                      : (lang === 'fa' ? 'خیر' : lang === 'ar' ? 'لا' : 'No')}
+                  </span>
+                </div>
+              )}
               {city && (
                 <div className="flex items-center gap-3">
                   <MapPin className="w-5 h-5 text-gold flex-shrink-0" />
@@ -514,6 +531,21 @@ export default function GuideDetails() {
                 </div>
               )}
             </div>
+
+            {specialAbilities.length > 0 && (
+              <div className="mt-5">
+                <p className="font-body text-xs font-medium text-muted-foreground mb-2">
+                  {lang === 'fa' ? 'توانایی‌های ویژه' : lang === 'ar' ? 'المهارات الخاصة' : 'Special Abilities'}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {specialAbilities.map(ability => (
+                    <span key={ability} className="px-3 py-1 rounded-full border border-gold/20 bg-gold/10 text-gold text-xs font-body font-medium">
+                      {getProviderAbilityLabel(ability, lang)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-3 mt-8">

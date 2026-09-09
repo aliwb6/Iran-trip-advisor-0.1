@@ -18,6 +18,8 @@ const completeGuide = {
   city: 'Shiraz',
   languages: 'Persian, English',
   specialties: ['Cultural'],
+  special_abilities: ['First Aid'],
+  has_vehicle: false,
   bio: 'Local guide',
   license_url: 'guide-1/license.pdf',
   license_status: 'pending_review',
@@ -31,6 +33,28 @@ test('pending-review profile with all required fields is 100% complete and appro
   assert.equal(completion.percentage, 100);
   assert.equal(completion.completed, true);
   assert.equal(eligibility.canApprove, true);
+});
+
+test('an explicit no-vehicle answer still completes the vehicle requirement', () => {
+  const completion = checkProfileCompletion({ ...completeGuide, has_vehicle: false });
+
+  assert.equal(completion.items.find(item => item.label === 'has_vehicle')?.ok, true);
+  assert.equal(completion.completed, true);
+});
+
+test('an unanswered vehicle requirement prevents provider completion', () => {
+  const completion = checkProfileCompletion({ ...completeGuide, has_vehicle: null });
+
+  assert.equal(completion.items.find(item => item.label === 'has_vehicle')?.ok, false);
+  assert.equal(completion.completed, false);
+});
+
+test('at least one non-empty special ability is required for provider completion', () => {
+  for (const special_abilities of [null, [], ['  ']]) {
+    const completion = checkProfileCompletion({ ...completeGuide, special_abilities });
+    assert.equal(completion.items.find(item => item.label === 'special_abilities')?.ok, false);
+    assert.equal(completion.completed, false);
+  }
 });
 
 test('a missing required field keeps completion below 100% and disables approval', () => {
@@ -82,6 +106,8 @@ test('approval sends verified/public status changes to the profiles backend', as
   assert.equal(updates.approval_rejection_reason, null);
   assert.equal(updates.approval_reviewed_at, '2026-09-06T12:00:00.000Z');
   assert.deepEqual(updates.specialties, ['Cultural']);
+  assert.equal(Object.hasOwn(updates, 'special_abilities'), false);
+  assert.equal(Object.hasOwn(updates, 'has_vehicle'), false);
 
   let received;
   const client = {
@@ -97,6 +123,7 @@ test('approval sends verified/public status changes to the profiles backend', as
                 select(columns) {
                   assert.match(columns, /id, full_name, email, phone/);
                   assert.match(columns, /license_url, license_status/);
+                  assert.match(columns, /special_abilities, has_vehicle/);
                   return Promise.resolve({ data: [{ ...completeGuide, ...payload }], error: null });
                 },
               };
@@ -126,6 +153,7 @@ function moderationClientReturning(data, error = null) {
                 select(columns) {
                   assert.match(columns, /id, full_name, email, phone/);
                   assert.match(columns, /license_url, license_status/);
+                  assert.match(columns, /special_abilities, has_vehicle/);
                   return Promise.resolve({ data, error });
                 },
               };
