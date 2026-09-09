@@ -103,7 +103,7 @@ export default function PublicLicenseCard({ profile, lang = 'en', className = ''
       <div className="flex items-center justify-between gap-3 border-b border-border/50 px-4 py-3.5">
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-gold/10 text-gold">
-            <FileText className="h-4.5 w-4.5" />
+            <FileText className="h-5 w-5" />
           </div>
           <h2 className="font-heading text-lg font-semibold text-foreground">{labels.title}</h2>
         </div>
