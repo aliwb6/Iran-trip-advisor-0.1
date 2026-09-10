@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { CreditCard, Loader2, LockKeyhole, MessageCircle, ShieldCheck } from 'lucide-react';
@@ -20,7 +20,12 @@ export default function RequestPaymentGate({ requestId, requestStatus }) {
   const [startingPayment, setStartingPayment] = useState(false);
   const shouldLoadBooking = ['confirmed', 'booked', 'completed'].includes(requestStatus);
 
-  const { data: booking = null, isLoading: bookingLoading, error: bookingError } = useQuery({
+  const {
+    data: booking = null,
+    isLoading: bookingLoading,
+    error: bookingError,
+    refetch: refetchBooking,
+  } = useQuery({
     queryKey: ['booking', requestId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -36,12 +41,23 @@ export default function RequestPaymentGate({ requestId, requestStatus }) {
     refetchOnWindowFocus: true,
   });
 
-  const { data: paymentConfig = null } = useQuery({
+  const { data: paymentConfig = null, isLoading: paymentConfigLoading } = useQuery({
     queryKey: ['payment-provider-config'],
     queryFn: fetchPaymentProviderConfig,
+    enabled: shouldLoadBooking,
     staleTime: 60_000,
     retry: 1,
   });
+
+  // Stripe redirect success is only a UX signal. Settlement authority remains
+  // the verified webhook, so keep refreshing while the server reports pending.
+  useEffect(() => {
+    if (!booking || !['deposit_pending', 'payment_pending'].includes(booking.payment_status)) return undefined;
+    const timer = window.setInterval(() => {
+      refetchBooking();
+    }, 2000);
+    return () => window.clearInterval(timer);
+  }, [booking, refetchBooking]);
 
   if (!shouldLoadBooking) return null;
 
@@ -161,14 +177,14 @@ export default function RequestPaymentGate({ requestId, requestStatus }) {
         <button
           type="button"
           onClick={startPayment}
-          disabled={!canPay || startingPayment}
+          disabled={!canPay || startingPayment || paymentConfigLoading}
           className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {startingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+          {startingPayment || paymentConfigLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
           {startingPayment ? 'Redirecting…' : tx.pay}
         </button>
       </div>
-      {!paymentSupported && (
+      {!paymentConfigLoading && !paymentSupported && (
         <p className="mt-3 text-xs text-amber-600 dark:text-amber-300">{tx.unavailable}</p>
       )}
     </div>
