@@ -54,6 +54,19 @@ test('provider booking surface exposes chat only after the same released paid st
   assert.match(provider, /Chat with traveler/);
 });
 
+test('public guide and agency chat CTAs use the server paid-booking predicate', async () => {
+  const [guide, agency] = await Promise.all([
+    source('../src/pages/GuideDetails.jsx'),
+    source('../src/pages/AgencyProfile.jsx'),
+  ]);
+
+  for (const profile of [guide, agency]) {
+    assert.match(profile, /canChatWithUser\(id\)/);
+    assert.match(profile, /disabled=\{!chatUnlocked\}/);
+    assert.doesNotMatch(profile, /\.from\(['"]trip_requests['"]\)[\s\S]*selected_guide_id/);
+  }
+});
+
 test('direct chat route fails closed before rendering the composer', async () => {
   const app = await source('../src/App.jsx');
   const guard = await source('../src/components/chat/PaidChatRoute.jsx');
