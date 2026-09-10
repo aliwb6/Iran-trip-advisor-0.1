@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/supabaseClient';
+import { canChatWithUser } from '@/api/chatAccess';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { avatarFor } from '@/lib/avatar';
 import { useAuth } from '@/lib/AuthContext';
@@ -296,19 +297,16 @@ export default function GuideDetails() {
         ]);
         if (profileErr) throw profileErr;
 
-        // Part 4: unlock chat if the current tourist has a confirmed/finalized
-        // trip with this guide/agency (proxy for a paid booking — no real
-        // payment gateway is wired up yet).
+        // Keep the profile CTA on the exact same server-side paid-booking
+        // predicate used by the chat route and message RLS. Authorization
+        // failures must fail closed without making the public profile unusable.
         let unlocked = false;
         if (user?.id) {
-          const { data: tripData } = await supabase
-            .from('trip_requests')
-            .select('id')
-            .eq('selected_guide_id', id)
-            .eq('user_id', user.id)
-            .in('status', ['confirmed', 'booked', 'completed'])
-            .limit(1);
-          unlocked = Array.isArray(tripData) && tripData.length > 0;
+          try {
+            unlocked = await canChatWithUser(id);
+          } catch {
+            unlocked = false;
+          }
         }
 
         if (mounted) {
