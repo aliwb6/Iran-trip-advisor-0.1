@@ -1,6 +1,15 @@
 -- Controlled marketplace dispatch.  A proposal cap is not an audience cap: this
 -- ledger is the sole record of which providers may discover/respond to a round.
 
+CREATE OR REPLACE FUNCTION private.trip_request_dispatch_timeout()
+RETURNS interval
+LANGUAGE sql
+IMMUTABLE
+SET search_path = ''
+AS $$ SELECT interval '24 hours' $$;
+REVOKE ALL ON FUNCTION private.trip_request_dispatch_timeout()
+  FROM PUBLIC, anon, authenticated, service_role;
+
 CREATE TABLE IF NOT EXISTS public.trip_request_dispatches (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   trip_request_id uuid NOT NULL REFERENCES public.trip_requests(id) ON DELETE CASCADE,
@@ -10,16 +19,20 @@ CREATE TABLE IF NOT EXISTS public.trip_request_dispatches (
   status text NOT NULL DEFAULT 'pending'
     CHECK (status IN ('pending', 'responded', 'declined', 'expired', 'closed')),
   invited_at timestamptz NOT NULL DEFAULT now(),
-  expires_at timestamptz NOT NULL DEFAULT (now() + interval '24 hours'),
+  expires_at timestamptz NOT NULL DEFAULT (now() + private.trip_request_dispatch_timeout()),
   responded_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT trip_request_dispatches_request_provider_round_key
     UNIQUE (trip_request_id, provider_id, proposal_round),
   CONSTRAINT trip_request_dispatches_response_state_check CHECK (
-    (status = 'responded') = (responded_at IS NOT NULL) OR status <> 'responded'
+    (status = 'responded' AND responded_at IS NOT NULL)
+    OR (status <> 'responded' AND responded_at IS NULL)
   )
 );
+
+ALTER TABLE public.trip_request_dispatches
+  ALTER COLUMN expires_at SET DEFAULT (now() + private.trip_request_dispatch_timeout());
 
 COMMENT ON TABLE public.trip_request_dispatches IS
   'Server-created marketplace invitations. Pending invitations expire after the configurable 24 hour dispatch window.';
@@ -34,11 +47,32 @@ CREATE INDEX IF NOT EXISTS idx_trip_request_dispatches_pending_expiry
 
 ALTER TABLE public.trip_request_dispatches ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.trip_request_dispatches FROM anon, authenticated;
+DROP POLICY IF EXISTS trip_request_dispatches_select_own ON public.trip_request_dispatches;
 CREATE POLICY trip_request_dispatches_select_own
 ON public.trip_request_dispatches FOR SELECT TO authenticated
 USING (provider_id = (SELECT auth.uid()) OR private.current_user_is_admin());
 GRANT SELECT ON public.trip_request_dispatches TO authenticated;
 
+-- Postgres 17 exposes publication membership through pg_publication_tables.
+-- Register once so provider-scoped Find Jobs subscriptions receive INSERT and
+-- UPDATE events without requiring REPLICA IDENTITY FULL.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_catalog.pg_publication p
+    WHERE p.pubname = 'supabase_realtime'
+  ) AND NOT EXISTS (
+    SELECT 1 FROM pg_catalog.pg_publication_tables pt
+    WHERE pt.pubname = 'supabase_realtime'
+      AND pt.schemaname = 'public'
+      AND pt.tablename = 'trip_request_dispatches'
+  ) THEN
+    ALTER PUBLICATION supabase_realtime ADD TABLE public.trip_request_dispatches;
+  END IF;
+END;
+$$;
+
+-- One authoritative eligibility predicate keeps dispatch and validation aligned.
 CREATE OR REPLACE FUNCTION private.marketplace_provider_is_eligible(
   p_provider_id uuid,
   p_destination text[]
@@ -65,7 +99,8 @@ AS $$
       )
   );
 $$;
-REVOKE ALL ON FUNCTION private.marketplace_provider_is_eligible(uuid, text[]) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION private.marketplace_provider_is_eligible(uuid, text[])
+  FROM PUBLIC, anon, authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.dispatch_trip_request(p_request_id uuid)
 RETURNS integer
@@ -96,11 +131,16 @@ BEGIN
     AND status = 'pending'
     AND expires_at <= now();
 
+  -- Responded providers still consume their original cohort position. Only an
+  -- unanswered pending invitation can expire, and only declined/expired rows
+  -- free capacity for a replacement.
   SELECT count(*) INTO v_active FROM public.trip_request_dispatches
   WHERE trip_request_id = v_request.id
     AND proposal_round = v_request.proposal_round
-    AND status = 'pending'
-    AND expires_at > now();
+    AND (
+      status = 'responded'
+      OR (status = 'pending' AND expires_at > now())
+    );
   v_capacity := GREATEST(0, 5 - v_active);
   IF v_capacity = 0 THEN RETURN 0; END IF;
 
@@ -127,7 +167,7 @@ BEGIN
       trip_request_id, provider_id, proposal_round, batch_number, status, expires_at
     )
     SELECT v_request.id, c.id, v_request.proposal_round, v_batch, 'pending',
-           now() + interval '24 hours'
+           now() + private.trip_request_dispatch_timeout()
     FROM candidates c
     ON CONFLICT (trip_request_id, provider_id, proposal_round) DO NOTHING
     RETURNING provider_id
@@ -152,12 +192,25 @@ BEGIN
       AND d.batch_number = v_batch AND p.notify_email IS TRUE
       AND NULLIF(btrim(p.email), '') IS NOT NULL
     ON CONFLICT (unique_key) DO NOTHING;
+
+    -- Keep the legacy audit column synchronized for compatibility with the
+    -- direct-request workflow. The dispatch ledger remains authoritative.
+    UPDATE public.trip_requests r
+    SET escalation_notified_provider_ids = COALESCE((
+      SELECT array_agg(d.provider_id ORDER BY d.provider_id)
+      FROM public.trip_request_dispatches d
+      WHERE d.trip_request_id = v_request.id
+        AND d.proposal_round = v_request.proposal_round
+    ), '{}'::uuid[]),
+    updated_at = now()
+    WHERE r.id = v_request.id;
   END IF;
 
   RETURN v_created;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.dispatch_trip_request(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.dispatch_trip_request(uuid)
+  FROM PUBLIC, anon, authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.dispatch_new_marketplace_trip_request()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
@@ -168,9 +221,12 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.dispatch_new_marketplace_trip_request() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.dispatch_new_marketplace_trip_request()
+  FROM PUBLIC, anon, authenticated, service_role;
 DROP TRIGGER IF EXISTS on_new_trip_request ON public.trip_requests;
+DROP TRIGGER IF EXISTS trg_notify_new_request ON public.trip_requests;
 DROP TRIGGER IF EXISTS trg_notify_guides_new_request ON public.trip_requests;
+DROP TRIGGER IF EXISTS trg_notify_direct_trip_request ON public.trip_requests;
 DROP TRIGGER IF EXISTS trg_dispatch_new_marketplace_trip_request ON public.trip_requests;
 CREATE TRIGGER trg_dispatch_new_marketplace_trip_request
 AFTER INSERT ON public.trip_requests FOR EACH ROW
@@ -180,7 +236,7 @@ CREATE OR REPLACE FUNCTION public.notify_guides_new_request()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_provider public.profiles%ROWTYPE; v_destination text;
 BEGIN
-  IF NEW.request_channel <> 'direct_profile' OR NEW.direct_provider_id IS NULL THEN RETURN NEW; END IF;
+  IF NEW.request_channel IS DISTINCT FROM 'direct_profile' OR NEW.direct_provider_id IS NULL THEN RETURN NEW; END IF;
   SELECT * INTO v_provider FROM public.profiles WHERE id = NEW.direct_provider_id;
   IF NOT FOUND THEN RETURN NEW; END IF;
   v_destination := COALESCE(array_to_string(NEW.destination, ', '), 'Iran');
@@ -198,8 +254,8 @@ BEGIN
   RETURN NEW;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.notify_guides_new_request() FROM PUBLIC, anon, authenticated;
-DROP TRIGGER IF EXISTS trg_notify_direct_trip_request ON public.trip_requests;
+REVOKE ALL ON FUNCTION public.notify_guides_new_request()
+  FROM PUBLIC, anon, authenticated, service_role;
 CREATE TRIGGER trg_notify_direct_trip_request
 AFTER INSERT ON public.trip_requests FOR EACH ROW
 EXECUTE FUNCTION public.notify_guides_new_request();
@@ -219,7 +275,8 @@ BEGIN
   RETURN true;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.decline_trip_request_invitation(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.decline_trip_request_invitation(uuid)
+  FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.decline_trip_request_invitation(uuid) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.process_trip_request_dispatches()
@@ -241,28 +298,59 @@ BEGIN
   RETURN v_processed;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.process_trip_request_dispatches() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.process_trip_request_dispatches()
+  FROM PUBLIC, anon, authenticated, service_role;
 
 CREATE OR REPLACE FUNCTION public.validate_trip_slot_insert()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
-DECLARE v_request public.trip_requests%ROWTYPE; v_active_count integer; v_max integer;
+DECLARE
+  v_request public.trip_requests%ROWTYPE;
+  v_active_count integer;
+  v_max integer;
+  v_user_id uuid := (SELECT auth.uid());
 BEGIN
+  IF v_user_id IS NULL OR NEW.guide_id IS DISTINCT FROM v_user_id THEN
+    RAISE EXCEPTION 'Proposal provider must match the authenticated caller';
+  END IF;
+
   SELECT * INTO v_request FROM public.trip_requests WHERE id = NEW.trip_request_id FOR UPDATE;
   IF NOT FOUND THEN RAISE EXCEPTION 'Trip request not found'; END IF;
   IF v_request.status NOT IN ('active','pending','open') THEN RAISE EXCEPTION 'This trip request is not accepting proposals'; END IF;
   IF v_request.expires_at IS NOT NULL AND v_request.expires_at <= now() THEN RAISE EXCEPTION 'This trip request has expired'; END IF;
-  IF NEW.guide_id <> (SELECT auth.uid()) OR NOT private.marketplace_provider_is_eligible(NEW.guide_id, v_request.destination) THEN
-    RAISE EXCEPTION 'Guide or agency is not eligible to submit proposals';
-  END IF;
+
   IF v_request.request_channel = 'direct_profile' AND v_request.direct_escalated_at IS NULL THEN
-    IF NEW.guide_id <> v_request.direct_provider_id THEN RAISE EXCEPTION 'This direct trip request is currently private to another provider'; END IF;
-    IF v_request.direct_response_deadline IS NOT NULL AND v_request.direct_response_deadline <= now() THEN RAISE EXCEPTION 'The exclusive response window has ended'; END IF;
-  ELSIF NOT EXISTS (
-    SELECT 1 FROM public.trip_request_dispatches d
-    WHERE d.trip_request_id = v_request.id AND d.provider_id = NEW.guide_id
-      AND d.proposal_round = v_request.proposal_round AND d.status = 'pending' AND d.expires_at > now()
-  ) THEN RAISE EXCEPTION 'This trip request was not dispatched to this provider';
+    IF NEW.guide_id IS DISTINCT FROM v_request.direct_provider_id THEN
+      RAISE EXCEPTION 'This direct trip request is currently private to another provider';
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.profiles p
+      WHERE p.id = NEW.guide_id
+        AND p.role IN ('guide', 'agency')
+        AND p.is_approved IS TRUE
+        AND p.is_rejected IS NOT TRUE
+    ) THEN
+      RAISE EXCEPTION 'Guide or agency is not eligible to submit this direct proposal';
+    END IF;
+    IF v_request.direct_response_deadline IS NOT NULL
+       AND v_request.direct_response_deadline <= now() THEN
+      RAISE EXCEPTION 'The exclusive response window has ended';
+    END IF;
+  ELSE
+    IF NOT private.marketplace_provider_is_eligible(NEW.guide_id, v_request.destination) THEN
+      RAISE EXCEPTION 'Guide or agency is not eligible to submit proposals';
+    END IF;
+    IF NOT EXISTS (
+      SELECT 1 FROM public.trip_request_dispatches d
+      WHERE d.trip_request_id = v_request.id
+        AND d.provider_id = NEW.guide_id
+        AND d.proposal_round = v_request.proposal_round
+        AND d.status = 'pending'
+        AND d.expires_at > now()
+    ) THEN
+      RAISE EXCEPTION 'This trip request was not dispatched to this provider';
+    END IF;
   END IF;
+
   NEW.proposal_round := v_request.proposal_round;
   SELECT count(*) INTO v_active_count FROM public.trip_slots s WHERE s.trip_request_id = v_request.id
     AND s.proposal_round = v_request.proposal_round AND s.status <> 'rejected';
@@ -275,16 +363,45 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+REVOKE ALL ON FUNCTION public.validate_trip_slot_insert()
+  FROM PUBLIC, anon, authenticated, service_role;
 
+-- The only broad policy is replaced with owner/admin/direct-target/proven
+-- dispatch relationships. It deliberately does not query trip_slots: that
+-- table's SELECT policy already queries trip_requests, so doing so here would
+-- create PostgreSQL 42P17 policy recursion.
 DROP POLICY IF EXISTS trip_requests_authenticated_select ON public.trip_requests;
 CREATE POLICY trip_requests_authenticated_select ON public.trip_requests FOR SELECT TO authenticated USING (
-  user_id = (SELECT auth.uid()) OR selected_guide_id = (SELECT auth.uid()) OR private.current_user_is_admin()
-  OR (request_channel = 'direct_profile' AND direct_escalated_at IS NULL AND direct_provider_id = (SELECT auth.uid()))
-  OR EXISTS (SELECT 1 FROM public.trip_request_dispatches d WHERE d.trip_request_id = trip_requests.id
-    AND d.provider_id = (SELECT auth.uid()) AND d.proposal_round = trip_requests.proposal_round
-    AND d.status IN ('pending','responded','declined','expired','closed'))
-  OR EXISTS (SELECT 1 FROM public.trip_slots s WHERE s.trip_request_id = trip_requests.id
-    AND s.guide_id = (SELECT auth.uid()))
+  user_id = (SELECT auth.uid())
+  OR selected_guide_id = (SELECT auth.uid())
+  OR private.current_user_is_admin()
+  OR EXISTS (
+    SELECT 1 FROM public.trip_request_dispatches d
+    WHERE d.trip_request_id = trip_requests.id
+      AND d.provider_id = (SELECT auth.uid())
+      AND d.proposal_round = trip_requests.proposal_round
+      AND d.status = 'responded'
+  )
+  OR (
+    status IN ('active', 'pending', 'open')
+    AND (expires_at IS NULL OR expires_at > now())
+    AND (
+      (
+        request_channel = 'direct_profile'
+        AND direct_escalated_at IS NULL
+        AND direct_provider_id = (SELECT auth.uid())
+        AND (direct_response_deadline IS NULL OR direct_response_deadline > now())
+      )
+      OR EXISTS (
+        SELECT 1 FROM public.trip_request_dispatches d
+        WHERE d.trip_request_id = trip_requests.id
+          AND d.provider_id = (SELECT auth.uid())
+          AND d.proposal_round = trip_requests.proposal_round
+          AND d.status = 'pending'
+          AND d.expires_at > now()
+      )
+    )
+  )
 );
 
 CREATE OR REPLACE FUNCTION public.rebroadcast_trip_request(request_id uuid)
@@ -305,7 +422,8 @@ BEGIN
   RETURN true;
 END;
 $$;
-REVOKE ALL ON FUNCTION public.rebroadcast_trip_request(uuid) FROM PUBLIC, anon;
+REVOKE ALL ON FUNCTION public.rebroadcast_trip_request(uuid)
+  FROM PUBLIC, anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.rebroadcast_trip_request(uuid) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.escalate_stale_direct_trip_requests()
@@ -323,17 +441,87 @@ BEGIN
       max_proposals = 5, status = 'active', updated_at = now() WHERE id = v_request.id;
     INSERT INTO public.notifications (user_id, type, message, related_request_id) VALUES (v_request.user_id,
       'direct_request_escalated', 'Your selected guide did not respond within 12 hours. Your trip request is now open to other guides.', v_request.id);
-    PERFORM public.dispatch_trip_request(v_request.id); v_count := v_count + 1;
+    PERFORM public.dispatch_trip_request(v_request.id);
+    UPDATE public.trip_requests
+    SET escalation_notified_provider_ids = COALESCE((
+      SELECT array_agg(d.provider_id ORDER BY d.provider_id)
+      FROM public.trip_request_dispatches d
+      WHERE d.trip_request_id = v_request.id
+        AND d.proposal_round = v_request.proposal_round
+        AND d.status IN ('pending', 'responded')
+    ), '{}'::uuid[])
+    WHERE id = v_request.id;
+    v_count := v_count + 1;
   END LOOP;
+
+  DELETE FROM public.direct_trip_request_intents
+  WHERE consumed_at IS NOT NULL OR expires_at <= now();
+
   RETURN v_count;
 END;
 $$;
+REVOKE ALL ON FUNCTION public.escalate_stale_direct_trip_requests()
+  FROM PUBLIC, anon, authenticated, service_role;
 
+-- Preserve access for providers who already submitted a non-rejected proposal
+-- in an actionable current round before this ledger existed. Rejected legacy
+-- proposals are recorded as closed so the provider is not re-invited in that
+-- round, but they neither consume capacity nor retain request access. Backfill
+-- rows do not emit a new invitation notification.
+INSERT INTO public.trip_request_dispatches (
+  trip_request_id, provider_id, proposal_round, batch_number, status,
+  invited_at, expires_at, responded_at
+)
+SELECT r.id, s.guide_id, r.proposal_round, 1,
+       CASE WHEN s.status = 'rejected' THEN 'closed' ELSE 'responded' END,
+       COALESCE(s.accepted_at, r.created_at, now()),
+       COALESCE(s.accepted_at, r.created_at, now()) + private.trip_request_dispatch_timeout(),
+       CASE WHEN s.status = 'rejected' THEN NULL
+            ELSE COALESCE(s.accepted_at, r.created_at, now()) END
+FROM public.trip_requests r
+JOIN public.trip_slots s
+  ON s.trip_request_id = r.id
+ AND s.proposal_round = r.proposal_round
+WHERE r.status IN ('active', 'pending', 'open', 'proposals_ready')
+  AND (r.request_channel IS DISTINCT FROM 'direct_profile' OR r.direct_escalated_at IS NOT NULL)
+  AND s.guide_id IS NOT NULL
+ON CONFLICT (trip_request_id, provider_id, proposal_round) DO UPDATE
+SET status = EXCLUDED.status,
+    responded_at = EXCLUDED.responded_at,
+    updated_at = now();
+
+-- Already-escalated direct requests may have an invitation array from the old
+-- workflow. Materialize those invitations without notifying again. Expired old
+-- invitations are recorded as expired so dispatch can replace only those rows.
+INSERT INTO public.trip_request_dispatches (
+  trip_request_id, provider_id, proposal_round, batch_number, status,
+  invited_at, expires_at
+)
+SELECT r.id, invited.provider_id, r.proposal_round, 1,
+       CASE WHEN r.direct_escalated_at + private.trip_request_dispatch_timeout() > now()
+            THEN 'pending' ELSE 'expired' END,
+       r.direct_escalated_at,
+       r.direct_escalated_at + private.trip_request_dispatch_timeout()
+FROM public.trip_requests r
+CROSS JOIN LATERAL unnest(COALESCE(r.escalation_notified_provider_ids, '{}'::uuid[]))
+  AS invited(provider_id)
+JOIN public.profiles p ON p.id = invited.provider_id
+WHERE r.request_channel = 'direct_profile'
+  AND r.direct_escalated_at IS NOT NULL
+  AND r.status IN ('active', 'pending', 'open')
+  AND (r.expires_at IS NULL OR r.expires_at > now())
+ON CONFLICT (trip_request_id, provider_id, proposal_round) DO NOTHING;
+
+-- Fill only the unoccupied remainder of each actionable legacy cohort. New
+-- rows and their notifications are generated atomically by the dispatcher.
 DO $$
 DECLARE v_id uuid;
 BEGIN
-  FOR v_id IN SELECT id FROM public.trip_requests WHERE request_channel IS DISTINCT FROM 'direct_profile'
-    AND status IN ('active','pending','open') AND (expires_at IS NULL OR expires_at > now())
+  FOR v_id IN
+    SELECT id FROM public.trip_requests
+    WHERE status IN ('active','pending','open')
+      AND (expires_at IS NULL OR expires_at > now())
+      AND (request_channel IS DISTINCT FROM 'direct_profile' OR direct_escalated_at IS NOT NULL)
   LOOP PERFORM public.dispatch_trip_request(v_id); END LOOP;
 END $$;
 
