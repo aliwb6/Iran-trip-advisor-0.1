@@ -131,20 +131,25 @@ function ProposalDetailModal({ slot, onClose }) {
               {lang === 'fa' ? 'این پیشنهاد رد شده و فقط برای سابقه نگه‌داری می‌شود.' : lang === 'ar' ? 'تم رفض هذا العرض وهو محفوظ للرجوع إليه.' : 'This proposal was rejected and is kept for your records.'}
             </div>
           )}
-          <Link to={path} className="flex items-center gap-3 hover:opacity-80 transition-opacity w-fit">
+          <Link
+            to={path}
+            className="group flex items-center gap-3 w-fit max-w-full rounded-2xl border border-border/45 bg-background/45 px-3.5 py-3 hover:border-accent/40 hover:bg-accent/[0.04] transition-all"
+          >
             <GuideAvatar guide={guide} size="lg" />
-            <div>
-              <p className="font-semibold text-foreground text-sm">{guide.full_name}</p>
-              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+            <div className="min-w-0">
+              <p className="text-base font-bold text-foreground truncate group-hover:text-accent transition-colors">
+                {guide.full_name}
+              </p>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 <RoleBadge role={guide.role} t={t} />
                 {guide.rating > 0 && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                     <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
                     {guide.rating}
                   </span>
                 )}
                 {guide.city && (
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                     <MapPin className="w-3 h-3" />
                     {guide.city}
                   </span>
@@ -229,13 +234,6 @@ function ProposalDetailModal({ slot, onClose }) {
               )}
             </>
           )}
-
-          <Link
-            to={path}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors"
-          >
-            {t('proposal_view_profile')}
-          </Link>
         </div>
       </DialogContent>
     </Dialog>
