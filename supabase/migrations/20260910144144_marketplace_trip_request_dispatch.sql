@@ -404,6 +404,7 @@ CREATE POLICY trip_requests_authenticated_select ON public.trip_requests FOR SEL
   )
 );
 
+-- Rebroadcast creates a new round then starts a controlled five-provider batch.
 CREATE OR REPLACE FUNCTION public.rebroadcast_trip_request(request_id uuid)
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_request public.trip_requests%ROWTYPE;

@@ -218,7 +218,7 @@ VALUES ('00000000-0000-0000-0000-000000009002', '00000000-0000-0000-0000-0000000
   '00000000-0000-0000-0000-000000000108', now() - interval '13 hours', now() - interval '1 hour',
   ARRAY['00000000-0000-0000-0000-000000000103'::uuid, '00000000-0000-0000-0000-000000000104'::uuid]);
 
-\ir ../../supabase/migrations/20260910150000_marketplace_trip_request_dispatch.sql
+\ir ../../supabase/migrations/20260910144144_marketplace_trip_request_dispatch.sql
 
 CREATE FUNCTION pg_temp.assert_true(p_condition boolean, p_message text)
 RETURNS void LANGUAGE plpgsql AS $$
