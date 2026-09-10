@@ -362,7 +362,8 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
         .select('*')
         .eq('trip_request_id', requestId)
         .eq('proposal_round', proposalRound)
-        .order('accepted_at', { ascending: false });
+        .order('accepted_at', { ascending: true, nullsFirst: false })
+        .order('id', { ascending: true });
       if (error) throw error;
 
       const rawSlots = data ?? [];
