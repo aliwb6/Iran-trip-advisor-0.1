@@ -14,6 +14,29 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+const PROPOSAL_TONES = [
+  {
+    card: 'border-teal-300/80 bg-teal-50/70 dark:border-teal-500/35 dark:bg-teal-950/20',
+    badge: 'border-teal-200 bg-teal-100 text-teal-700 dark:border-teal-500/30 dark:bg-teal-500/15 dark:text-teal-300',
+  },
+  {
+    card: 'border-amber-300/80 bg-amber-50/70 dark:border-amber-500/35 dark:bg-amber-950/20',
+    badge: 'border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-500/30 dark:bg-amber-500/15 dark:text-amber-300',
+  },
+  {
+    card: 'border-sky-300/80 bg-sky-50/70 dark:border-sky-500/35 dark:bg-sky-950/20',
+    badge: 'border-sky-200 bg-sky-100 text-sky-700 dark:border-sky-500/30 dark:bg-sky-500/15 dark:text-sky-300',
+  },
+  {
+    card: 'border-violet-300/80 bg-violet-50/70 dark:border-violet-500/35 dark:bg-violet-950/20',
+    badge: 'border-violet-200 bg-violet-100 text-violet-700 dark:border-violet-500/30 dark:bg-violet-500/15 dark:text-violet-300',
+  },
+  {
+    card: 'border-rose-300/80 bg-rose-50/70 dark:border-rose-500/35 dark:bg-rose-950/20',
+    badge: 'border-rose-200 bg-rose-100 text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/15 dark:text-rose-300',
+  },
+];
+
 function profilePath(guide) {
   return guide?.role === 'agency'
     ? `/agencies/${guide.id}`
@@ -219,76 +242,104 @@ function ProposalDetailModal({ slot, onClose }) {
   );
 }
 
-function ProposalRow({ slot, onReject, onSelect, rejecting, selecting, canSelect }) {
+function ProposalRow({ slot, index, onReject, onSelect, rejecting, selecting, canSelect }) {
   const { t, lang } = useI18n();
   const [showDetail, setShowDetail] = useState(false);
   const guide = slot.guide || {};
   const path  = profilePath(guide);
   const rejected = slot.status === 'rejected';
   const cannotReject = ['rejected', 'finalized', 'selected', 'closed'].includes(slot.status);
+  const tone = PROPOSAL_TONES[index % PROPOSAL_TONES.length];
+  const proposalLabel = lang === 'fa'
+    ? `پیشنهاد ${index + 1}`
+    : lang === 'ar'
+    ? `العرض ${index + 1}`
+    : `Proposal ${index + 1}`;
 
   return (
     <>
-      <div className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${rejected ? 'bg-gray-100/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 grayscale opacity-70' : 'bg-background/30 border-border/20 hover:border-border/50'}`}>
-        <Link to={path} className="flex items-center gap-2.5 min-w-0 flex-1 hover:opacity-80 transition-opacity">
-          <GuideAvatar guide={guide} />
-          <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{guide.full_name}</p>
-            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-              <RoleBadge role={guide.role} t={t} />
-              {rejected && (
-                <span className="px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-semibold">
-                  {lang === 'fa' ? 'رد شده' : lang === 'ar' ? 'مرفوض' : 'Rejected'}
-                </span>
-              )}
-              {guide.rating > 0 && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                  {guide.rating}
-                </span>
-              )}
-              {guide.city && (
-                <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <MapPin className="w-3 h-3" />
-                  {guide.city}
-                </span>
-              )}
+      <div className={`rounded-2xl border-2 p-4 transition-all duration-300 ${
+        rejected
+          ? 'bg-gray-100/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 grayscale opacity-70'
+          : `${tone.card} shadow-sm hover:shadow-md`
+      }`}>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Link to={path} className="flex items-center gap-3 min-w-0 flex-1 hover:opacity-80 transition-opacity">
+            <GuideAvatar guide={guide} />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-base font-bold text-foreground truncate">{guide.full_name}</p>
+                {!rejected && (
+                  <span className={`px-2 py-0.5 rounded-full border text-[10px] font-bold ${tone.badge}`}>
+                    {proposalLabel}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                <RoleBadge role={guide.role} t={t} />
+                {rejected && (
+                  <span className="px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-semibold">
+                    {lang === 'fa' ? 'رد شده' : lang === 'ar' ? 'مرفوض' : 'Rejected'}
+                  </span>
+                )}
+                {guide.rating > 0 && (
+                  <span className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                    <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                    {guide.rating}
+                  </span>
+                )}
+                {guide.city && (
+                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                    <MapPin className="w-3 h-3" />
+                    {guide.city}
+                  </span>
+                )}
+              </div>
             </div>
+          </Link>
+
+          <div className="flex items-center gap-2 flex-wrap sm:justify-end sm:shrink-0">
+            <div className="rounded-xl border border-border/40 bg-background/70 px-3 py-1.5 min-w-[92px]">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">
+                {t('proposal_price_label')}
+              </p>
+              <p className="text-sm font-bold text-foreground whitespace-nowrap">
+                {slot.price != null
+                  ? `${Number(slot.price).toLocaleString('en-US')} ${slot.currency || ''}`
+                  : '—'}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowDetail(true)}
+              className="shrink-0 inline-flex items-center justify-center rounded-xl bg-accent px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-accent/20 hover:bg-accent/90 hover:shadow-lg hover:shadow-accent/25 transition-all whitespace-nowrap"
+            >
+              {t('proposal_see_details')}
+            </button>
+
+            {!cannotReject && (
+              <button
+                onClick={() => onReject(slot)}
+                disabled={rejecting}
+                className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/15 hover:text-red-600 disabled:opacity-50 transition-colors"
+              >
+                {rejecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                {lang === 'fa' ? 'رد' : lang === 'ar' ? 'رفض' : 'Reject'}
+              </button>
+            )}
+
+            {canSelect && ['accepted', 'chatting'].includes(slot.status) && (
+              <button
+                onClick={() => onSelect(slot)}
+                disabled={selecting}
+                className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+              >
+                {selecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                {selecting ? 'Selecting…' : 'Select guide'}
+              </button>
+            )}
           </div>
-        </Link>
-
-        <div className="hidden sm:block text-xs text-muted-foreground shrink-0 text-right">
-          {slot.price != null
-            ? `${Number(slot.price).toLocaleString('en-US')} ${slot.currency || ''}`
-            : '—'}
         </div>
-
-        <button
-          onClick={() => setShowDetail(true)}
-          className="shrink-0 text-xs font-medium text-accent hover:text-accent/80 transition whitespace-nowrap"
-        >
-          {t('proposal_see_details')}
-        </button>
-        {!cannotReject && (
-          <button
-            onClick={() => onReject(slot)}
-            disabled={rejecting}
-            className="shrink-0 inline-flex items-center gap-1 text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50"
-          >
-            {rejecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
-            {lang === 'fa' ? 'رد' : lang === 'ar' ? 'رفض' : 'Reject'}
-          </button>
-        )}
-        {canSelect && ['accepted', 'chatting'].includes(slot.status) && (
-          <button
-            onClick={() => onSelect(slot)}
-            disabled={selecting}
-            className="shrink-0 inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
-          >
-            {selecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-            {selecting ? 'Selecting…' : 'Select guide'}
-          </button>
-        )}
       </div>
 
       {showDetail && (
@@ -373,11 +424,29 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
     }
   };
 
+  const panelSubtitle = lang === 'fa'
+    ? 'پیشنهادها را سریع مقایسه کنید و جزئیات هر کدام را ببینید.'
+    : lang === 'ar'
+    ? 'قارن العروض بسرعة وافتح تفاصيل كل عرض.'
+    : 'Compare offers at a glance, then open any proposal for full details.';
+
   return (
-    <div className="pt-4 border-t border-border/30" dir={dir}>
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-        {t('card_view_proposals')}
-      </p>
+    <div className="pt-5 border-t border-border/30" dir={dir}>
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p className="font-heading text-base sm:text-lg font-bold text-foreground">
+            {t('card_view_proposals')}
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {panelSubtitle}
+          </p>
+        </div>
+        {!isLoading && slots.length > 0 && (
+          <span className="shrink-0 inline-flex items-center justify-center min-w-8 h-8 px-2 rounded-full bg-accent/15 text-accent border border-accent/30 text-sm font-bold">
+            {slots.length}
+          </span>
+        )}
+      </div>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-8">
@@ -388,11 +457,12 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
           {t('proposals_no_proposals')}
         </p>
       ) : (
-        <div className="space-y-2">
-          {slots.map(slot => (
+        <div className="space-y-3">
+          {slots.map((slot, index) => (
             <ProposalRow
               key={slot.id}
               slot={slot}
+              index={index}
               onReject={rejectProposal}
               onSelect={selectProposal}
               rejecting={rejectingId === slot.id}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MapPin, Users, Baby, ArrowRight, ArrowLeft,
@@ -63,7 +63,11 @@ function PrefCell({ icon: Icon, label, value }) {
 
 export default function RequestCard({ request, onOpen, slotCount = 0 }) {
   const { t, lang, dir } = useI18n();
-  const [proposalsOpen, setProposalsOpen] = useState(false);
+  const [proposalsOpen, setProposalsOpen] = useState(() => slotCount > 0);
+
+  useEffect(() => {
+    if (slotCount > 0) setProposalsOpen(true);
+  }, [slotCount]);
 
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const status      = request.status || 'waiting';
@@ -86,7 +90,7 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
   const guidesAcceptedLabel = t('card_guides_accepted')
     .replace('{n}', slotCount)
     .replace('{max}', request.maxProposals);
-  const proposalsBtnLabel   = proposalsOpen ? t('card_hide_proposals') : t('card_view_proposals');
+  const proposalsBtnLabel = proposalsOpen ? t('card_hide_proposals') : t('card_view_proposals');
 
   return (
     <motion.article
@@ -191,16 +195,19 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Proposals toggle — Level 2 */}
-          <button
-            onClick={() => setProposalsOpen(prev => !prev)}
-            className="inline-flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-foreground transition"
-          >
-            {proposalsBtnLabel}
-            <ChevronDown
-              className={`w-3.5 h-3.5 transition-transform duration-300 ${proposalsOpen ? 'rotate-180' : ''}`}
-            />
-          </button>
+          {/* Proposals are expanded by default as soon as at least one arrives. */}
+          {slotCount > 0 && (
+            <button
+              onClick={() => setProposalsOpen(prev => !prev)}
+              className="inline-flex items-center gap-1.5 px-2 py-1 text-sm font-medium text-muted-foreground hover:text-foreground transition"
+              aria-expanded={proposalsOpen}
+            >
+              {proposalsBtnLabel}
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-300 ${proposalsOpen ? 'rotate-180' : ''}`}
+              />
+            </button>
+          )}
 
           {/* Existing See Details */}
           <button
@@ -213,9 +220,9 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
         </div>
       </footer>
 
-      {/* Level 2 — inline proposals panel (animated) */}
+      {/* Inline proposals panel: visible by default when proposals exist. */}
       <AnimatePresence initial={false}>
-        {proposalsOpen && (
+        {slotCount > 0 && proposalsOpen && (
           <motion.div
             key="proposals-panel"
             initial={{ height: 0, opacity: 0 }}
