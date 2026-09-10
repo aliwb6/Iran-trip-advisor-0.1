@@ -7,9 +7,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
 import { supabase } from '@/supabaseClient';
 import RequestCard from '@/components/profile/RequestCard';
+import RequestPaymentGate from '@/components/profile/RequestPaymentGate';
 import TripRequestForm from '@/components/profile/TripRequestForm';
-
-
 
 const HOLIDAY_TYPE_LABELS = {
   active:       'Active',
@@ -22,9 +21,9 @@ const HOLIDAY_TYPE_LABELS = {
 export default function RequestsPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
-  const { lang, dir } = useI18n();
+  const { lang } = useI18n();
 
-  const [filter, setFilter]   = useState('active');
+  const [filter, setFilter] = useState('active');
   const [formOpen, setFormOpen] = useState(false);
 
   useEffect(() => {
@@ -75,35 +74,35 @@ export default function RequestsPage() {
     // destination is a text[] column; tolerate legacy string values too
     const cities = Array.isArray(r.destination) ? r.destination : r.destination ? [r.destination] : [];
     const hasTransport = r.assistance?.includes('Transportation') || Boolean(r.transportation);
-    const hasAccomm    = r.assistance?.includes('Accommodation')  || Boolean(r.accommodation);
+    const hasAccomm = r.assistance?.includes('Accommodation') || Boolean(r.accommodation);
     const holidayLabel = HOLIDAY_TYPE_LABELS[r.holiday_type] || r.holiday_type;
-    const tourLabel    = r.tour_type === 'private' ? 'Private Tour'
-                       : r.tour_type === 'group'   ? 'Group Tour'
-                       : r.tour_type;
-    const displayType  = holidayLabel
+    const tourLabel = r.tour_type === 'private' ? 'Private Tour'
+      : r.tour_type === 'group' ? 'Group Tour'
+      : r.tour_type;
+    const displayType = holidayLabel
       ? (tourLabel ? `${holidayLabel} · ${tourLabel}` : holidayLabel)
       : tourLabel;
 
     const effectiveStatus = isOverdue(r) ? 'expired' : r.status;
 
     return {
-      id:            r.id,
-      title:         r.title
+      id: r.id,
+      title: r.title
         || (cities.length
           ? `${lang === 'fa' ? 'سفر به' : lang === 'ar' ? 'رحلة إلى' : 'Trip to'} ${cities.join(', ')}`
           : (lang === 'fa' ? 'درخواست سفر' : lang === 'ar' ? 'طلب رحلة' : 'Trip Request')),
-      destination:   cities,
-      adults:        r.adults   ?? 1,
-      children:      r.children ?? 0,
-      startDate:     r.start_date,
-      startTime:     r.arrival_time   || r.start_time,
-      endDate:       r.end_date,
-      endTime:       r.departure_time || r.end_time,
+      destination: cities,
+      adults: r.adults ?? 1,
+      children: r.children ?? 0,
+      startDate: r.start_date,
+      startTime: r.arrival_time || r.start_time,
+      endDate: r.end_date,
+      endTime: r.departure_time || r.end_time,
       transportation: hasTransport ? (lang === 'fa' ? 'بله' : lang === 'ar' ? 'نعم' : 'Yes') : null,
-      accommodation:  hasAccomm    ? (lang === 'fa' ? 'بله' : lang === 'ar' ? 'نعم' : 'Yes') : null,
-      tourType:       displayType  || null,
-      requirements:  r.requirements || r.notes,
-      status:        (['open', 'active', 'pending', 'waiting'].includes(effectiveStatus))
+      accommodation: hasAccomm ? (lang === 'fa' ? 'بله' : lang === 'ar' ? 'نعم' : 'Yes') : null,
+      tourType: displayType || null,
+      requirements: r.requirements || r.notes,
+      status: (['open', 'active', 'pending', 'waiting'].includes(effectiveStatus))
         ? 'waiting'
         : effectiveStatus === 'proposals_ready' ? 'received' : (effectiveStatus || 'waiting'),
       canonicalStatus: effectiveStatus || 'active',
@@ -113,26 +112,26 @@ export default function RequestsPage() {
   };
 
   const tx = {
-    title:    lang === 'fa' ? 'درخواست‌های سفر من' : lang === 'ar' ? 'طلبات سفري' : 'My Travel Requests',
+    title: lang === 'fa' ? 'درخواست‌های سفر من' : lang === 'ar' ? 'طلبات سفري' : 'My Travel Requests',
     subtitle: lang === 'fa'
       ? 'پیشنهادهای راهنماها را اینجا ببین و مدیریت کن'
       : lang === 'ar'
-      ? 'تابع وأدر العروض من المرشدين هنا'
-      : 'Track proposals from local guides and manage your trip plans',
-    active:   lang === 'fa' ? 'فعال'    : lang === 'ar' ? 'نشط'    : 'Active',
-    past:     lang === 'fa' ? 'گذشته'   : lang === 'ar' ? 'سابق'   : 'Past',
-    newBtn:   lang === 'fa' ? 'درخواست جدید' : lang === 'ar' ? 'طلب جديد' : '+ New Trip Request',
+        ? 'تابع وأدر العروض من المرشدين هنا'
+        : 'Track proposals from local guides and manage your trip plans',
+    active: lang === 'fa' ? 'فعال' : lang === 'ar' ? 'نشط' : 'Active',
+    past: lang === 'fa' ? 'گذشته' : lang === 'ar' ? 'سابق' : 'Past',
+    newBtn: lang === 'fa' ? 'درخواست جدید' : lang === 'ar' ? 'طلب جديد' : '+ New Trip Request',
     emptyTitle: filter === 'active'
-      ? (lang === 'fa' ? 'هنوز درخواست فعالی نداری'  : lang === 'ar' ? 'لا توجد طلبات نشطة بعد' : 'No active trip requests yet')
-      : (lang === 'fa' ? 'هنوز درخواست گذشته‌ای نداری' : lang === 'ar' ? 'لا توجد طلبات سابقة'    : 'No past trip requests'),
+      ? (lang === 'fa' ? 'هنوز درخواست فعالی نداری' : lang === 'ar' ? 'لا توجد طلبات نشطة بعد' : 'No active trip requests yet')
+      : (lang === 'fa' ? 'هنوز درخواست گذشته‌ای نداری' : lang === 'ar' ? 'لا توجد طلبات سابقة' : 'No past trip requests'),
     emptyDesc: filter === 'active'
       ? (lang === 'fa'
-          ? 'روی دکمه «درخواست جدید» کلیک کن تا یک درخواست سفر سفارشی بسازی و پیشنهادهای راهنماهای محلی را دریافت کنی.'
-          : lang === 'ar'
+        ? 'روی دکمه «درخواست جدید» کلیک کن تا یک درخواست سفر سفارشی بسازی و پیشنهادهای راهنماهای محلی را دریافت کنی.'
+        : lang === 'ar'
           ? 'انقر على «طلب جديد» لإنشاء طلب رحلة مخصص وتلقي عروض من المرشدين المحليين.'
           : 'Click "+ New Trip Request" above to create a custom trip and start receiving proposals from local guides.')
       : (lang === 'fa' ? 'سفرهای کامل‌شده یا منقضی‌شده اینجا ظاهر می‌شوند.'
-          : lang === 'ar' ? 'ستظهر هنا الرحلات المكتملة أو المنتهية.'
+        : lang === 'ar' ? 'ستظهر هنا الرحلات المكتملة أو المنتهية.'
           : 'Completed or expired trip requests will appear here.'),
     back: lang === 'fa' ? 'بازگشت' : lang === 'ar' ? 'رجوع' : 'Back',
   };
@@ -229,12 +228,17 @@ export default function RequestsPage() {
         ) : (
           <div className="grid grid-cols-1 gap-5">
             {filtered.map(r => (
-              <RequestCard
-                key={r.id}
-                request={mapToCard(r)}
-                slotCount={Number(r.proposals_count) || 0}
-                onOpen={req => navigate(`/profile/requests/${req.id}`)}
-              />
+              <div key={r.id}>
+                <RequestCard
+                  request={mapToCard(r)}
+                  slotCount={Number(r.proposals_count) || 0}
+                  onOpen={req => navigate(`/profile/requests/${req.id}`)}
+                />
+                <RequestPaymentGate
+                  requestId={r.id}
+                  requestStatus={r.status}
+                />
+              </div>
             ))}
           </div>
         )}

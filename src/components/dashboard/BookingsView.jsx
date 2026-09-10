@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Contact, Loader2, Mail, Phone, Users, Wallet } from 'lucide-react';
+import { CalendarDays, Contact, Loader2, Mail, MessageCircle, Phone, Users, Wallet } from 'lucide-react';
 import { fetchMyBookings } from '@/api/bookings';
 import { fetchReleasedBookingContact } from '@/api/participantProfiles';
 
@@ -12,11 +13,14 @@ const money = (value, currency = 'USD') => new Intl.NumberFormat('en-US', {
 const percent = (value) => `${Math.round((Number(value) || 0) * 100)}%`;
 
 function BookingCard({ booking }) {
+  const navigate = useNavigate();
   const currency = booking.currency || 'USD';
   const dates = [booking.start_date, booking.end_date].filter(Boolean).join(' → ') || 'Dates not set';
   const [contact, setContact] = useState(null);
   const [contactLoading, setContactLoading] = useState(false);
   const [contactError, setContactError] = useState('');
+  const chatUnlocked = booking.contact_released === true
+    && ['deposit_paid', 'paid'].includes(booking.payment_status);
 
   const loadContact = async () => {
     if (!booking.contact_released || contactLoading) return;
@@ -79,33 +83,44 @@ function BookingCard({ booking }) {
       </dl>
 
       <div className="mt-4 border-t border-white/[0.07] pt-4">
-        {booking.contact_released ? (
-          contact ? (
-            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs">
-              <div className="flex items-center gap-2 text-emerald-300">
-                <Contact className="h-4 w-4" />
-                <span className="font-semibold">Traveler contact</span>
+        {chatUnlocked ? (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => navigate(`/chat/${booking.tourist_id}`)}
+              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-500"
+            >
+              <MessageCircle className="h-3.5 w-3.5" />
+              Chat with traveler
+            </button>
+
+            {contact ? (
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs">
+                <div className="flex items-center gap-2 text-emerald-300">
+                  <Contact className="h-4 w-4" />
+                  <span className="font-semibold">Traveler contact</span>
+                </div>
+                <p className="mt-2 font-medium text-white">{contact.full_name || 'Traveler'}</p>
+                {contact.email && <p className="mt-1 flex items-center gap-2 text-white/60"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
+                {contact.phone && <p className="mt-1 flex items-center gap-2 text-white/60"><Phone className="h-3.5 w-3.5" />{contact.phone}</p>}
               </div>
-              <p className="mt-2 font-medium text-white">{contact.full_name || 'Traveler'}</p>
-              {contact.email && <p className="mt-1 flex items-center gap-2 text-white/60"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
-              {contact.phone && <p className="mt-1 flex items-center gap-2 text-white/60"><Phone className="h-3.5 w-3.5" />{contact.phone}</p>}
-            </div>
-          ) : (
-            <div>
-              <button
-                type="button"
-                onClick={loadContact}
-                disabled={contactLoading}
-                className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/15 disabled:opacity-60"
-              >
-                {contactLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Contact className="h-3.5 w-3.5" />}
-                {contactLoading ? 'Loading contact…' : 'View traveler contact'}
-              </button>
-              {contactError && <p className="mt-2 text-xs text-red-300">{contactError}</p>}
-            </div>
-          )
+            ) : (
+              <div>
+                <button
+                  type="button"
+                  onClick={loadContact}
+                  disabled={contactLoading}
+                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/15 disabled:opacity-60"
+                >
+                  {contactLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Contact className="h-3.5 w-3.5" />}
+                  {contactLoading ? 'Loading contact…' : 'View traveler contact'}
+                </button>
+                {contactError && <p className="mt-2 text-xs text-red-300">{contactError}</p>}
+              </div>
+            )}
+          </div>
         ) : (
-          <p className="text-xs text-white/35">Private traveler contact unlocks only after the booking deposit is confirmed.</p>
+          <p className="text-xs text-white/35">Two-way chat and private traveler contact unlock only after the booking deposit is securely confirmed.</p>
         )}
       </div>
     </article>

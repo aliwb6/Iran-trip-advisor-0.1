@@ -130,8 +130,8 @@ export default async function handler(request, response) {
     const currency = String(attempt.currency || '').toLowerCase();
     const amountMinor = toMinorUnits(attempt.amount, currency);
     const appUrl = paymentAppUrl(env, request);
-    const successUrl = `${appUrl}/my-trips?payment=success&session_id={CHECKOUT_SESSION_ID}`;
-    const cancelUrl = `${appUrl}/my-trips?payment=cancelled`;
+    const successUrl = `${appUrl}/profile/requests?payment=success&session_id={CHECKOUT_SESSION_ID}`;
+    const cancelUrl = `${appUrl}/profile/requests?payment=cancelled`;
     const productName = `Booking deposit${attempt.booking_title ? ` — ${attempt.booking_title}` : ''}`.slice(0, 120);
 
     const params = {
