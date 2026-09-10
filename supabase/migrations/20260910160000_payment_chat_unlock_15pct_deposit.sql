@@ -60,6 +60,21 @@ REVOKE ALL ON FUNCTION private.current_user_has_released_booking(uuid)
 GRANT EXECUTE ON FUNCTION private.current_user_has_released_booking(uuid)
   TO authenticated;
 
+-- Browser UI can ask one yes/no question without reading arbitrary bookings.
+-- Authorization stays server-side and shares the exact predicate used by RLS.
+CREATE OR REPLACE FUNCTION public.can_chat_with_user(p_counterparty_id uuid)
+RETURNS boolean
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+  SELECT private.current_user_has_released_booking(p_counterparty_id);
+$$;
+
+REVOKE ALL ON FUNCTION public.can_chat_with_user(uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.can_chat_with_user(uuid) TO authenticated;
+
 -- Keep the existing helper name used by message INSERT RLS, but make the rule
 -- intentionally strict: direct chat is a post-payment capability only.
 CREATE OR REPLACE FUNCTION private.current_user_can_message(p_recipient_id uuid)
