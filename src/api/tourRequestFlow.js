@@ -1,32 +1,93 @@
 import { supabase } from '../supabaseClient';
 
+const OPEN_REQUEST_STATUSES = ['active', 'pending', 'open'];
+const FILLED_REQUEST_STATUSES = ['confirmed', 'booked', 'completed'];
+
 const isExpired = (expiresAt) => Boolean(
   expiresAt && new Date(expiresAt).getTime() <= Date.now()
 );
 
-// ── Guide: fetch all open requests this guide hasn't applied to this round ────
+const normalizeRequest = (request) => ({
+  ...request,
+  proposal_round: Math.max(1, Number(request.proposal_round) || 1),
+  accepted_count: Number(request.proposals_count) || 0,
+  max_proposals: Math.max(1, Number(request.max_proposals) || 5),
+});
+
+// ── Guide: fetch active invitations plus requests that were filled by another provider ──
 
 export async function fetchAvailableRequests(guideId) {
-  const { data: requests, error: requestError } = await supabase
+  const { data: dispatches, error: dispatchError } = await supabase
+    .from('trip_request_dispatches')
+    .select('proposal_round, status, expires_at, invited_at, trip_request:trip_requests!inner(*)')
+    .eq('provider_id', guideId)
+    .in('status', ['pending', 'expired'])
+    .in('trip_request.status', [...OPEN_REQUEST_STATUSES, ...FILLED_REQUEST_STATUSES])
+    .order('invited_at', { ascending: false });
+
+  if (dispatchError) throw dispatchError;
+
+  // Direct-profile requests are private to their target before escalation and do
+  // not have a marketplace dispatch row yet, so preserve that inbox path.
+  const { data: directRequests, error: directError } = await supabase
     .from('trip_requests')
     .select('*')
-    .in('status', ['active', 'pending', 'open'])
+    .eq('request_channel', 'direct_profile')
+    .eq('direct_provider_id', guideId)
+    .is('direct_escalated_at', null)
+    .in('status', OPEN_REQUEST_STATUSES)
     .order('created_at', { ascending: false });
 
-  if (requestError) throw requestError;
-  if (!requests?.length) return [];
+  if (directError) throw directError;
 
-  const normalized = requests.map(request => ({
-    ...request,
-    proposal_round: Math.max(1, Number(request.proposal_round) || 1),
-    accepted_count: Number(request.proposals_count) || 0,
-    max_proposals: Math.max(1, Number(request.max_proposals) || 5),
-  }));
+  const requestMap = new Map();
 
-  const currentRequests = normalized.filter(request => !isExpired(request.expires_at));
-  if (!currentRequests.length) return [];
+  (dispatches || []).forEach((dispatch) => {
+    if (!dispatch.trip_request) return;
+    const request = normalizeRequest(dispatch.trip_request);
+    const dispatchRound = Math.max(1, Number(dispatch.proposal_round) || 1);
+    if (dispatchRound !== request.proposal_round) return;
 
-  const requestIds = currentRequests.map(request => request.id);
+    const filledByAnother = Boolean(
+      request.selected_guide_id &&
+      request.selected_guide_id !== guideId &&
+      FILLED_REQUEST_STATUSES.includes(request.status)
+    );
+    const actionable = Boolean(
+      OPEN_REQUEST_STATUSES.includes(request.status) &&
+      dispatch.status === 'pending' &&
+      !isExpired(dispatch.expires_at) &&
+      !isExpired(request.expires_at)
+    );
+
+    // A timed-out invitation must not reappear as actionable just because the
+    // parent request is still open. Keep only live invitations or filled history.
+    if (!actionable && !filledByAnother) return;
+
+    requestMap.set(request.id, {
+      ...request,
+      dispatch_status: dispatch.status,
+      dispatch_expires_at: dispatch.expires_at,
+      provider_request_state: filledByAnother ? 'expired' : 'available',
+    });
+  });
+
+  (directRequests || []).forEach((rawRequest) => {
+    const request = normalizeRequest(rawRequest);
+    if (isExpired(request.expires_at)) return;
+    if (!requestMap.has(request.id)) {
+      requestMap.set(request.id, {
+        ...request,
+        dispatch_status: 'direct',
+        provider_request_state: 'available',
+      });
+    }
+  });
+
+  const requests = [...requestMap.values()];
+  if (!requests.length) return [];
+
+  const requestIds = requests.map(request => request.id);
   const { data: mySlots, error: slotError } = await supabase
     .from('trip_slots')
     .select('trip_request_id, id, status, price, price_type, price_period, accepted_at, proposal_round')
@@ -40,12 +101,16 @@ export async function fetchAvailableRequests(guideId) {
     mySlotMap[`${slot.trip_request_id}:${Number(slot.proposal_round) || 1}`] = slot;
   });
 
-  return currentRequests
+  return requests
     .map(request => ({
       ...request,
       my_slot: mySlotMap[`${request.id}:${request.proposal_round}`] || null,
     }))
-    .filter(request => !request.my_slot && request.accepted_count < request.max_proposals);
+    .filter(request => {
+      if (request.my_slot) return false;
+      if (request.provider_request_state === 'expired') return true;
+      return request.accepted_count < request.max_proposals;
+    });
 }
 
 // ── Guide: fetch requests this guide submitted proposals for this round ───────
@@ -63,7 +128,7 @@ export async function fetchMyAcceptedRequests(guideId) {
   const reqIds = [...new Set(slots.map(slot => slot.trip_request_id))];
   const { data: requests, error: rErr } = await supabase
     .from('trip_requests')
-    .select('id, destination, start_date, end_date, adults, children, status, proposal_round, expires_at')
+    .select('id, destination, start_date, end_date, adults, children, status, selected_guide_id, proposal_round, expires_at')
     .in('id', reqIds);
 
   if (rErr) throw rErr;
