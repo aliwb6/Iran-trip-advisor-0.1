@@ -60,18 +60,25 @@ export async function createTripRequest(travelerId, tripData) {
 }
 
 export async function getAvailableTripRequests(guideId) {
-  const { data: rawTrips, error } = await supabase
-    .from('trip_requests')
-    .select('*')
-    .in('status', ['open', 'active', 'pending'])
-    .order('created_at', { ascending: false });
+  // The dispatch ledger is the provider's server-authorized Find Jobs inbox.
+  // Do not start from the global trip_requests collection and filter in JS.
+  const { data: dispatches, error } = await supabase
+    .from('trip_request_dispatches')
+    .select('proposal_round, expires_at, trip_request:trip_requests!inner(*)')
+    .eq('provider_id', guideId)
+    .eq('status', 'pending')
+    .gt('expires_at', new Date().toISOString())
+    .in('trip_request.status', ['open', 'active', 'pending'])
+    .order('invited_at', { ascending: false });
 
   if (error) throw error;
-  if (!rawTrips?.length) return [];
+  if (!dispatches?.length) return [];
 
-  const trips = rawTrips
-    .map(normalizeTripRequest)
-    .filter(trip => !isRequestExpired(trip) && trip.proposals_count < trip.max_proposals);
+  const trips = dispatches
+    .map(dispatch => ({ ...normalizeTripRequest(dispatch.trip_request), dispatch_round: Number(dispatch.proposal_round) || 1 }))
+    .filter(trip => !isRequestExpired(trip)
+      && trip.proposals_count < trip.max_proposals
+      && trip.proposal_round === trip.dispatch_round);
 
   if (!trips.length) return [];
 

@@ -19,6 +19,8 @@ function timeAgo(dateStr) {
 
 const TYPE_CONFIG = {
   new_request:     { dot: 'bg-blue-400',               label: 'New Request' },
+  tour_request:    { dot: 'bg-blue-400',               label: 'New Request' },
+  direct_trip_request: { dot: 'bg-blue-400',           label: 'Direct Request' },
   proposals_ready: { dot: 'bg-violet-400',             label: 'Guides Ready' },
   guide_selected:  { dot: 'bg-emerald-400',            label: 'Selected! 🎉' },
   request_filled:  { dot: 'bg-white/30',               label: 'Not selected' },
@@ -36,8 +38,8 @@ function NotifCard({ notif, onMarkRead, onNavigate }) {
       onClick={() => {
         if (!notif.is_read) onMarkRead(notif.id);
         if (notif.related_request_id) {
-          // new_request → go accept it; guide_selected / request_filled → see accepted list
-          onNavigate(notif.type === 'new_request' ? '/find-jobs' : '/dashboard');
+          const isProviderRequest = ['new_request', 'tour_request', 'direct_trip_request'].includes(notif.type);
+          onNavigate(isProviderRequest ? `/dashboard/requests/${notif.related_request_id}` : '/dashboard');
         }
       }}
       className={`w-full text-left rounded-2xl border p-4 transition-colors ${

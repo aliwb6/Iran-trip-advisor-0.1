@@ -19,6 +19,7 @@ function timeAgo(dateStr) {
 const TYPE_DOT = {
   // actual table types
   tour_request:    'bg-blue-500',
+  direct_trip_request: 'bg-blue-500',
   message:         'bg-violet-500',
   // legacy types kept for backward compat with existing DB rows
   new_request:     'bg-blue-500',
@@ -99,8 +100,8 @@ export default function NotificationBell({ userId, isLight = false }) {
 
     const { type, related_request_id } = notif;
 
-    if (type === 'tour_request' || type === 'new_request') {
-      navigate('/dashboard/requests');
+    if (type === 'tour_request' || type === 'new_request' || type === 'direct_trip_request') {
+      navigate(related_request_id ? `/dashboard/requests/${related_request_id}` : '/dashboard/requests');
     } else if (type === 'message') {
       // If related_request_id holds the sender's user id, go to that chat thread;
       // otherwise fall back to the dashboard chat section.

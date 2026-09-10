@@ -36,7 +36,7 @@ function notificationDestination(notification) {
     return `/profile/requests/${requestId}`;
   }
 
-  if (notification.type === 'tour_request' || notification.type === 'new_request') {
+  if (notification.type === 'tour_request' || notification.type === 'new_request' || notification.type === 'direct_trip_request') {
     return `/dashboard/requests/${requestId}`;
   }
 

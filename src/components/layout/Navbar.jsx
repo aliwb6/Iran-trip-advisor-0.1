@@ -8,6 +8,7 @@ import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
 import { Menu, X, Compass, ArrowRight, LogOut, LayoutDashboard, Shield, User } from 'lucide-react';
 import { preloadRoute } from '@/lib/route-loaders';
+import { getAvailableTripRequests } from '@/api/tripRequests';
 
 const UserDropdown = lazy(() => import('@/components/navbar/UserDropdown'));
 
@@ -42,16 +43,7 @@ export default function Navbar() {
 
     async function fetchCount() {
       try {
-        const { data, error } = await supabase
-          .from('trip_requests')
-          .select('id, expires_at, proposals_count, max_proposals')
-          .in('status', ['open', 'active', 'pending']);
-        if (error) throw error;
-        const availableCount = (data || []).filter(request => {
-          const expired = request.expires_at && new Date(request.expires_at).getTime() <= Date.now();
-          const max = Math.max(1, Number(request.max_proposals) || 5);
-          return !expired && (Number(request.proposals_count) || 0) < max;
-        }).length;
+        const availableCount = (await getAvailableTripRequests(user.id)).length;
         if (!cancelled) setOpenRequestCount(availableCount);
       } catch (e) {
         // silently fail
@@ -61,19 +53,21 @@ export default function Navbar() {
     fetchCount();
 
     const channel = supabase
-      .channel('nav-trip-requests')
+      .channel(`nav-trip-request-dispatches-${user.id}`)
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'trip_requests',
+        table: 'trip_request_dispatches',
+        filter: `provider_id=eq.${user.id}`,
       }, fetchCount)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'trip_requests' }, fetchCount)
       .subscribe();
 
     return () => {
       cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [isAuthenticated, isGuideOrAgency]);
+  }, [isAuthenticated, isGuideOrAgency, user?.id]);
 
   const baseLinks = [
     { path: '/tours', label: t('nav_tours') },
