@@ -101,7 +101,7 @@ ON public.messages
 FOR SELECT
 TO authenticated
 USING (
-  public.current_user_is_admin()
+  private.current_user_is_admin()
   OR (
     conversation_id IS NULL
     AND (
