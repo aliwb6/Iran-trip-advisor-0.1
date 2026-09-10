@@ -190,7 +190,7 @@ BEGIN
   IF v_provider.notify_email IS TRUE AND NULLIF(btrim(v_provider.email), '') IS NOT NULL THEN
     INSERT INTO public.email_outbox (recipient_user_id, recipient_email, template, payload, unique_key)
     VALUES (v_provider.id, v_provider.email, 'direct_trip_request',
-            jsonb_build_object('request_id', v_request.id, 'destination', NEW.destination,
+            jsonb_build_object('request_id', NEW.id, 'destination', NEW.destination,
               'deadline', NEW.direct_response_deadline, 'provider_name', v_provider.full_name),
             'direct-trip-request:' || NEW.id::text || ':' || v_provider.id::text)
     ON CONFLICT (unique_key) DO NOTHING;
