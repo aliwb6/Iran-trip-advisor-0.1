@@ -62,6 +62,7 @@ const HOW_IT_WORKS = [
 const HOURS   = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 const MINUTES = ['00', '15', '30', '45'];
 const GUIDE_LANGUAGE_OPTIONS = mergeLanguages(popularLanguages, allLanguages);
+const REQUIREMENTS_MIN_LENGTH = 80;
 
 const INITIAL_FORM = {
   destinations: [],
@@ -81,7 +82,6 @@ const INITIAL_FORM = {
   assistance: [],
   accommodation_stars: null,
   requirements: '',
-  no_requirements: false,
   holiday_types: [],
   additional_services: [],
   tour_type: '',
@@ -756,6 +756,7 @@ function Step2({
   const [showServiceInput,  setShowServiceInput]  = useState(false);
   const holidayInputRef = useRef(null);
   const serviceInputRef = useRef(null);
+  const requirementsLength = form.requirements.trim().length;
 
   const submitHolidayType = () => {
     const v = newHolidayType.trim();
@@ -940,48 +941,6 @@ function Step2({
         </div>
       </div>
 
-      {/* Requirements */}
-      <div>
-        <label className="block text-sm font-bold text-foreground mb-2.5">
-          Your Requirements <span className="text-red-500">*</span>
-        </label>
-        <textarea
-          value={form.no_requirements ? '' : form.requirements}
-          onChange={e => set('requirements', e.target.value)}
-          onInput={(e) => {
-            e.target.style.height = 'auto';
-            e.target.style.height = e.target.scrollHeight + 'px';
-          }}
-          placeholder="Describe your travel goals, interests, or any special needs..."
-          rows={2}
-          disabled={form.no_requirements}
-          style={{ minHeight: '60px', maxHeight: '200px', overflow: 'hidden', resize: 'none' }}
-          className={`w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.08] border border-gray-200 dark:border-white/20 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent transition-colors ${
-            form.no_requirements ? 'opacity-40 cursor-not-allowed' : ''
-          }`}
-        />
-        <FieldError msg={errors?.requirements} />
-        <div
-          onClick={() => {
-            const next = !form.no_requirements;
-            set('no_requirements', next);
-            if (next) set('requirements', '');
-          }}
-          className="flex items-center gap-2 mt-2.5 cursor-pointer select-none group"
-        >
-          <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors ${
-            form.no_requirements
-              ? 'bg-accent border-accent'
-              : 'border-border/60 group-hover:border-accent/50'
-          }`}>
-            {form.no_requirements && <Check className="w-2.5 h-2.5 text-white" />}
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            I have no additional requirements
-          </span>
-        </div>
-      </div>
-
       {/* Tour type */}
       <div>
         <FieldLabel>I prefer:</FieldLabel>
@@ -997,6 +956,42 @@ function Step2({
               label={t.label}
             />
           ))}
+        </div>
+      </div>
+
+      {/* Requirements — intentionally last so travellers can add anything not covered above */}
+      <div>
+        <label className="block text-sm font-bold text-foreground mb-2.5">
+          Your Requirements <span className="text-red-500">*</span>
+        </label>
+        <textarea
+          value={form.requirements}
+          onChange={e => set('requirements', e.target.value)}
+          onInput={(e) => {
+            e.target.style.height = 'auto';
+            e.target.style.height = e.target.scrollHeight + 'px';
+          }}
+          placeholder="Describe anything else we should know about your travel goals, interests, or special needs..."
+          rows={2}
+          minLength={REQUIREMENTS_MIN_LENGTH}
+          required
+          aria-describedby="trip-requirements-help trip-requirements-count"
+          style={{ minHeight: '60px', maxHeight: '200px', overflow: 'hidden', resize: 'none' }}
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.08] border border-gray-200 dark:border-white/20 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent transition-colors"
+        />
+        <FieldError msg={errors?.requirements} />
+        <div className="mt-2 flex items-start justify-between gap-3 text-xs">
+          <p id="trip-requirements-help" className="text-muted-foreground">
+            Add any details not covered above. Minimum {REQUIREMENTS_MIN_LENGTH} characters.
+          </p>
+          <span
+            id="trip-requirements-count"
+            className={`shrink-0 font-medium tabular-nums ${
+              requirementsLength >= REQUIREMENTS_MIN_LENGTH ? 'text-accent' : 'text-red-400'
+            }`}
+          >
+            {requirementsLength}/{REQUIREMENTS_MIN_LENGTH}
+          </span>
         </div>
       </div>
     </div>
@@ -1153,10 +1148,11 @@ export default function TripRequestForm({ isOpen, onClose, onSuccess, initialDat
     }
 
     const errs = {};
+    const trimmedRequirements = form.requirements.trim();
     if (!form.holiday_types.length)
       errs.holiday_types = 'Please select at least one type of holiday.';
-    if (!form.no_requirements && !form.requirements.trim())
-      errs.requirements = "Please describe your requirements or check 'I have no additional requirements'.";
+    if (trimmedRequirements.length < REQUIREMENTS_MIN_LENGTH)
+      errs.requirements = `Please write at least ${REQUIREMENTS_MIN_LENGTH} characters in Your Requirements (${trimmedRequirements.length}/${REQUIREMENTS_MIN_LENGTH}).`;
 
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
@@ -1180,7 +1176,7 @@ export default function TripRequestForm({ isOpen, onClose, onSuccess, initialDat
         guide_languages:     form.guide_languages,
         assistance:          form.assistance,
         accommodation_stars: form.accommodation_stars,
-        requirements:        form.requirements,
+        requirements:        trimmedRequirements,
         holiday_types:       form.holiday_types,
         additional_services: form.additional_services,
         tour_type:           form.tour_type,
