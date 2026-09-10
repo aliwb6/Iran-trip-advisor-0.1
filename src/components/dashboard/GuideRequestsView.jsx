@@ -24,12 +24,18 @@ function fmt(dateStr) {
 const cityList = (d) => (Array.isArray(d) ? d : d ? [d] : []);
 
 const SLOT_STATUS_LABEL = {
-  accepted:  { text: 'Waiting for tourist',  color: 'text-yellow-400',  bg: 'bg-yellow-400/10' },
-  selected:  { text: 'You were chosen! 🎉',  color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  rejected:  { text: 'Not selected',         color: 'text-white/40',    bg: 'bg-white/[0.05]'  },
-  chatting:  { text: 'In discussion',        color: 'text-blue-400',    bg: 'bg-blue-400/10'   },
-  finalized: { text: 'Booked',               color: 'text-emerald-400', bg: 'bg-emerald-400/10'},
-  closed:    { text: 'Closed',               color: 'text-white/30',    bg: 'bg-white/[0.04]'  },
+  accepted:  { text: 'Waiting for tourist',       color: 'text-yellow-400',  bg: 'bg-yellow-400/10' },
+  selected:  { text: 'You were chosen! 🎉',       color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  rejected:  { text: 'Rejected by traveler',      color: 'text-red-300',     bg: 'bg-red-500/10' },
+  chatting:  { text: 'In discussion',             color: 'text-blue-400',    bg: 'bg-blue-400/10' },
+  finalized: { text: 'Booked',                    color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+  closed:    { text: 'Closed',                    color: 'text-white/30',    bg: 'bg-white/[0.04]' },
+};
+
+const FILLED_SLOT_INFO = {
+  text: 'Expired',
+  color: 'text-white/55',
+  bg: 'bg-white/[0.07]',
 };
 
 function Tag({ children }) {
@@ -77,6 +83,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
 
   const maxProposals = req.max_proposals || 5;
   const isFull = req.accepted_count >= maxProposals;
+  const isExpiredForProvider = req.provider_request_state === 'expired';
   const mySlot = req.my_slot;
   const hasApplied = Boolean(mySlot);
   const slotInfo = mySlot ? (SLOT_STATUS_LABEL[mySlot.status] || SLOT_STATUS_LABEL.accepted) : null;
@@ -95,7 +102,11 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.97 }}
-        className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl p-5 hover:border-white/[0.15] transition-colors"
+        className={`border rounded-2xl p-5 transition-all ${
+          isExpiredForProvider
+            ? 'bg-white/[0.035] border-white/[0.06] grayscale opacity-70'
+            : 'bg-[hsl(222,45%,14%)] border-white/[0.08] hover:border-white/[0.15]'
+        }`}
       >
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
@@ -104,7 +115,14 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
             </h3>
             <p className="text-white/40 text-[11px] mt-0.5">Submitted {fmt(req.created_at)}</p>
           </div>
-          <ProposalCountPill count={req.accepted_count} max={maxProposals} />
+          {isExpiredForProvider ? (
+            <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-semibold bg-white/[0.08] text-white/55 border border-white/10">
+              <Clock className="w-3 h-3" />
+              Expired
+            </span>
+          ) : (
+            <ProposalCountPill count={req.accepted_count} max={maxProposals} />
+          )}
         </div>
 
         <div className="flex flex-wrap gap-1.5 mb-3">
@@ -131,7 +149,17 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
           </p>
         )}
 
-        {hasApplied ? (
+        {isExpiredForProvider ? (
+          <div className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/10 px-4 py-3">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-white/45" />
+            <div>
+              <p className="text-xs font-semibold text-white/65">This request has expired for you.</p>
+              <p className="text-[11px] leading-relaxed text-white/40 mt-0.5">
+                The traveler selected another guide or agency, so this tour request is no longer available.
+              </p>
+            </div>
+          </div>
+        ) : hasApplied ? (
           <div className={`flex items-center gap-2 py-2.5 px-4 rounded-xl text-sm font-medium ${slotInfo.bg} ${slotInfo.color}`}>
             <CheckCircle2 className="w-4 h-4 shrink-0" />
             {t('proposal_submitted')} ({mySlot.status})
@@ -165,14 +193,16 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
         )}
       </motion.div>
 
-      <SubmitProposalModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        request={req}
-        guideId={guideId}
-        commissionRate={commissionRate}
-        onSuccess={handleProposalSuccess}
-      />
+      {!isExpiredForProvider && (
+        <SubmitProposalModal
+          open={modalOpen}
+          onClose={() => setModalOpen(false)}
+          request={req}
+          guideId={guideId}
+          commissionRate={commissionRate}
+          onSuccess={handleProposalSuccess}
+        />
+      )}
     </>
   );
 }
@@ -182,7 +212,15 @@ function ProposalCard({ entry, onChanged }) {
   const queryClient = useQueryClient();
   const [confirming, setConfirming] = useState(false);
   const req = entry.request;
-  const slotInfo = SLOT_STATUS_LABEL[entry.status] || { text: entry.status, color: 'text-white/40', bg: 'bg-white/[0.05]' };
+  const filledByAnother = Boolean(
+    entry.status === 'rejected' &&
+    req?.selected_guide_id &&
+    ['confirmed', 'booked', 'completed'].includes(req?.status)
+  );
+  const explicitlyRejected = entry.status === 'rejected' && !filledByAnother;
+  const slotInfo = filledByAnother
+    ? FILLED_SLOT_INFO
+    : (SLOT_STATUS_LABEL[entry.status] || { text: entry.status, color: 'text-white/40', bg: 'bg-white/[0.05]' });
   const start = fmt(req?.start_date);
   const end = fmt(req?.end_date);
   const dest = cityList(req?.destination).join(', ') || 'Iran';
@@ -217,7 +255,11 @@ function ProposalCard({ entry, onChanged }) {
   };
 
   return (
-    <div className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl p-5">
+    <div className={`border rounded-2xl p-5 transition-all ${
+      entry.status === 'rejected'
+        ? 'bg-white/[0.035] border-white/[0.06] grayscale opacity-75'
+        : 'bg-[hsl(222,45%,14%)] border-white/[0.08]'
+    }`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
           <h3 className="text-white font-semibold text-sm">Trip to {dest}</h3>
@@ -229,6 +271,24 @@ function ProposalCard({ entry, onChanged }) {
           {slotInfo.text}
         </span>
       </div>
+
+      {filledByAnother && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/10 px-3.5 py-3 mb-3">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-white/45" />
+          <p className="text-xs leading-relaxed text-white/50">
+            Expired — the traveler selected another guide or agency. You can no longer act on this request.
+          </p>
+        </div>
+      )}
+
+      {explicitlyRejected && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-red-400/15 bg-red-500/[0.06] px-3.5 py-3 mb-3">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-300/80" />
+          <p className="text-xs leading-relaxed text-red-100/70">
+            The traveler rejected your proposal. This proposal is kept here for your records.
+          </p>
+        </div>
+      )}
 
       {priceLabel && <p className="text-[hsl(178,85%,55%)] font-semibold text-sm mb-2">{priceLabel}</p>}
 

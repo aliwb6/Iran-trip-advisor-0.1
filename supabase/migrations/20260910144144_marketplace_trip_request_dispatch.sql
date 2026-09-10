@@ -36,10 +36,9 @@ ALTER TABLE public.trip_request_dispatches ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.trip_request_dispatches FROM anon, authenticated;
 CREATE POLICY trip_request_dispatches_select_own
 ON public.trip_request_dispatches FOR SELECT TO authenticated
-USING (provider_id = (SELECT auth.uid()) OR public.current_user_is_admin());
+USING (provider_id = (SELECT auth.uid()) OR private.current_user_is_admin());
 GRANT SELECT ON public.trip_request_dispatches TO authenticated;
 
--- One authoritative eligibility predicate keeps dispatch and validation aligned.
 CREATE OR REPLACE FUNCTION private.marketplace_provider_is_eligible(
   p_provider_id uuid,
   p_destination text[]
@@ -68,8 +67,6 @@ AS $$
 $$;
 REVOKE ALL ON FUNCTION private.marketplace_provider_is_eligible(uuid, text[]) FROM PUBLIC, anon, authenticated;
 
--- Must only be called by triggers, lifecycle RPCs, or cron. The request row
--- lock serializes dispatch, expiry, rebroadcast and proposal submission.
 CREATE OR REPLACE FUNCTION public.dispatch_trip_request(p_request_id uuid)
 RETURNS integer
 LANGUAGE plpgsql
@@ -143,8 +140,6 @@ BEGIN
   )
   SELECT count(*) INTO v_created FROM notified;
 
-  -- Direct-profile escalation already has an email contract. Its marketplace
-  -- batch uses the same ledger and remains idempotent through unique_key.
   IF v_request.request_channel = 'direct_profile' AND v_request.direct_escalated_at IS NOT NULL THEN
     INSERT INTO public.email_outbox (recipient_user_id, recipient_email, template, payload, unique_key)
     SELECT d.provider_id, p.email, 'trip_request_escalation_invite',
@@ -181,8 +176,6 @@ CREATE TRIGGER trg_dispatch_new_marketplace_trip_request
 AFTER INSERT ON public.trip_requests FOR EACH ROW
 EXECUTE FUNCTION public.dispatch_new_marketplace_trip_request();
 
--- The direct target notification remains private and keeps its established
--- email outbox behavior; generic requests are now dispatched above instead.
 CREATE OR REPLACE FUNCTION public.notify_guides_new_request()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_provider public.profiles%ROWTYPE; v_destination text;
@@ -211,8 +204,6 @@ CREATE TRIGGER trg_notify_direct_trip_request
 AFTER INSERT ON public.trip_requests FOR EACH ROW
 EXECUTE FUNCTION public.notify_guides_new_request();
 
--- A provider may explicitly yield an unanswered invitation. No browser write
--- access to the ledger is granted; this owner-bound RPC replaces it atomically.
 CREATE OR REPLACE FUNCTION public.decline_trip_request_invitation(request_id uuid)
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_round integer;
@@ -252,8 +243,6 @@ END;
 $$;
 REVOKE ALL ON FUNCTION public.process_trip_request_dispatches() FROM PUBLIC, anon, authenticated;
 
--- Canonical proposal guard: generic (and escalated direct) marketplace work
--- requires a still-actionable invitation. Direct exclusive requests are exempt.
 CREATE OR REPLACE FUNCTION public.validate_trip_slot_insert()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_request public.trip_requests%ROWTYPE; v_active_count integer; v_max integer;
@@ -287,11 +276,9 @@ BEGIN
 END;
 $$;
 
--- The only broad policy is replaced with owner/admin/direct-target/proven
--- invitation-or-proposal relationships. This also protects direct REST reads.
 DROP POLICY IF EXISTS trip_requests_authenticated_select ON public.trip_requests;
 CREATE POLICY trip_requests_authenticated_select ON public.trip_requests FOR SELECT TO authenticated USING (
-  user_id = (SELECT auth.uid()) OR selected_guide_id = (SELECT auth.uid()) OR public.current_user_is_admin()
+  user_id = (SELECT auth.uid()) OR selected_guide_id = (SELECT auth.uid()) OR private.current_user_is_admin()
   OR (request_channel = 'direct_profile' AND direct_escalated_at IS NULL AND direct_provider_id = (SELECT auth.uid()))
   OR EXISTS (SELECT 1 FROM public.trip_request_dispatches d WHERE d.trip_request_id = trip_requests.id
     AND d.provider_id = (SELECT auth.uid()) AND d.proposal_round = trip_requests.proposal_round
@@ -300,7 +287,6 @@ CREATE POLICY trip_requests_authenticated_select ON public.trip_requests FOR SEL
     AND s.guide_id = (SELECT auth.uid()))
 );
 
--- Rebroadcast creates a new round then starts a controlled five-provider batch.
 CREATE OR REPLACE FUNCTION public.rebroadcast_trip_request(request_id uuid)
 RETURNS boolean LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_request public.trip_requests%ROWTYPE;
@@ -322,8 +308,6 @@ $$;
 REVOKE ALL ON FUNCTION public.rebroadcast_trip_request(uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.rebroadcast_trip_request(uuid) TO authenticated;
 
--- Preserve direct escalation's single traveler update but route its provider
--- batch through the same dispatch ledger instead of a broadcast-like array.
 CREATE OR REPLACE FUNCTION public.escalate_stale_direct_trip_requests()
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $$
 DECLARE v_request public.trip_requests%ROWTYPE; v_count integer := 0;
@@ -345,9 +329,6 @@ BEGIN
 END;
 $$;
 
--- Existing actionable generic requests are initialized once, privately. They
--- receive at most five new ledger invitations; completed/expired/direct rows
--- and historical proposal rows are untouched.
 DO $$
 DECLARE v_id uuid;
 BEGIN
