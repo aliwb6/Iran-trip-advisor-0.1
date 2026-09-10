@@ -3,7 +3,10 @@ import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 
 const NotificationsContext = createContext(null);
-const NOTIFICATION_FIELDS = 'id,user_id,type,title,body,link,is_read,created_at';
+
+// Keep this list aligned with the canonical public.notifications table.
+// The table stores one human-readable message plus the related trip request id.
+const NOTIFICATION_FIELDS = 'id,user_id,type,message,related_request_id,is_read,created_at';
 
 export function NotificationsProvider({ children }) {
   const { user } = useAuth();
@@ -22,10 +25,15 @@ export function NotificationsProvider({ children }) {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
-      if (!error && data) {
-        setNotifications(data);
-        setUnreadCount(data.filter(n => !n.is_read).length);
+
+      if (error) {
+        console.error('Failed to load notifications', error);
+        return;
       }
+
+      const nextNotifications = data || [];
+      setNotifications(nextNotifications);
+      setUnreadCount(nextNotifications.filter(notification => !notification.is_read).length);
     } finally {
       setLoading(false);
     }
@@ -33,15 +41,41 @@ export function NotificationsProvider({ children }) {
 
   const markAllRead = useCallback(async () => {
     if (!userId) return;
-    await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId).eq('is_read', false);
-    setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('user_id', userId)
+      .eq('is_read', false);
+
+    if (error) {
+      console.error('Failed to mark notifications as read', error);
+      return;
+    }
+
+    setNotifications(prev => prev.map(notification => ({ ...notification, is_read: true })));
     setUnreadCount(0);
   }, [userId]);
 
   const markOneRead = useCallback(async (id) => {
-    await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
-    setUnreadCount(prev => Math.max(0, prev - 1));
+    if (!id) return;
+
+    const { error } = await supabase
+      .from('notifications')
+      .update({ is_read: true })
+      .eq('id', id)
+      .eq('is_read', false);
+
+    if (error) {
+      console.error('Failed to mark notification as read', error);
+      return;
+    }
+
+    setNotifications(prev => {
+      const wasUnread = prev.some(notification => notification.id === id && !notification.is_read);
+      if (wasUnread) setUnreadCount(count => Math.max(0, count - 1));
+      return prev.map(notification => notification.id === id ? { ...notification, is_read: true } : notification);
+    });
   }, []);
 
   useEffect(() => {
@@ -65,9 +99,19 @@ export function NotificationsProvider({ children }) {
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
         }, (payload) => {
-          setNotifications(prev => [payload.new, ...prev].slice(0, 20));
-          setUnreadCount(prev => prev + 1);
+          const notification = payload.new;
+          setNotifications(prev => {
+            if (prev.some(item => item.id === notification.id)) return prev;
+            return [notification, ...prev].slice(0, 20);
+          });
+          if (!notification.is_read) setUnreadCount(prev => prev + 1);
         })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        }, fetchNotifications)
         .subscribe();
     };
 
