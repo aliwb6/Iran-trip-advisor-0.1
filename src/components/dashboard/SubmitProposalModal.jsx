@@ -632,7 +632,7 @@ export default function SubmitProposalModal({
               {submitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
               ) : (
-                t('submit_proposal_btn')
+                t('apply')
               )}
             </button>
           </div>

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, Calendar, Users, Globe, FileText,
   Clock, RefreshCw, AlertCircle, CheckCircle2,
-  Send, Loader2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -150,7 +150,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
               {isFull ? (
                 <><AlertCircle className="w-4 h-4" /> Request closed ({req.accepted_count}/{maxProposals})</>
               ) : (
-                <><Send className="w-4 h-4" /> {t('apply')}</>
+                <><FileText className="w-4 h-4" /> See Details</>
               )}
             </button>
             {!isFull && (
