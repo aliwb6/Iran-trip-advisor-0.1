@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, Calendar, Users, Globe, FileText,
   Clock, RefreshCw, AlertCircle, CheckCircle2,
-  Send, Loader2,
+  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
