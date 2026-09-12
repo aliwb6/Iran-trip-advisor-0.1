@@ -31,7 +31,7 @@ export async function fetchAvailableRequests(guideId) {
   // not have a marketplace dispatch row yet, so preserve that inbox path.
   const { data: directRequests, error: directError } = await supabase
     .from('trip_requests')
-    .select('*, source_tour:tours!source_tour_id(id, slug, title, description, itinerary, duration, price, price_usd, price_from, cities, city, location, included, excluded, not_included, image_url, gallery, tour_type)')
+    .select('*, source_tour:tours!source_tour_id(id, slug, title, description, itinerary, duration, price, cities, city, location, included, image_url, gallery, tour_type)')
     .eq('request_channel', 'direct_profile')
     .eq('direct_provider_id', guideId)
     .is('direct_escalated_at', null)
