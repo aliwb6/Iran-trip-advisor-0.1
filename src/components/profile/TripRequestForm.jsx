@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, ChevronLeft, ChevronRight, Check, Plus,
-  MapPin, Car, Hotel, Loader2,
+  MapPin, Car, Hotel, Loader2, Calendar, Users,
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n';
@@ -540,8 +540,8 @@ function IconGridItem({ selected, onClick, emoji, label, multi = false }) {
 
 // ── Step indicator ─────────────────────────────────────────────────────────
 
-function StepIndicator({ step }) {
-  const steps = ['Trip Details', 'Preferences'];
+function StepIndicator({ step, packageMode = false }) {
+  const steps = packageMode ? ['Customization', 'Your Details'] : ['Trip Details', 'Preferences'];
   return (
     <div className="flex items-center justify-center gap-0 mb-6">
       {steps.map((label, i) => {
@@ -573,6 +573,52 @@ function StepIndicator({ step }) {
         );
       })}
     </div>
+  );
+}
+
+function PackageRequestSummary({ context, form, lang }) {
+  const adults = form.maleAdults + form.femaleAdults;
+  const travellers = [
+    adults ? `${adults} ${adults === 1 ? 'Adult' : 'Adults'}` : null,
+    form.children ? `${form.children} ${form.children === 1 ? 'Child' : 'Children'}` : null,
+  ].filter(Boolean).join(', ');
+
+  return (
+    <aside className="hidden lg:flex w-[330px] shrink-0 flex-col overflow-hidden border-e border-border/50 bg-card">
+      <div className="relative h-48 shrink-0 bg-muted">
+        {context.image && (
+          <img src={context.image} alt="" className="h-full w-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+        <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-white/70">{context.eyebrow}</p>
+          <h3 className="mt-1 font-heading text-lg font-semibold leading-snug">{context.title}</h3>
+          {context.location && <p className="mt-2 flex items-center gap-1.5 text-xs text-white/80"><MapPin className="h-3.5 w-3.5" />{context.location}</p>}
+        </div>
+      </div>
+
+      <div className="space-y-4 p-5 text-sm">
+        <div className="flex items-start gap-2.5 text-muted-foreground">
+          <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+          <span>{form.start_date && form.end_date ? `${formatDateDisplay(form.start_date)} — ${formatDateDisplay(form.end_date)}` : (lang === 'fa' ? 'تاریخ سفر را انتخاب کنید' : 'Choose your travel dates')}</span>
+        </div>
+        <div className="flex items-start gap-2.5 text-muted-foreground">
+          <Users className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+          <span>{travellers || (lang === 'fa' ? 'مسافران را مشخص کنید' : 'Choose your travellers')}</span>
+        </div>
+      </div>
+
+      <div className="mt-auto border-t border-border/50 p-5">
+        {context.price != null && (
+          <div className="flex items-baseline justify-between gap-3">
+            <span className="text-xs text-muted-foreground">{lang === 'fa' ? 'قیمت از' : 'Estimated from'}</span>
+            <span className="font-heading text-lg font-semibold text-foreground">USD {Number(context.price).toLocaleString()}</span>
+          </div>
+        )}
+        {context.meta && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{context.meta}</p>}
+        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground/80">{lang === 'fa' ? 'مبلغ نهایی پس از بررسی درخواست شما تأیید می‌شود.' : 'The final price is confirmed after your request is reviewed.'}</p>
+      </div>
+    </aside>
   );
 }
 
@@ -1011,6 +1057,7 @@ export default function TripRequestForm({
   const { user }       = useAuth();
   const { t, lang, dir } = useI18n();
   const queryClient    = useQueryClient();
+  const packageMode = Boolean(requestContext?.package);
   const [step, setStep]           = useState(1);
   const [direction, setDirection] = useState(1);
   const [form, setForm]           = useState(INITIAL_FORM);
@@ -1215,7 +1262,7 @@ export default function TripRequestForm({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
         >
           {/* Backdrop */}
           <motion.div
@@ -1232,10 +1279,13 @@ export default function TripRequestForm({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.97, y: 12 }}
             transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 w-full max-w-4xl flex rounded-3xl overflow-hidden shadow-2xl"
-            style={{ maxHeight: 'min(92vh, 780px)' }}
+            className={`relative z-10 flex w-full overflow-hidden shadow-2xl ${packageMode ? 'max-w-6xl rounded-2xl border border-border/60' : 'max-w-4xl rounded-3xl'}`}
+            style={{ maxHeight: 'min(92vh, 800px)' }}
           >
             {/* ── Sidebar (desktop only) ── */}
+            {packageMode ? (
+              <PackageRequestSummary context={requestContext} form={form} lang={lang} />
+            ) : (
             <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-navy relative overflow-hidden">
               <div className="relative z-10 flex flex-col h-full p-7">
                 <div className="mb-8">
@@ -1268,6 +1318,7 @@ export default function TripRequestForm({
               <div className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full bg-accent/15 blur-3xl pointer-events-none" />
               <div className="absolute top-0 right-0 w-px h-full bg-white/10" />
             </aside>
+            )}
 
             {/* ── Form area ── */}
             <div className="flex-1 bg-card flex flex-col overflow-hidden">
@@ -1275,10 +1326,12 @@ export default function TripRequestForm({
               <div className="flex items-start justify-between px-6 sm:px-8 pt-6 pb-0 shrink-0">
                 <div>
                   <h2 className="font-heading text-xl font-semibold text-foreground">
-                    New Trip Request
+                    {packageMode ? 'Customize your tour' : 'New Trip Request'}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    {step === 1 ? 'Step 1 of 2 — Trip Details' : 'Step 2 of 2 — Preferences'}
+                    {packageMode
+                      ? (step === 1 ? 'Tell us how you would like to tailor this package.' : 'Confirm your preferences before sending the request.')
+                      : (step === 1 ? 'Step 1 of 2 — Trip Details' : 'Step 2 of 2 — Preferences')}
                   </p>
                 </div>
                 <button
@@ -1291,12 +1344,12 @@ export default function TripRequestForm({
 
               {/* Step indicator */}
               <div className="px-6 sm:px-8 pt-5 shrink-0">
-                <StepIndicator step={step} />
+                <StepIndicator step={step} packageMode={packageMode} />
               </div>
 
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-4">
-                {requestContext && (
+                {requestContext && !packageMode && (
                   <div className="mb-5 rounded-2xl border border-accent/20 bg-accent/[0.06] px-4 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
                       {requestContext.eyebrow}
@@ -1361,7 +1414,7 @@ export default function TripRequestForm({
                     onClick={goNext}
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25"
                   >
-                    Next
+                    {packageMode ? 'Continue' : 'Next'}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (
@@ -1372,7 +1425,7 @@ export default function TripRequestForm({
                   >
                     {submitting
                       ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
-                      : 'Submit Request'
+                      : (packageMode ? 'Send Customization Request' : 'Submit Request')
                     }
                   </button>
                 )}

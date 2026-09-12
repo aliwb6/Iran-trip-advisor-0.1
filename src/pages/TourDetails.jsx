@@ -630,8 +630,12 @@ export default function TourDetails() {
         onSuccess={handlePackageRequestSuccess}
         initialData={packageRequestInitialData}
         requestContext={requestTarget ? {
+          package: true,
           eyebrow: t('package_request_based_on'),
           title,
+          image: heroImage,
+          location,
+          price: priceFrom,
           meta: requestTarget.provider_code
             ? t('package_request_target_with_code', {
                 name: requestTarget.provider_name || t('package_request_provider_fallback'),
