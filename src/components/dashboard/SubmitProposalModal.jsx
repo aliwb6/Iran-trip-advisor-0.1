@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Loader2, DollarSign, AlertTriangle,
@@ -15,6 +15,7 @@ import {
 import { useI18n } from '@/lib/i18n.jsx';
 import { guideSubmitProposal } from '@/api/tourRequestFlow';
 import { calculateProposalEstimate } from '@/lib/proposalPricing';
+import { buildPackageProposalPrefill, getPackageRequestKind } from '@/lib/packageTripRequest';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -271,6 +272,23 @@ export default function SubmitProposalModal({
   const [hasTransportation, setHasTransportation] = useState(false);
   const [transportationItems, setTransportationItems] = useState([]);
   const [customTransport, setCustomTransport] = useState('');
+  const packageRequestKind = getPackageRequestKind(request);
+  const sourceTourTitle = request?.source_tour?.title?.[lang]
+    || request?.source_tour?.title?.en
+    || request?.source_tour?.title
+    || '';
+
+  useEffect(() => {
+    if (!open) return;
+    const prefill = buildPackageProposalPrefill(request, lang);
+    if (!prefill) return;
+
+    setPrice(prefill.price);
+    setItinerary(prefill.itinerary);
+    setIncludedText(prefill.included.join('\n'));
+    setExcludedText(prefill.excluded.join('\n'));
+    setMessage(prefill.message);
+  }, [open, request, lang]);
 
   const TRANSPORT_OPTIONS = [
     'Private car',
@@ -388,10 +406,24 @@ export default function SubmitProposalModal({
           >
             <DialogHeader>
               <DialogTitle className="text-white text-lg font-bold">
-                {t('submit_proposal')}
+                {packageRequestKind === 'package_booking'
+                  ? 'Confirm & Send Offer'
+                  : packageRequestKind === 'package_private'
+                    ? 'Send Custom Proposal'
+                    : t('submit_proposal')}
               </DialogTitle>
             </DialogHeader>
             <p className="text-white/50 text-sm mt-1">{subtitle}</p>
+            {packageRequestKind && sourceTourTitle && (
+              <div className="mt-3 rounded-xl border border-teal-300/20 bg-teal-300/[0.07] px-3 py-2 text-xs leading-relaxed text-teal-100/80">
+                <span className="font-semibold text-teal-200">
+                  {packageRequestKind === 'package_booking' ? 'Package booking offer' : 'Reference tour'}:
+                </span>{' '}
+                {sourceTourTitle}. {packageRequestKind === 'package_booking'
+                  ? 'Package details have been pre-filled; adjust them before sending.'
+                  : 'Use the original package as a starting point and customize every offer detail.'}
+              </div>
+            )}
             <span className="inline-block mt-2 text-[10px] font-medium text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-full px-3 py-1">
               Request closes when {maxProposals} guide{maxProposals === 1 ? '' : 's'} apply
             </span>
@@ -632,7 +664,7 @@ export default function SubmitProposalModal({
               {submitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
               ) : (
-                t('apply')
+                packageRequestKind === 'package_booking' ? 'Confirm & Send Offer' : t('apply')
               )}
             </button>
           </div>

@@ -85,3 +85,33 @@ export function buildPackageTripRequestInitialData(tour, lang = 'en') {
   };
 }
 
+export function getPackageRequestKind(request) {
+  if (request?.request_kind === 'package_booking') return 'package_booking';
+  if (request?.request_kind === 'package_private') return 'package_private';
+  return null;
+}
+
+export function buildPackageProposalPrefill(request, lang = 'en') {
+  const tour = request?.source_tour;
+  if (!tour) return null;
+
+  const price = tour.price ?? tour.price_usd ?? tour.price_from ?? '';
+  const itinerary = Array.isArray(tour.itinerary)
+    ? tour.itinerary.map((day, index) => {
+      if (typeof day === 'string') return day.trim();
+      const title = asLocalizedText(day?.title, lang);
+      const description = asLocalizedText(day?.description, lang);
+      return `Day ${day?.day || index + 1}: ${[title, description].filter(Boolean).join(' — ')}`.trim();
+    }).filter(Boolean).join('\n')
+    : asLocalizedText(tour.itinerary, lang);
+
+  return {
+    price: price == null ? '' : String(price),
+    itinerary,
+    included: asList(tour.included, lang),
+    excluded: asList(tour.excluded ?? tour.not_included, lang),
+    message: getPackageRequestKind(request) === 'package_booking'
+      ? 'Thank you for your booking request. I have reviewed the package details and availability.'
+      : 'Thank you for your private tour request. This offer is based on the reference package and can be tailored to your needs.',
+  };
+}

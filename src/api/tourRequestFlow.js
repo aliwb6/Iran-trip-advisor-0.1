@@ -31,7 +31,7 @@ export async function fetchAvailableRequests(guideId) {
   // not have a marketplace dispatch row yet, so preserve that inbox path.
   const { data: directRequests, error: directError } = await supabase
     .from('trip_requests')
-    .select('*')
+    .select('*, source_tour:tours!source_tour_id(id, slug, title, description, itinerary, duration, price, price_usd, price_from, cities, city, location, included, excluded, not_included, image_url, gallery, tour_type)')
     .eq('request_channel', 'direct_profile')
     .eq('direct_provider_id', guideId)
     .is('direct_escalated_at', null)
@@ -193,6 +193,15 @@ export async function guideSubmitProposal(guideId, requestId, proposal) {
     }
     throw error;
   }
+  return data;
+}
+
+export async function declinePackageTripRequest(requestId) {
+  const { data, error } = await supabase.rpc('decline_package_trip_request', {
+    request_id: requestId,
+  });
+  if (error) throw error;
+  if (!data) throw new Error('This package request can no longer be declined.');
   return data;
 }
 
