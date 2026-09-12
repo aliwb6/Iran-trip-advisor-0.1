@@ -5,9 +5,9 @@ import { motion } from 'framer-motion';
 import {
   CheckCircle, XCircle,
   ArrowRight, ArrowLeft, Star, Lock, Loader2, ChevronLeft, ChevronRight,
+  Send, UserRoundSearch, Hash,
 } from 'lucide-react';
 import { useTourBySlug, FALLBACK_IMAGE } from '@/hooks/useSupabase';
-import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { lookupInclusionLabel, computeNotIncludedLabels } from '@/lib/tourInclusions';
 import { toast } from 'sonner';
@@ -15,12 +15,16 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { TourDetailsSkeleton } from '@/components/ui/Skeletons';
 import { transformImage, imgPresets } from '@/lib/imageTransform';
-import { resolveTourRequestRecipient } from '@/api/participantProfiles';
+import TripRequestForm from '@/components/profile/TripRequestForm';
+import {
+  beginPackageTripRequest,
+  cancelPackageTripRequestIntent,
+} from '@/api/packageTripRequests';
+import { buildPackageTripRequestInitialData } from '@/lib/packageTripRequest';
 
 const purposeBadgeConfig = {
   leisure: { en: 'Leisure', fa: 'تفریحی', ar: 'ترفيه', color: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' },
@@ -109,23 +113,16 @@ export default function TourDetails() {
   const { isAuthenticated } = useAuth();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const { tour, loading, error } = useTourBySlug(slug);
-  const [requestOpen, setRequestOpen] = useState(false);
-  const [reqMessage, setReqMessage] = useState('');
-  const [reqDate, setReqDate] = useState('');
-  const [reqEndDate, setReqEndDate] = useState('');
-  const [reqGroupSize, setReqGroupSize] = useState('');
-  const [reqLoading, setReqLoading] = useState(false);
+  const [providerDialogOpen, setProviderDialogOpen] = useState(false);
+  const [providerCode, setProviderCode] = useState('');
+  const [requestFormOpen, setRequestFormOpen] = useState(false);
+  const [requestStarting, setRequestStarting] = useState(false);
+  const [requestIntentId, setRequestIntentId] = useState(null);
+  const [requestTarget, setRequestTarget] = useState(null);
 
   // Lightbox state for the sidebar gallery thumbnails. `lightboxIndex` is the
   // index into `tour.gallery` of the currently-opened image; null means closed.
   const [lightboxIndex, setLightboxIndex] = useState(null);
-
-  const resetRequestForm = () => {
-    setReqMessage('');
-    setReqDate('');
-    setReqEndDate('');
-    setReqGroupSize('');
-  };
 
   const closeLightbox = () => setLightboxIndex(null);
   const stepLightbox = (delta) => {
@@ -175,52 +172,46 @@ export default function TourDetails() {
   const gallery = (Array.isArray(tour?.gallery) ? tour.gallery : []).filter(Boolean);
   const galleryCaptions = Array.isArray(tour?.gallery_captions) ? tour.gallery_captions : [];
 
-  const handleSubmitRequest = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+  const startPackageRequest = async (targetCode = null) => {
+    if (!isAuthenticated) {
       toast.error(t('request_login_required'));
-      navigate('/login');
+      navigate('/login', { state: { from: `/tours/${slug}` } });
       return;
     }
 
-    setReqLoading(true);
+    setRequestStarting(true);
     try {
-      const recipientId = await resolveTourRequestRecipient(tour.id);
-
-      if (!recipientId) {
-        toast.error(t('request_not_found'));
-        return;
-      }
-
-      if (recipientId === user.id) {
-        toast.error(t('request_self_error'));
-        return;
-      }
-
-      const { error: insertErr } = await supabase.from('tour_requests').insert({
-        tour_id: tour.id,
-        tourist_id: user.id,
-        guide_id: recipientId,
-        message: reqMessage || null,
-        preferred_date: reqDate || null,
-        preferred_end_date: reqEndDate || null,
-        group_size: reqGroupSize ? Number(reqGroupSize) : null,
-        status: 'pending',
-      });
-
-      if (insertErr) {
-        toast.error(t('request_generic_error'));
-        return;
-      }
-
-      toast.success(t('request_success'));
-      setRequestOpen(false);
-      resetRequestForm();
-    } catch {
-      toast.error(t('request_generic_error'));
+      const intent = await beginPackageTripRequest(tour.id, targetCode);
+      setRequestIntentId(intent.intent_id);
+      setRequestTarget(intent);
+      setProviderDialogOpen(false);
+      setRequestFormOpen(true);
+      setProviderCode('');
+    } catch (requestError) {
+      const message = requestError?.message || t('request_generic_error');
+      toast.error(message);
     } finally {
-      setReqLoading(false);
+      setRequestStarting(false);
     }
+  };
+
+  const closePackageRequestForm = () => {
+    const intentId = requestIntentId;
+    setRequestFormOpen(false);
+    setRequestIntentId(null);
+    setRequestTarget(null);
+    if (intentId) {
+      cancelPackageTripRequestIntent(intentId).catch(() => {
+        // Intents expire automatically; closing the form must remain responsive.
+      });
+    }
+  };
+
+  const handlePackageRequestSuccess = () => {
+    setRequestIntentId(null);
+    setRequestTarget(null);
+    setRequestFormOpen(false);
+    navigate('/profile/requests');
   };
 
   const title = pickLang(tour.title, lang);
@@ -262,14 +253,7 @@ export default function TourDetails() {
 
   const heroImage = pickHeroImage(tour);
 
-  // Booking a package starts the package-specific request form.
-  const handleBookNow = () => {
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-    setRequestOpen(true);
-  };
+  const packageRequestInitialData = buildPackageTripRequestInitialData(tour, lang);
 
   return (
     <div dir={dir} className="pt-0 pb-20 min-h-screen">
@@ -499,10 +483,30 @@ export default function TourDetails() {
 
                 <div className="space-y-3 mb-6">
                   <button
-                    onClick={handleBookNow}
-                    className="w-full py-3 rounded-xl bg-accent text-white font-body font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2"
+                    type="button"
+                    onClick={() => startPackageRequest()}
+                    disabled={requestStarting}
+                    className="w-full min-h-12 px-4 py-3 rounded-xl bg-accent text-white font-body font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
+                    {requestStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                     {lang === 'fa' ? 'درخواست رزرو' : lang === 'ar' ? 'طلب الحجز' : 'Request Booking'}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        toast.error(t('request_login_required'));
+                        navigate('/login', { state: { from: `/tours/${slug}` } });
+                        return;
+                      }
+                      setProviderDialogOpen(true);
+                    }}
+                    disabled={requestStarting}
+                    className="w-full min-h-12 px-4 py-3 rounded-xl border-2 border-accent/55 bg-accent/[0.03] text-accent font-body font-semibold hover:border-accent hover:bg-accent/10 transition-colors flex items-center justify-center gap-2 text-center leading-snug disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <UserRoundSearch className="w-4 h-4 shrink-0" />
+                    {t('request_another_provider_cta')}
                   </button>
                 </div>
 
@@ -556,82 +560,88 @@ export default function TourDetails() {
         </div>
       </div>
 
-      {/* Tour Request Dialog */}
-      <Dialog open={requestOpen} onOpenChange={(open) => { setRequestOpen(open); if (!open) resetRequestForm(); }}>
+      {/* Select another guide/agency by the stable public numeric ID. */}
+      <Dialog
+        open={providerDialogOpen}
+        onOpenChange={(open) => {
+          if (requestStarting) return;
+          setProviderDialogOpen(open);
+          if (!open) setProviderCode('');
+        }}
+      >
         <DialogContent dir={dir} className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{t('request_dialog_title')}</DialogTitle>
-            <DialogDescription>{t('request_dialog_desc')}</DialogDescription>
+            <DialogTitle>{t('request_another_provider_title')}</DialogTitle>
+            <DialogDescription>{t('request_another_provider_desc')}</DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
-            {/* Message */}
+          <div className="space-y-3 pt-2">
             <div className="space-y-1.5">
-              <Label>{t('request_message_label')}</Label>
-              <Textarea
-                value={reqMessage}
-                onChange={(e) => setReqMessage(e.target.value)}
-                placeholder={t('request_message_ph')}
-                rows={3}
-                className="resize-none"
-              />
-            </div>
-
-            {/* Preferred dates */}
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label>{t('request_date_label')}</Label>
+              <Label htmlFor="package-provider-code">{t('request_provider_code_label')}</Label>
+              <div className="relative">
+                <Hash className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  type="date"
-                  value={reqDate}
-                  onChange={(e) => setReqDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
+                  id="package-provider-code"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
+                  value={providerCode}
+                  onChange={(event) => setProviderCode(event.target.value.replace(/\D/g, '').slice(0, 12))}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && providerCode && !requestStarting) {
+                      event.preventDefault();
+                      startPackageRequest(providerCode);
+                    }
+                  }}
+                  placeholder={t('request_provider_code_ph')}
+                  className="ps-9"
                   dir="ltr"
                 />
               </div>
-              <div className="space-y-1.5">
-                <Label>
-                  {lang === 'fa' ? 'تاریخ پایان (اختیاری)' : lang === 'ar' ? 'تاريخ الانتهاء (اختياري)' : 'End date (optional)'}
-                </Label>
-                <Input
-                  type="date"
-                  value={reqEndDate}
-                  onChange={(e) => setReqEndDate(e.target.value)}
-                  min={reqDate || new Date().toISOString().split('T')[0]}
-                  dir="ltr"
-                />
-              </div>
-            </div>
-
-            {/* Group size */}
-            <div className="space-y-1.5">
-              <Label>{t('request_group_label')}</Label>
-              <Input
-                type="number"
-                min={1}
-                value={reqGroupSize}
-                onChange={(e) => setReqGroupSize(e.target.value)}
-                placeholder="1"
-                dir="ltr"
-              />
+              <p className="text-xs leading-relaxed text-muted-foreground">
+                {t('request_provider_code_help')}
+              </p>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">
             <Button
               variant="outline"
-              onClick={() => { setRequestOpen(false); resetRequestForm(); }}
-              disabled={reqLoading}
+              onClick={() => { setProviderDialogOpen(false); setProviderCode(''); }}
+              disabled={requestStarting}
             >
               {t('request_cancel')}
             </Button>
-            <Button onClick={handleSubmitRequest} disabled={reqLoading}>
-              {reqLoading && <Loader2 className="w-4 h-4 animate-spin me-2" />}
-              {t('request_submit')}
+            <Button
+              onClick={() => startPackageRequest(providerCode)}
+              disabled={requestStarting || !providerCode}
+            >
+              {requestStarting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
+              {t('request_continue')}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <TripRequestForm
+        isOpen={requestFormOpen}
+        onClose={closePackageRequestForm}
+        onSuccess={handlePackageRequestSuccess}
+        initialData={packageRequestInitialData}
+        requestContext={requestTarget ? {
+          eyebrow: t('package_request_based_on'),
+          title,
+          meta: requestTarget.provider_code
+            ? t('package_request_target_with_code', {
+                name: requestTarget.provider_name || t('package_request_provider_fallback'),
+                code: requestTarget.provider_code,
+              })
+            : t('package_request_target', {
+                name: requestTarget.provider_name || t('package_request_provider_fallback'),
+              }),
+        } : null}
+      />
 
       {/* Gallery Lightbox */}
       <Dialog open={lightboxIndex != null} onOpenChange={(open) => { if (!open) closeLightbox(); }}>

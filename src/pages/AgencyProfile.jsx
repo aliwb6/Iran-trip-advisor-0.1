@@ -237,7 +237,7 @@ export default function AgencyProfile() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { lang, dir } = useI18n();
+  const { t, lang, dir } = useI18n();
 
   const [agency, setAgency] = useState(null);
   const [tours, setTours] = useState([]);
@@ -409,6 +409,25 @@ export default function AgencyProfile() {
                   }}
                   className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-border/50 transition"
                   aria-label={lang === 'fa' ? 'کپی نام کاربری' : 'Copy username'}
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
+
+            {agency.provider_code && (
+              <div className="flex w-fit items-center gap-1.5 rounded-full border border-accent/20 bg-accent/[0.06] px-3 py-1.5 mb-4 -mt-2">
+                <span className="font-body text-xs font-semibold text-accent">
+                  {t('provider_id_label')} #{agency.provider_code}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(String(agency.provider_code));
+                    toast.success(t('provider_id_copied'));
+                  }}
+                  className="p-1 rounded-md text-accent/70 hover:text-accent hover:bg-accent/10 transition"
+                  aria-label={t('provider_id_copied')}
                 >
                   <Copy className="w-3.5 h-3.5" />
                 </button>

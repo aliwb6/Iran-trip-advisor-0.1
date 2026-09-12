@@ -78,9 +78,10 @@ test('dashboard message counterpart lookups use participant RPCs', async () => {
 
 test('tour request recipient selection stays server-side', async () => {
   const tourDetails = await source('../src/pages/TourDetails.jsx');
+  const packageRequests = await source('../src/api/packageTripRequests.js');
 
-  assert.match(tourDetails, /import \{ resolveTourRequestRecipient \} from '@\/api\/participantProfiles'/);
-  assert.match(tourDetails, /await resolveTourRequestRecipient\(tour\.id\)/);
+  assert.match(tourDetails, /beginPackageTripRequest/);
+  assert.match(packageRequests, /rpc\('begin_package_trip_request'/);
   assert.doesNotMatch(tourDetails, /current_user_is_admin|is_admin/);
   assert.doesNotMatch(tourDetails, /from\(['"]profiles['"]\)/);
 });

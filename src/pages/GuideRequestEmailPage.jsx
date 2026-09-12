@@ -8,6 +8,7 @@ import {
   Globe,
   Loader2,
   MapPin,
+  PackageOpen,
   Send,
   ShieldCheck,
   Users,
@@ -87,7 +88,7 @@ export default function GuideRequestEmailPage() {
       try {
         const { data: requestData, error: requestError } = await supabase
           .from('trip_requests')
-          .select('*')
+          .select('*, source_tour:tours!source_tour_id(id, slug, title, status)')
           .eq('id', requestId)
           .single();
 
@@ -141,7 +142,12 @@ export default function GuideRequestEmailPage() {
   const maxProposals = Math.max(1, Number(request?.max_proposals) || 5);
   const proposalCount = Math.max(0, Number(request?.proposals_count) || 0);
   const full = proposalCount >= maxProposals;
-  const roleAllowed = ['guide', 'agency'].includes(profile?.role);
+  const packageAdminAllowed = Boolean(
+    request?.source_tour_id
+      && request?.direct_provider_id === user?.id
+      && (profile?.is_admin || profile?.role === 'admin')
+  );
+  const roleAllowed = ['guide', 'agency'].includes(profile?.role) || packageAdminAllowed;
   const canSubmit = Boolean(
     request
       && roleAllowed
@@ -249,6 +255,32 @@ export default function GuideRequestEmailPage() {
                   </div>
                 )}
 
+                {request.source_tour && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-teal-300/20 bg-teal-300/[0.07] p-4">
+                    <div className="flex min-w-0 items-start gap-3">
+                      <PackageOpen className="mt-0.5 h-5 w-5 shrink-0 text-teal-300" />
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-teal-200/65">
+                          Based on a Tour Package
+                        </p>
+                        <p className="mt-1 truncate text-sm font-semibold text-white">
+                          {typeof request.source_tour.title === 'object'
+                            ? request.source_tour.title.en || Object.values(request.source_tour.title)[0]
+                            : request.source_tour.title}
+                        </p>
+                      </div>
+                    </div>
+                    {request.source_tour.slug && (
+                      <Link
+                        to={`/tours/${request.source_tour.slug}`}
+                        className="shrink-0 rounded-xl border border-teal-200/20 px-3 py-2 text-xs font-semibold text-teal-200 transition hover:bg-teal-200/10"
+                      >
+                        View original tour
+                      </Link>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   <Detail icon={MapPin} label="Destination">{destination}</Detail>
                   <Detail icon={CalendarDays} label="Travel dates">
@@ -303,7 +335,7 @@ export default function GuideRequestEmailPage() {
                       : full
                         ? 'This request has reached its proposal limit.'
                         : !roleAllowed
-                          ? 'Only guide or agency accounts can submit proposals.'
+                          ? 'Only the selected guide, agency, or platform administrator can submit a proposal.'
                           : 'This request is no longer accepting proposals.'}
                   </div>
                 )}

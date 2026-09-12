@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, MapPin, Calendar, Users, Baby, Car, Hotel,
   Sparkles, FileText, Globe, Clock,
-  Tag, Layers,
+  Tag, Layers, PackageOpen,
 } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
@@ -82,7 +82,7 @@ export default function RequestDetailPage() {
       setError(null);
       const { data, error: err } = await supabase
         .from('trip_requests')
-        .select('*')
+        .select('*, source_tour:tours!source_tour_id(id, slug, title, status)')
         .eq('id', id)
         .eq('user_id', user.id)
         .single();
@@ -168,6 +168,25 @@ export default function RequestDetailPage() {
                 </p>
               )}
             </div>
+
+            {r?.source_tour && (
+              <Link
+                to={`/tours/${r.source_tour.slug}`}
+                className="flex items-center gap-3 rounded-3xl border border-accent/20 bg-accent/5 p-5 transition-colors hover:bg-accent/10"
+              >
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent/10 text-accent">
+                  <PackageOpen className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-[10px] font-semibold uppercase tracking-wider text-accent">
+                    Based on a Tour Package
+                  </span>
+                  <span className="mt-0.5 block truncate text-sm font-semibold text-foreground">
+                    {r.source_tour.title || 'View tour package'}
+                  </span>
+                </span>
+              </Link>
+            )}
 
             {/* Travel dates & times */}
             <Section title="Travel Dates">

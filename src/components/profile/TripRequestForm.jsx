@@ -1000,7 +1000,14 @@ function Step2({
 
 // ── Main export ────────────────────────────────────────────────────────────
 
-export default function TripRequestForm({ isOpen, onClose, onSuccess, initialData, prefillData = null }) {
+export default function TripRequestForm({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialData,
+  prefillData = null,
+  requestContext = null,
+}) {
   const { user }       = useAuth();
   const { t, lang, dir } = useI18n();
   const queryClient    = useQueryClient();
@@ -1289,6 +1296,21 @@ export default function TripRequestForm({ isOpen, onClose, onSuccess, initialDat
 
               {/* Scrollable content */}
               <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-4">
+                {requestContext && (
+                  <div className="mb-5 rounded-2xl border border-accent/20 bg-accent/[0.06] px-4 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
+                      {requestContext.eyebrow}
+                    </p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {requestContext.title}
+                    </p>
+                    {requestContext.meta && (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {requestContext.meta}
+                      </p>
+                    )}
+                  </div>
+                )}
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={step}

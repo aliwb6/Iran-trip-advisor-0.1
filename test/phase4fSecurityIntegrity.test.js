@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 
 const root = new URL('..', import.meta.url);
-const migrationPath = '../supabase/migrations/20260909190045_phase4f_security_integrity_hardening.sql';
+const migrationPath = '../supabase/migrations/20260909191647_phase4f_security_integrity_hardening.sql';
 
 async function source(path) {
   return readFile(new URL(path, import.meta.url), 'utf8');
@@ -135,18 +135,21 @@ test('message updates expose only read receipts or owner-scoped AI history edits
   assert.match(history, /conversation_id: convId,[\s\S]*role: msg\.role,[\s\S]*content: msg\.content/);
 });
 
-test('legacy tour requests have no browser update or participant reassignment path', async () => {
+test('legacy tour requests have no browser mutation or participant reassignment path', async () => {
   const sql = await source(migrationPath);
   const files = await sourceFiles('src');
   const frontend = await Promise.all(files.map(file => readFile(new URL(`../${file}`, import.meta.url), 'utf8')));
   const tourDetails = await source('../src/pages/TourDetails.jsx');
+  const packageRequests = await source('../src/api/packageTripRequests.js');
 
   assert.match(sql, /DROP POLICY IF EXISTS tour_requests_authenticated_update ON public\.tour_requests/);
   assert.match(sql, /REVOKE UPDATE ON TABLE public\.tour_requests FROM authenticated/);
   for (const content of frontend) {
     assert.doesNotMatch(content, /\.from\(['"]tour_requests['"]\)[\s\S]{0,240}?\.update\(/);
+    assert.doesNotMatch(content, /\.from\(['"]tour_requests['"]\)[\s\S]{0,240}?\.insert\(/);
   }
-  assert.match(tourDetails, /\.from\('tour_requests'\)\.insert\(\{[\s\S]*tour_id: tour\.id,[\s\S]*tourist_id: user\.id,[\s\S]*guide_id: recipientId/);
+  assert.doesNotMatch(tourDetails, /\.from\('tour_requests'\)/);
+  assert.match(packageRequests, /rpc\('begin_package_trip_request'/);
 });
 
 test('provider request visibility requires the same approval boundary as proposal insertion', async () => {
