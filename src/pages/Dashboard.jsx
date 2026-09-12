@@ -208,7 +208,11 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
   const { t, lang, dir } = useI18n();
   const activeId = section || 'home';
   const profileCheck = profile ? checkProfileCompletion(profile) : null;
-  const canAddTour = !profile || profile.role === 'traveler' || (profile.license_status === 'verified' && profileCheck?.completed);
+  // Completing the provider profile is the only prerequisite for creating a tour.
+  // License verification controls public visibility, not access to the tour form.
+  const canAddTour = profile?.role === 'guide' || profile?.role === 'agency'
+    ? Boolean(profileCheck?.completed)
+    : profile?.role === 'traveler';
 
   const NAV_LABELS = {
     home:        t('dashboard_nav_home'),
@@ -469,7 +473,7 @@ function LicenseCard({ profile, onSave }) {
 
 // ─── HomeView ─────────────────────────────────────────────────────────────────
 
-function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenChat, onProfileSave }) {
+function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenChat, onProfileSave, canAddTour }) {
   const { t, lang: i18nLang, dir } = useI18n();
   const [reqTab, setReqTab] = useState('new');
   const [latestChats, setLatestChats] = useState([]);
@@ -634,7 +638,9 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
           </div>
           <button
             onClick={() => onNavigate('add-tour')}
-            className="mt-4 flex-1 min-h-[140px] w-full rounded-xl bg-[hsl(178,85%,32%)]/[0.08] hover:bg-[hsl(178,85%,32%)]/[0.15] border-2 border-dashed border-[hsl(178,85%,32%)]/40 hover:border-[hsl(178,85%,45%)] flex flex-col items-center justify-center gap-2 text-[hsl(178,85%,50%)] transition group"
+            disabled={!canAddTour}
+            title={!canAddTour ? t('profile_completion_required_for_tour') : ''}
+            className="mt-4 flex-1 min-h-[140px] w-full rounded-xl bg-[hsl(178,85%,32%)]/[0.08] hover:bg-[hsl(178,85%,32%)]/[0.15] border-2 border-dashed border-[hsl(178,85%,32%)]/40 hover:border-[hsl(178,85%,45%)] flex flex-col items-center justify-center gap-2 text-[hsl(178,85%,50%)] transition group disabled:cursor-not-allowed disabled:opacity-40"
           >
             <div className="w-12 h-12 rounded-2xl bg-[hsl(178,85%,32%)]/20 group-hover:bg-[hsl(178,85%,32%)] flex items-center justify-center transition">
               <Plus className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
@@ -668,7 +674,9 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
           ) : (
             <button
               onClick={() => onNavigate('add-tour')}
-              className="flex-1 min-h-[180px] w-full rounded-xl border-2 border-dashed border-white/15 hover:border-[hsl(178,85%,45%)] hover:bg-[hsl(178,85%,32%)]/[0.05] flex flex-col items-center justify-center gap-2 text-white/35 hover:text-[hsl(178,85%,50%)] transition group"
+              disabled={!canAddTour}
+              title={!canAddTour ? t('profile_completion_required_for_tour') : ''}
+              className="flex-1 min-h-[180px] w-full rounded-xl border-2 border-dashed border-white/15 hover:border-[hsl(178,85%,45%)] hover:bg-[hsl(178,85%,32%)]/[0.05] flex flex-col items-center justify-center gap-2 text-white/35 hover:text-[hsl(178,85%,50%)] transition group disabled:cursor-not-allowed disabled:opacity-40"
             >
               <div className="w-12 h-12 rounded-2xl bg-white/[0.06] group-hover:bg-[hsl(178,85%,32%)]/20 flex items-center justify-center transition">
                 <Plus className="w-6 h-6" />
@@ -2534,8 +2542,13 @@ export default function Dashboard() {
   const isGuideOrAgency = profile?.role === 'guide' || profile?.role === 'agency';
   const profileCheck = profile ? checkProfileCompletion(profile) : null;
   const profileIncomplete = isGuideOrAgency && !profileCheck?.completed;
+  const canAddTour = isGuideOrAgency && Boolean(profileCheck?.completed);
 
   const nav = (sec) => {
+    if (sec === 'add-tour' && !canAddTour) {
+      toast.error(_t('profile_completion_required_for_tour'));
+      return;
+    }
     setEditingTour(null);
     navigate(sec === 'home' ? '/dashboard' : `/dashboard/${sec}`);
   };
@@ -2566,6 +2579,15 @@ export default function Dashboard() {
   };
 
   const renderContent = () => {
+    if (!editingTour && section === 'add-tour' && !canAddTour) {
+      return (
+        <EmptyState
+          Icon={AlertTriangle}
+          title={_t('profile_incomplete_banner')}
+          desc={_t('profile_completion_required_for_tour')}
+        />
+      );
+    }
     if (editingTour || section === 'add-tour') {
       return (
         <TourForm
@@ -2586,6 +2608,7 @@ export default function Dashboard() {
             userId={authUser?.id}
             lang={lang}
             onNavigate={nav}
+            canAddTour={canAddTour}
             onOpenChat={(otherId) => navigate(`/chat/${otherId}`)}
             onProfileSave={handleProfileSaved}
           />
