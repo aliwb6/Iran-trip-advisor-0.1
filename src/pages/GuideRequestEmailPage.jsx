@@ -17,6 +17,7 @@ import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
 import SubmitProposalModal from '@/components/dashboard/SubmitProposalModal';
+import { getPackageRequestKind } from '@/lib/packageTripRequest';
 
 const OPEN_STATUSES = new Set(['open', 'active', 'pending']);
 
@@ -88,7 +89,7 @@ export default function GuideRequestEmailPage() {
       try {
         const { data: requestData, error: requestError } = await supabase
           .from('trip_requests')
-          .select('*, source_tour:tours!source_tour_id(id, slug, title, status)')
+          .select('*, source_tour:tours!source_tour_id(id, slug, title, description, itinerary, duration, price, price_usd, price_from, cities, city, location, included, excluded, not_included, image_url, gallery, tour_type, status)')
           .eq('id', requestId)
           .single();
 
@@ -164,6 +165,10 @@ export default function GuideRequestEmailPage() {
       && request?.direct_response_deadline
       && new Date(request.direct_response_deadline).getTime() > Date.now()
   );
+  const packageRequestKind = getPackageRequestKind(request);
+  const sourceTourTitle = request?.source_tour?.title?.en
+    || request?.source_tour?.title?.fa
+    || request?.source_tour?.title;
 
   useEffect(() => {
     if (!loading && canSubmit && searchParams.get('action') === 'proposal') {
@@ -229,9 +234,15 @@ export default function GuideRequestEmailPage() {
                 <div className="flex flex-wrap items-start justify-between gap-4">
                   <div>
                     <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-amber-300/80">
-                      Trip request
+                      {packageRequestKind === 'package_booking'
+                        ? 'Booking Request'
+                        : packageRequestKind === 'package_private'
+                          ? 'Private Tour Invitation'
+                          : 'Trip request'}
                     </p>
-                    <h1 className="text-2xl font-bold text-white sm:text-3xl">Trip to {destination}</h1>
+                    <h1 className="text-2xl font-bold text-white sm:text-3xl">
+                      {packageRequestKind === 'package_booking' && sourceTourTitle ? sourceTourTitle : `Trip to ${destination}`}
+                    </h1>
                     <p className="mt-2 text-sm text-white/45">
                       Review the traveler’s request before sending your proposal.
                     </p>
@@ -268,6 +279,11 @@ export default function GuideRequestEmailPage() {
                             ? request.source_tour.title.en || Object.values(request.source_tour.title)[0]
                             : request.source_tour.title}
                         </p>
+                        {packageRequestKind === 'package_private' && (
+                          <p className="mt-1 text-xs leading-relaxed text-teal-100/65">
+                            This package is a reference only. Your proposal can be fully customized.
+                          </p>
+                        )}
                       </div>
                     </div>
                     {request.source_tour.slug && (
@@ -326,7 +342,7 @@ export default function GuideRequestEmailPage() {
                     className="flex w-full items-center justify-center gap-2 rounded-2xl bg-[hsl(178,85%,32%)] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-teal-950/30 transition hover:bg-[hsl(178,85%,28%)]"
                   >
                     <Send className="h-4 w-4" />
-                    Send Proposal
+                    {packageRequestKind === 'package_booking' ? 'Confirm & Send Offer' : 'Send Proposal'}
                   </button>
                 ) : (
                   <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 text-sm text-white/55">

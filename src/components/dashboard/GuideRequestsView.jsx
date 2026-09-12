@@ -13,8 +13,10 @@ import {
   fetchAvailableRequests,
   fetchMyAcceptedRequests,
   guideConfirmBooking,
+  declinePackageTripRequest,
 } from '@/api/tourRequestFlow';
 import SubmitProposalModal from './SubmitProposalModal';
+import { getPackageRequestKind } from '@/lib/packageTripRequest';
 
 function fmt(dateStr) {
   if (!dateStr) return null;
@@ -80,6 +82,7 @@ function LoadingState() {
 function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
   const { t } = useI18n();
   const [modalOpen, setModalOpen] = useState(false);
+  const [declining, setDeclining] = useState(false);
 
   const maxProposals = req.max_proposals || 5;
   const isFull = req.accepted_count >= maxProposals;
@@ -89,10 +92,27 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
   const slotInfo = mySlot ? (SLOT_STATUS_LABEL[mySlot.status] || SLOT_STATUS_LABEL.accepted) : null;
   const start = fmt(req.start_date);
   const end = fmt(req.end_date);
+  const packageRequestKind = getPackageRequestKind(req);
+  const sourceTour = req.source_tour;
+  const sourceTourTitle = sourceTour?.title?.en || sourceTour?.title?.fa || sourceTour?.title || '';
 
   const handleProposalSuccess = () => {
     setModalOpen(false);
     onApplied();
+  };
+
+  const handleDecline = async () => {
+    if (!window.confirm('Decline this private package request? The traveler will be notified.')) return;
+    setDeclining(true);
+    try {
+      await declinePackageTripRequest(req.id);
+      toast.success('Request declined. The traveler has been notified.');
+      onApplied();
+    } catch (err) {
+      toast.error(err.message || 'Could not decline this request.');
+    } finally {
+      setDeclining(false);
+    }
   };
 
   return (
@@ -110,8 +130,19 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
       >
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
+            {packageRequestKind && (
+              <span className={`mb-2 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
+                packageRequestKind === 'package_booking'
+                  ? 'border-amber-300/25 bg-amber-300/10 text-amber-200'
+                  : 'border-teal-300/25 bg-teal-300/10 text-teal-200'
+              }`}>
+                {packageRequestKind === 'package_booking' ? 'Booking Request' : 'Private Tour Invitation'}
+              </span>
+            )}
             <h3 className="text-white font-semibold text-sm leading-snug">
-              Trip to {cityList(req.destination).join(', ') || 'Iran'}
+              {packageRequestKind === 'package_booking' && sourceTourTitle
+                ? sourceTourTitle
+                : `Trip to ${cityList(req.destination).join(', ') || 'Iran'}`}
             </h3>
             <p className="text-white/40 text-[11px] mt-0.5">Submitted {fmt(req.created_at)}</p>
           </div>
@@ -124,6 +155,23 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
             <ProposalCountPill count={req.accepted_count} max={maxProposals} />
           )}
         </div>
+
+        {packageRequestKind && sourceTour && (
+          <div className="mb-3 flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+            {(sourceTour.image_url || sourceTour.gallery?.[0]) && (
+              <img
+                src={sourceTour.image_url || sourceTour.gallery[0]}
+                alt=""
+                className="h-12 w-16 rounded-lg object-cover"
+              />
+            )}
+            <p className="min-w-0 text-xs leading-relaxed text-white/55">
+              {packageRequestKind === 'package_booking'
+                ? 'A traveler requested this exact package. Review the pre-filled offer before sending.'
+                : 'The traveler selected you for a tour based on this reference package. You do not own the original tour.'}
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-1.5 mb-3">
           {(start || end) && (
@@ -178,16 +226,26 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
               {isFull ? (
                 <><AlertCircle className="w-4 h-4" /> Request closed ({req.accepted_count}/{maxProposals})</>
               ) : (
-                <><FileText className="w-4 h-4" /> See Details</>
+                <><FileText className="w-4 h-4" /> {packageRequestKind === 'package_booking' ? 'Confirm & Send Offer' : packageRequestKind ? 'Create Proposal' : 'See Details'}</>
               )}
             </button>
             {!isFull && (
-              <button
-                onClick={() => onSkip(req.id)}
-                className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:text-white/70 hover:bg-white/[0.07] transition-colors"
-              >
-                {t('skip')}
-              </button>
+              packageRequestKind ? (
+                <button
+                  onClick={handleDecline}
+                  disabled={declining}
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-red-200/70 hover:bg-red-500/10 hover:text-red-200 transition-colors disabled:opacity-50"
+                >
+                  {declining ? 'Declining…' : 'Decline'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => onSkip(req.id)}
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:text-white/70 hover:bg-white/[0.07] transition-colors"
+                >
+                  {t('skip')}
+                </button>
+              )
             )}
           </div>
         )}
