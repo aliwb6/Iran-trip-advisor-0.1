@@ -10,3 +10,14 @@ export async function canChatWithUser(counterpartyId) {
   if (error) throw error;
   return data === true;
 }
+
+export async function canShareContactWithUser(counterpartyId) {
+  if (!counterpartyId) return false;
+
+  const { data, error } = await supabase.rpc('can_share_contact_with_user', {
+    p_counterparty_id: counterpartyId,
+  });
+
+  if (error) throw error;
+  return data === true;
+}

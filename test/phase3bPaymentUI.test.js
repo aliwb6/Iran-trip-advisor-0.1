@@ -23,13 +23,17 @@ test('traveler and provider contact UI remains behind the server release flag an
   const traveler = await source('../src/pages/MyTripRequests.jsx');
   const provider = await source('../src/components/dashboard/BookingsView.jsx');
 
-  for (const ui of [traveler, provider]) {
-    assert.match(ui, /contact_released/);
-    assert.match(ui, /fetchReleasedBookingContact\(booking\.id\)/);
-    assert.doesNotMatch(ui, /from\(['"]profiles['"]\)/);
-  }
+  assert.match(traveler, /contact_released/);
+  assert.match(traveler, /fetchReleasedBookingContact\(booking\.id\)/);
+  assert.doesNotMatch(traveler, /from\(['"]profiles['"]\)/);
+
+  assert.match(provider, /contact_released/);
+  assert.match(provider, /BookingContactCard/);
+  assert.doesNotMatch(provider, /from\(['"]profiles['"]\)/);
+
   assert.match(traveler, /Private contact details unlock only after the booking deposit is confirmed/);
-  assert.match(provider, /Two-way chat and private traveler contact unlock only after the booking deposit is securely confirmed/);
+  assert.match(provider, /Private contact details remain locked until the traveler payment is confirmed/);
+  assert.match(provider, /Chat with traveler/);
 });
 
 test('payment return UX never treats redirect success as settlement authority', async () => {

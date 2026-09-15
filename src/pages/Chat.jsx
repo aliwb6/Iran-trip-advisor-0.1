@@ -1,24 +1,25 @@
-import { useEffect, useState, useRef } from 'react';
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  ArrowLeft,
+  ArrowRight,
+  CheckCircle2,
+  Loader2,
+  MessageCircle,
+  Send,
+  ShieldAlert,
+  ShieldCheck,
+} from 'lucide-react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
 import { avatarFor } from '@/lib/avatar';
 import { fetchParticipantProfile } from '@/api/participantProfiles';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft,
-  ArrowRight,
-  Send,
-  Loader2,
-  MessageCircle,
-  Sparkles,
-  Globe2,
-  ChevronDown,
-} from 'lucide-react';
+import { canShareContactWithUser } from '@/api/chatAccess';
+import { detectContactSharing } from '@/lib/contactSharing';
 
-// ── Brand tokens ────────────────────────────────────────────────
 const C = {
   turq: '#0D8B85',
   turqSoft: '#3FC7C1',
@@ -28,156 +29,28 @@ const C = {
   mist: '#F5FBFA',
   muted: '#7A8C8C',
   ink: '#0F2A2A',
-  gold: '#C9972B',
 };
 
-// ── Persian Rub-el-Hizb pattern ─────────────────────────────────
-function PersianPattern({ opacity = 0.06, color = C.turq, size = 72 }) {
-  return (
-    <svg
-      className="absolute inset-0 h-full w-full select-none pointer-events-none"
-      aria-hidden="true"
-      style={{ opacity }}
-    >
-      <defs>
-        <pattern
-          id="rub-el-hizb"
-          width={size}
-          height={size}
-          patternUnits="userSpaceOnUse"
-        >
-          <g fill="none" stroke={color} strokeWidth="0.9">
-            <rect
-              x={size * 0.22}
-              y={size * 0.22}
-              width={size * 0.56}
-              height={size * 0.56}
-            />
-            <rect
-              x={size * 0.22}
-              y={size * 0.22}
-              width={size * 0.56}
-              height={size * 0.56}
-              transform={`rotate(45 ${size / 2} ${size / 2})`}
-            />
-            <circle cx={size / 2} cy={size / 2} r="1.6" fill={color} />
-          </g>
-          <g fill={color}>
-            <circle cx="0" cy="0" r="1" />
-            <circle cx={size} cy="0" r="1" />
-            <circle cx="0" cy={size} r="1" />
-            <circle cx={size} cy={size} r="1" />
-          </g>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#rub-el-hizb)" />
-    </svg>
-  );
-}
-
-// ── Aria avatar mark ────────────────────────────────────────────
-function AriaMark({ size = 36, pulse = false }) {
-  return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `radial-gradient(circle at 30% 28%, ${C.turqSoft}, ${C.turq} 60%, ${C.turqDeep})`,
-          boxShadow: `0 4px 12px ${C.turq}40, inset 0 0 0 1px ${C.turqDeep}80`,
-        }}
-      />
-      <div className="absolute inset-0 grid place-items-center">
-        <Sparkles
-          className="text-[#FFFFFF]"
-          style={{ width: size * 0.5, height: size * 0.5 }}
-          strokeWidth={2.2}
-        />
-      </div>
-      {pulse && (
-        <span
-          className="absolute -inset-1 rounded-full animate-ping"
-          style={{ background: `${C.turq}25` }}
-          aria-hidden
-        />
-      )}
-    </div>
-  );
-}
-
-// ── Typing indicator ────────────────────────────────────────────
-function TypingDots() {
-  return (
-    <div className="flex items-center gap-1.5 px-1 py-0.5">
-      {[0, 1, 2].map((i) => (
-        <motion.span
-          key={i}
-          className="block h-1.5 w-1.5 rounded-full"
-          style={{ background: C.muted }}
-          animate={{ y: [0, -4, 0], opacity: [0.35, 1, 0.35] }}
-          transition={{
-            duration: 1.1,
-            repeat: Infinity,
-            delay: i * 0.15,
-            ease: 'easeInOut',
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// ── Chat bubble ─────────────────────────────────────────────────
-function MessageBubble({ msg, idx, isUser, avatar, senderName }) {
+function MessageBubble({ message, mine, senderName }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
-      transition={{
-        duration: 0.45,
-        delay: idx === 0 ? 0 : 0,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-      className={`flex w-full items-end gap-3 ${
-        isUser ? 'justify-end' : 'justify-start'
-      }`}
+      className={`flex w-full ${mine ? 'justify-end' : 'justify-start'}`}
     >
-      {!isUser && <AriaMark size={32} />}
-      <div className={`group max-w-[78%] ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
-        {!isUser && (
-          <span className="mb-1 px-1 text-[11px] font-medium tracking-wide" style={{ color: C.muted }}>
-            {senderName || 'Guide'}
-          </span>
-        )}
+      <div className={`max-w-[82%] sm:max-w-[72%] ${mine ? 'items-end' : 'items-start'} flex flex-col`}>
+        {!mine && <span className="mb-1 px-1 text-[11px] font-medium" style={{ color: C.muted }}>{senderName}</span>}
         <div
-          className={`relative rounded-3xl px-5 py-3.5 text-[14.5px] leading-relaxed shadow-sm whitespace-pre-wrap ${
-            isUser ? 'rounded-br-md' : 'rounded-bl-md'
-          }`}
-          style={
-            isUser
-              ? {
-                  background: `linear-gradient(135deg, ${C.turq} 0%, ${C.turqDeep} 100%)`,
-                  color: '#FFFFFF',
-                  boxShadow: `0 6px 18px ${C.turq}30`,
-                }
-              : {
-                  background: '#FFFFFF',
-                  color: C.ink,
-                  border: `1px solid ${C.muted}20`,
-                }
-          }
+          className={`rounded-3xl px-4 py-3 text-sm leading-relaxed shadow-sm whitespace-pre-wrap break-words ${mine ? 'rounded-br-md' : 'rounded-bl-md'}`}
+          style={mine
+            ? { background: `linear-gradient(135deg, ${C.turq}, ${C.turqDeep})`, color: C.white }
+            : { background: C.white, color: C.ink, border: `1px solid ${C.muted}25` }}
         >
-          {msg.content}
+          {message.content}
         </div>
-        {msg.created_at && (
-          <span
-            className="mt-1.5 px-1 text-[10.5px] opacity-0 transition-opacity group-hover:opacity-100"
-            style={{ color: C.muted }}
-          >
-            {new Date(msg.created_at).toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
+        {message.created_at && (
+          <span className="mt-1 px-1 text-[10px]" style={{ color: C.muted }}>
+            {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </span>
         )}
       </div>
@@ -185,473 +58,279 @@ function MessageBubble({ msg, idx, isUser, avatar, senderName }) {
   );
 }
 
-// ── Language switcher ───────────────────────────────────────────
-const LANGS = [
-  { code: 'en', label: 'English', dir: 'ltr' },
-  { code: 'fa', label: 'فارسی', dir: 'rtl' },
-  { code: 'ar', label: 'العربية', dir: 'rtl' },
-];
-
-function LanguageSwitcher({ lang, onChange }) {
-  const [open, setOpen] = useState(false);
-  const current = LANGS.find((l) => l.code === lang) || LANGS[0];
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium transition-colors"
-        style={{
-          background: '#ffffff70',
-          backdropFilter: 'blur(12px)',
-          border: `1px solid ${C.muted}30`,
-          color: C.teal,
-        }}
-      >
-        <Globe2 className="h-4 w-4" style={{ color: C.turq }} />
-        <span>{current.label}</span>
-        <ChevronDown
-          className={`h-3.5 w-3.5 transition-transform ${open ? 'rotate-180' : ''}`}
-          style={{ color: C.muted }}
-        />
-      </button>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 min-w-[140px] overflow-hidden rounded-2xl py-1 z-10"
-            style={{
-              background: '#ffffff',
-              border: `1px solid ${C.muted}25`,
-              boxShadow: `0 12px 40px ${C.teal}15`,
-            }}
-          >
-            {LANGS.map((l) => (
-              <button
-                key={l.code}
-                onClick={() => {
-                  onChange(l.code);
-                  setOpen(false);
-                }}
-                className="flex w-full items-center justify-between px-4 py-2 text-sm transition-colors hover:bg-white"
-                style={{ color: C.teal }}
-              >
-                <span style={{ direction: l.dir }}>{l.label}</span>
-                {l.code === lang && (
-                  <span className="h-1.5 w-1.5 rounded-full" style={{ background: C.turq }} />
-                )}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-}
-
-// ── Main Chat Component ─────────────────────────────────────────
 export default function Chat() {
   const { guideId } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const { lang, dir } = useI18n();
-  const [chatLang, setChatLang] = useState(lang);
-  const isRtl = dir === 'rtl';
-  const BackArrow = isRtl ? ArrowRight : ArrowLeft;
+  const BackArrow = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
-  const initialMessage = location.state?.initialMessage || '';
-  const [guide, setGuide] = useState(null);
+  const [participant, setParticipant] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [input, setInput] = useState(initialMessage);
   const [sending, setSending] = useState(false);
-
+  const [error, setError] = useState('');
+  const [contactSharingAllowed, setContactSharingAllowed] = useState(false);
   const scrollerRef = useRef(null);
-  const inputRef = useRef(null);
 
-  // Auth guard
   useEffect(() => {
-    if (!isLoadingAuth && !isAuthenticated) {
-      navigate('/login');
-    }
-  }, [isLoadingAuth, isAuthenticated, navigate]);
+    if (!isLoadingAuth && !isAuthenticated) navigate('/login');
+  }, [isAuthenticated, isLoadingAuth, navigate]);
 
-  // Initial load: guide profile + message history
   useEffect(() => {
-    if (!user || !guideId) return;
+    if (!user?.id || !guideId) return;
     let cancelled = false;
 
-    (async () => {
+    const load = async () => {
       setLoading(true);
+      setError('');
       try {
-        const [publicProfileRes, msgsRes] = await Promise.all([
-          // A public guide/agency can be contacted before a message
-          // relationship exists, so resolve published identity through the
-          // public RPC before attempting the relationship-scoped RPC.
-          selectPublicProfiles(
-            supabase,
-            'id, full_name, avatar_url, gender, role, city, bio'
-          ).eq('id', guideId).maybeSingle(),
+        const [publicProfileRes, messagesRes, contactPermission] = await Promise.all([
+          selectPublicProfiles(supabase, 'id, full_name, avatar_url, gender, role, city, bio')
+            .eq('id', guideId)
+            .maybeSingle(),
           supabase
             .from('messages')
             .select('*')
-            .or(
-              `and(sender_id.eq.${user.id},receiver_id.eq.${guideId}),and(sender_id.eq.${guideId},receiver_id.eq.${user.id})`
-            )
+            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${guideId}),and(sender_id.eq.${guideId},receiver_id.eq.${user.id})`)
             .order('created_at', { ascending: true }),
+          canShareContactWithUser(guideId).catch(() => false),
         ]);
 
         if (cancelled) return;
-        if (msgsRes.error) throw msgsRes.error;
+        if (messagesRes.error) throw messagesRes.error;
 
-        let participant = publicProfileRes.data;
-        if (!participant) participant = await fetchParticipantProfile(guideId);
+        let profile = publicProfileRes.data;
+        if (!profile) profile = await fetchParticipantProfile(guideId);
+        if (cancelled) return;
 
-        setGuide(participant || {
+        setParticipant(profile || {
           id: guideId,
           full_name: 'User',
           avatar_url: null,
-          gender: null,
           role: null,
           city: null,
           bio: null,
         });
-        setMessages(msgsRes.data || []);
+        setMessages(messagesRes.data || []);
+        setContactSharingAllowed(contactPermission === true);
 
-        const unreadIds = (msgsRes.data || [])
-          .filter((m) => m.receiver_id === user.id && !m.is_read)
-          .map((m) => m.id);
-        if (unreadIds.length > 0) {
+        const unreadIds = (messagesRes.data || [])
+          .filter(message => message.receiver_id === user.id && !message.is_read)
+          .map(message => message.id);
+        if (unreadIds.length) {
           await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
         }
-      } catch (err) {
-        if (!cancelled) setError(err.message);
+      } catch (loadError) {
+        if (!cancelled) setError(loadError.message || 'Could not load this conversation.');
       } finally {
         if (!cancelled) setLoading(false);
       }
-    })();
-
-    return () => {
-      cancelled = true;
     };
-  }, [user, guideId]);
 
-  // Realtime: incoming messages from this guide
+    load();
+    return () => { cancelled = true; };
+  }, [guideId, user?.id]);
+
   useEffect(() => {
-    if (!user || !guideId) return;
+    if (!guideId || !user?.id) return undefined;
+    const refreshPermission = async () => {
+      try {
+        setContactSharingAllowed(await canShareContactWithUser(guideId));
+      } catch {
+        // Keep the last safe value; database enforcement remains authoritative.
+      }
+    };
+    window.addEventListener('focus', refreshPermission);
+    return () => window.removeEventListener('focus', refreshPermission);
+  }, [guideId, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !guideId) return undefined;
     const channel = supabase
-      .channel(`chat-${user.id}-${guideId}`)
+      .channel(`direct-chat-${user.id}-${guideId}`)
       .on(
         'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `receiver_id=eq.${user.id}`,
+        { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` },
+        async payload => {
+          const message = payload.new;
+          if (message.sender_id !== guideId) return;
+          setMessages(current => current.some(item => item.id === message.id) ? current : [...current, message]);
+          await supabase.from('messages').update({ is_read: true }).eq('id', message.id);
         },
-        async (payload) => {
-          const m = payload.new;
-          if (m.sender_id !== guideId) return;
-          setMessages((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-          await supabase.from('messages').update({ is_read: true }).eq('id', m.id);
-        }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [user, guideId]);
+    return () => { supabase.removeChannel(channel); };
+  }, [guideId, user?.id]);
 
-  // Auto-scroll to bottom on new messages
   useEffect(() => {
-    if (scrollerRef.current) {
-      scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
-    }
+    if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
   }, [messages]);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
+  const blockedMessage = lang === 'fa'
+    ? 'تا قبل از تأیید پرداخت، ارسال شماره تلفن، ایمیل، لینک یا شناسه شبکه‌های اجتماعی مجاز نیست. گفتگو را داخل سایت ادامه دهید.'
+    : lang === 'ar'
+      ? 'قبل تأكيد الدفع لا يمكن مشاركة رقم الهاتف أو البريد الإلكتروني أو الروابط أو حسابات التواصل. تابع المحادثة داخل الموقع.'
+      : 'Phone numbers, direct contact addresses, links, and social-media IDs cannot be shared until payment is confirmed. Please keep the conversation on the platform.';
+
+  const handleSend = async event => {
+    event.preventDefault();
     const text = input.trim();
-    if (!text || !user || !guideId || sending) return;
+    if (!text || !user?.id || !guideId || sending) return;
+
+    const violations = contactSharingAllowed ? [] : detectContactSharing(text);
+    if (violations.length > 0) {
+      setError(blockedMessage);
+      return;
+    }
+
     setSending(true);
-    setInput('');
+    setError('');
     try {
       const { data, error: insertError } = await supabase
         .from('messages')
-        .insert({
-          sender_id: user.id,
-          receiver_id: guideId,
-          content: text,
-        })
+        .insert({ sender_id: user.id, receiver_id: guideId, content: text })
         .select()
         .single();
       if (insertError) throw insertError;
       if (data) {
-        setMessages((prev) => (prev.some((x) => x.id === data.id) ? prev : [...prev, data]));
+        setMessages(current => current.some(item => item.id === data.id) ? current : [...current, data]);
       }
-    } catch (err) {
-      setError(err.message);
-      setInput(text);
+      setInput('');
+    } catch (sendError) {
+      const message = String(sendError?.message || 'Could not send this message.');
+      setError(message.includes('Contact information can only be shared') ? blockedMessage : message);
     } finally {
       setSending(false);
     }
   };
 
-  if (isLoadingAuth || (loading && !error)) {
+  if (isLoadingAuth || loading) {
     return (
-      <div
-        dir={dir}
-        className="min-h-screen w-full flex items-center justify-center"
-        style={{ background: C.white }}
-      >
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin" style={{ color: C.turq }} />
-          <p style={{ color: C.muted }} className="text-sm">
-            {chatLang === 'fa' ? 'در حال بارگزاری...' : 'Loading...'}
-          </p>
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: C.white }}>
+        <div className="flex items-center gap-3 text-sm" style={{ color: C.muted }}>
+          <Loader2 className="h-5 w-5 animate-spin" style={{ color: C.turq }} />
+          {lang === 'fa' ? 'در حال بارگذاری گفتگو…' : lang === 'ar' ? 'جارٍ تحميل المحادثة…' : 'Loading conversation…'}
         </div>
       </div>
     );
   }
 
-  if (!guide) {
+  if (!participant) {
     return (
-      <div
-        dir={dir}
-        className="min-h-screen w-full flex items-center justify-center px-6"
-        style={{ background: C.white }}
-      >
-        <div className="text-center max-w-sm">
-          <div
-            className="w-16 h-16 rounded-2xl border flex items-center justify-center mx-auto mb-4"
-            style={{ background: `${C.muted}10`, borderColor: `${C.muted}20` }}
-          >
-            <MessageCircle className="w-7 h-7" style={{ color: C.muted }} />
-          </div>
-          <p className="font-semibold text-lg mb-2" style={{ color: C.teal }}>
-            {chatLang === 'fa'
-              ? 'کاربر یافت نشد'
-              : chatLang === 'ar'
-              ? 'المستخدم غير موجود'
-              : 'Guide not found'}
-          </p>
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-          <Link
-            to="/guides"
-            className="inline-flex items-center gap-2 font-medium transition-colors hover:opacity-80"
-            style={{ color: C.turq }}
-          >
-            ← {chatLang === 'fa' ? 'بازگشت' : chatLang === 'ar' ? 'رجوع' : 'Back'}
-          </Link>
+      <div dir={dir} className="min-h-[100dvh] flex items-center justify-center px-5" style={{ background: C.white }}>
+        <div className="max-w-sm text-center">
+          <MessageCircle className="mx-auto h-8 w-8" style={{ color: C.muted }} />
+          <h1 className="mt-4 text-xl font-bold" style={{ color: C.teal }}>
+            {lang === 'fa' ? 'گفتگو یافت نشد' : lang === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found'}
+          </h1>
+          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
+          <Link to="/profile/requests" className="mt-5 inline-block text-sm font-semibold" style={{ color: C.turq }}>View requests</Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div
-      dir={dir}
-      className="h-[100dvh] min-h-[100dvh] w-full overflow-hidden"
-      style={{
-        background: C.white,
-        fontFamily: "'Khamenei', 'Segoe UI', system-ui, -apple-system, sans-serif",
-        color: C.ink,
-      }}
-    >
-      <div className="mx-auto flex h-full max-w-[1480px] flex-col lg:flex-row">
-        {/* Chat column */}
-        <section
-          className="relative flex min-h-0 w-full flex-1 flex-col lg:w-[60%] lg:border-r"
-          style={{ borderColor: `${C.muted}20` }}
-        >
-          {/* Header */}
-          <header
-            className="relative shrink-0 overflow-hidden px-4 pt-5 pb-4 sm:px-10 sm:pt-10 sm:pb-9"
-            style={{ borderBottom: `1px solid ${C.muted}20` }}
-          >
-            <PersianPattern opacity={0.055} color={C.turq} size={64} />
-            <div
-              className="absolute inset-x-0 top-0 h-px"
-              style={{
-                background: `linear-gradient(90deg, transparent, ${C.turq}55, transparent)`,
-              }}
-            />
-            <div className="relative flex items-start justify-between gap-4">
-              <div className="flex min-w-0 items-center gap-3.5">
-                <button
-                  onClick={() => navigate(-1)}
-                  className="inline-flex items-center justify-center w-10 h-10 rounded-lg transition-colors -ml-2"
-                  style={{ background: `${C.muted}10`, color: C.teal }}
-                  aria-label="Back"
-                >
-                  <BackArrow className="w-5 h-5" />
+    <div dir={dir} className="h-[100dvh] min-h-[100dvh] w-full overflow-hidden" style={{ background: C.white, color: C.ink }}>
+      <div className="mx-auto flex h-full max-w-[1480px]">
+        <section className="flex min-h-0 min-w-0 flex-1 flex-col lg:border-r" style={{ borderColor: `${C.muted}25` }}>
+          <header className="shrink-0 border-b px-4 py-4 sm:px-8" style={{ borderColor: `${C.muted}25`, background: C.white }}>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex min-w-0 items-center gap-3">
+                <button type="button" onClick={() => navigate(-1)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.mist, color: C.teal }} aria-label="Back">
+                  <BackArrow className="h-5 w-5" />
                 </button>
+                <img src={avatarFor(participant)} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover" />
                 <div className="min-w-0">
-                  <div
-                    className="text-[10.5px] font-semibold uppercase tracking-[0.18em]"
-                    style={{ color: C.turq }}
-                  >
-                    Chat with Guide
-                  </div>
-                  <h1
-                    className="mt-1 truncate text-xl font-bold leading-tight sm:text-2xl"
-                    style={{ color: C.teal }}
-                  >
-                    {guide.full_name || 'Guide'}
-                  </h1>
-                  {guide.city && (
-                    <p
-                      className="mt-0.5 text-[13px]"
-                      style={{ color: C.muted }}
-                    >
-                      📍 {guide.city}
-                    </p>
-                  )}
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.turq }}>Iran Trip Advisor chat</p>
+                  <h1 className="truncate text-lg font-bold sm:text-xl" style={{ color: C.teal }}>{participant.full_name || 'User'}</h1>
+                  {participant.city && <p className="truncate text-xs" style={{ color: C.muted }}>{participant.city}</p>}
                 </div>
               </div>
-              <LanguageSwitcher lang={chatLang} onChange={setChatLang} />
+              <div className="hidden rounded-full px-3 py-1.5 text-[11px] font-semibold sm:flex sm:items-center sm:gap-1.5" style={{ background: `${C.turq}12`, color: C.turq }}>
+                <ShieldCheck className="h-3.5 w-3.5" /> In-platform messaging
+              </div>
             </div>
-
-            {/* Decorative line */}
-            <div
-              className="mt-7 h-[2px] w-full"
-              style={{
-                background: `repeating-linear-gradient(90deg, ${C.turq} 0 6px, transparent 6px 12px, ${C.muted} 12px 14px, transparent 14px 20px)`,
-                opacity: 0.45,
-              }}
-            />
           </header>
 
-          {/* Messages */}
-          <div
-            ref={scrollerRef}
-            className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-10 sm:py-6"
-          >
-            <div className="mx-auto flex max-w-[680px] flex-col gap-5">
+          <div className={`shrink-0 border-b px-4 py-3 sm:px-8 ${contactSharingAllowed ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
+            <div className="mx-auto flex max-w-[760px] items-start gap-2.5">
+              {contactSharingAllowed
+                ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                : <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />}
+              <p className={`text-xs leading-relaxed ${contactSharingAllowed ? 'text-emerald-800' : 'text-amber-900'}`}>
+                {contactSharingAllowed
+                  ? (lang === 'fa' ? 'پرداخت تأیید شده است؛ اشتراک اطلاعات تماس برای هماهنگی رزرو مجاز است.' : lang === 'ar' ? 'تم تأكيد الدفع؛ يمكن الآن مشاركة معلومات الاتصال لتنسيق الحجز.' : 'Payment is confirmed. Contact information may now be shared for booking coordination.')
+                  : (lang === 'fa' ? 'برای امنیت شما، گفتگوها ممکن است توسط تیم Iran Trip Advisor بررسی شوند. تا قبل از پرداخت، شماره تلفن، ایمیل، لینک و شناسه شبکه‌های اجتماعی قابل اشتراک نیست.' : lang === 'ar' ? 'لأمانك قد تتم مراجعة المحادثات من فريق Iran Trip Advisor. قبل الدفع لا يمكن مشاركة الهاتف أو البريد أو الروابط أو حسابات التواصل.' : 'For your safety, conversations may be reviewed by the Iran Trip Advisor team. Before payment, phone numbers, direct contact addresses, links, and social-media IDs cannot be shared.')}
+              </p>
+            </div>
+          </div>
+
+          <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8">
+            <div className="mx-auto flex max-w-[760px] flex-col gap-4">
               {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-24 text-center">
-                  <AriaMark size={48} />
-                  <p className="mt-4 font-medium" style={{ color: C.teal }}>
-                    {chatLang === 'fa'
-                      ? 'هنوز پیامی رد و بدل نشده است'
-                      : chatLang === 'ar'
-                      ? 'لا توجد رسائل بعد'
-                      : 'No messages yet'}
-                  </p>
-                  <p className="mt-1 text-sm" style={{ color: C.muted }}>
-                    {chatLang === 'fa'
-                      ? 'گفت‌وگو را با یک سلام آغاز کنید'
-                      : chatLang === 'ar'
-                      ? 'ابدأ المحادثة بتحية'
-                      : 'Start the conversation with a hello'}
-                  </p>
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: `${C.turq}12`, color: C.turq }}><MessageCircle className="h-5 w-5" /></div>
+                  <p className="mt-4 text-sm font-semibold" style={{ color: C.teal }}>{lang === 'fa' ? 'گفتگو را شروع کنید' : lang === 'ar' ? 'ابدأ المحادثة' : 'Start the conversation'}</p>
+                  <p className="mt-1 max-w-md text-xs leading-relaxed" style={{ color: C.muted }}>{lang === 'fa' ? 'درباره برنامه سفر، قیمت، تاریخ و خدمات داخل سایت هماهنگ کنید.' : lang === 'ar' ? 'نسّق برنامج الرحلة والسعر والتواريخ والخدمات داخل الموقع.' : 'Discuss itinerary, pricing, dates, and services here before booking.'}</p>
                 </div>
               ) : (
                 <AnimatePresence initial={false}>
-                  {messages.map((m, idx) => {
-                    const isUser = m.sender_id === user.id;
-                    return (
-                      <MessageBubble
-                        key={m.id}
-                        msg={m}
-                        idx={idx}
-                        isUser={isUser}
-                        senderName={isUser ? 'You' : guide.full_name}
-                      />
-                    );
-                  })}
+                  {messages.map(message => (
+                    <MessageBubble key={message.id} message={message} mine={message.sender_id === user.id} senderName={participant.full_name || 'User'} />
+                  ))}
                 </AnimatePresence>
               )}
             </div>
           </div>
 
-          {/* Input form */}
-          <form
-            onSubmit={handleSend}
-            className="shrink-0 border-t px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-10 sm:py-4"
-            style={{ borderColor: `${C.muted}20`, background: `${C.white}` }}
-          >
-            <div className="mx-auto flex max-w-[680px] items-center gap-3">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={
-                  chatLang === 'fa'
-                    ? 'پیام خود را بنویسید...'
-                    : chatLang === 'ar'
-                    ? 'اكتب رسالتك...'
-                    : 'Type a message...'
-                }
-                className="flex-1 px-4 py-2.5 rounded-xl border text-sm focus:outline-none transition-all"
-                style={{
-                  background: `${C.mist}`,
-                  borderColor: `${C.muted}20`,
-                  color: C.ink,
-                }}
-                dir="auto"
-                autoComplete="off"
-                disabled={sending}
-              />
-              <button
-                type="submit"
-                disabled={sending || !input.trim()}
-                className="w-10 h-10 rounded-xl flex items-center justify-center font-medium transition-all hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: !sending && input.trim() ? C.turq : `${C.muted}40`,
-                  color: C.white,
-                }}
-                aria-label="Send message"
-              >
-                {sending ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <Send className="w-4 h-4" />
-                )}
-              </button>
+          <form onSubmit={handleSend} className="shrink-0 border-t px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-8 sm:py-4" style={{ borderColor: `${C.muted}25`, background: C.white }}>
+            <div className="mx-auto max-w-[760px]">
+              <div className="flex items-end gap-2.5">
+                <textarea
+                  value={input}
+                  onChange={event => { setInput(event.target.value); if (error) setError(''); }}
+                  onKeyDown={event => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault();
+                      handleSend(event);
+                    }
+                  }}
+                  rows={1}
+                  maxLength={4000}
+                  placeholder={lang === 'fa' ? 'پیام خود را بنویسید…' : lang === 'ar' ? 'اكتب رسالتك…' : 'Type a message…'}
+                  className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2"
+                  style={{ background: C.mist, borderColor: `${C.muted}25`, color: C.ink, '--tw-ring-color': `${C.turq}30` }}
+                  dir="auto"
+                  disabled={sending}
+                />
+                <button type="submit" disabled={sending || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label="Send message">
+                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                </button>
+              </div>
+              {error && <p role="alert" className="mt-2 text-xs leading-relaxed text-red-500">{error}</p>}
+              {!contactSharingAllowed && (
+                <p className="mt-2 text-[10px]" style={{ color: C.muted }}>
+                  Contact details are automatically blocked until booking payment is confirmed.
+                </p>
+              )}
             </div>
-            {error && (
-              <p className="mt-2 text-xs text-red-500">{error}</p>
-            )}
           </form>
         </section>
 
-        {/* Info panel - Right side on desktop */}
-        <aside
-          className="hidden lg:flex flex-col w-[40%] border-l overflow-y-auto px-8 py-8"
-          style={{ borderColor: `${C.muted}20`, background: `${C.mist}40` }}
-        >
-          {guide && (
-            <div>
-              <div
-                className="relative w-24 h-24 rounded-2xl overflow-hidden mb-4 border-2"
-                style={{ borderColor: C.turq }}
-              >
-                <img decoding="async" loading="lazy"
-                  src={avatarFor(guide)}
-                  alt={guide.full_name}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <h2 className="text-2xl font-bold mb-1" style={{ color: C.teal }}>
-                {guide.full_name}
-              </h2>
-              {guide.city && (
-                <p className="text-sm mb-4" style={{ color: C.muted }}>
-                  📍 {guide.city}
-                </p>
-              )}
-              <p className="text-sm leading-relaxed" style={{ color: C.ink }}>
-                {guide.bio || 'Welcome! Let me help you plan an unforgettable journey through Iran.'}
-              </p>
-            </div>
-          )}
+        <aside className="hidden w-[34%] shrink-0 flex-col overflow-y-auto bg-[#F7FBFA] p-8 lg:flex">
+          <img src={avatarFor(participant)} alt={participant.full_name || ''} className="h-24 w-24 rounded-2xl object-cover shadow-sm" />
+          <h2 className="mt-4 text-2xl font-bold" style={{ color: C.teal }}>{participant.full_name || 'User'}</h2>
+          {participant.role && <p className="mt-1 text-xs font-semibold capitalize" style={{ color: C.turq }}>{participant.role}</p>}
+          {participant.city && <p className="mt-2 text-sm" style={{ color: C.muted }}>{participant.city}</p>}
+          {participant.bio && <p className="mt-5 text-sm leading-7" style={{ color: C.ink }}>{participant.bio}</p>}
+          <div className="mt-6 rounded-2xl border border-[#DCEBE8] bg-white p-4">
+            <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: C.teal }}><ShieldCheck className="h-4 w-4" /> Safer booking communication</div>
+            <p className="mt-2 text-xs leading-relaxed" style={{ color: C.muted }}>Keep itinerary and price decisions in this chat. Verified payment unlocks private contact details automatically.</p>
+          </div>
         </aside>
       </div>
     </div>

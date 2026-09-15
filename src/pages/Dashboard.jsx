@@ -22,6 +22,7 @@ import GuideRequestsView from '@/components/dashboard/GuideRequestsView';
 import NotificationsView from '@/components/dashboard/NotificationsView';
 import BookingsView from '@/components/dashboard/BookingsView';
 import PaymentHistoryView from '@/components/dashboard/PaymentHistoryView';
+import ProviderContactMethodsCard from '@/components/dashboard/ProviderContactMethodsCard';
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { checkProfileCompletion } from '@/lib/profileCompletion';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
@@ -1321,6 +1322,13 @@ function ProfileView({ profile, userId, onSave }) {
             <input name="phone" type="tel" value={form.phone} onChange={handleChange} className={inputClass} placeholder="+98 ..." dir="ltr" />
           </div>
         </div>
+
+        {isGuideOrAgencyProfile && (
+          <ProviderContactMethodsCard
+            providerId={userId}
+            profile={{ ...profile, phone: form.phone }}
+          />
+        )}
 
         {/* Service cities */}
         <div>

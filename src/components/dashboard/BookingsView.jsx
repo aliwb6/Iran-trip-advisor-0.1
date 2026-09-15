@@ -1,41 +1,22 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Contact, Loader2, Mail, MessageCircle, Phone, Users, Wallet } from 'lucide-react';
+import { CalendarDays, Loader2, MessageCircle, Users, Wallet } from 'lucide-react';
 import { fetchMyBookings } from '@/api/bookings';
-import { fetchReleasedBookingContact } from '@/api/participantProfiles';
+import BookingContactCard from '@/components/profile/BookingContactCard';
 
 const money = (value, currency = 'USD') => new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: currency || 'USD',
 }).format(Number(value) || 0);
 
-const percent = (value) => `${Math.round((Number(value) || 0) * 100)}%`;
+const percent = value => `${Math.round((Number(value) || 0) * 100)}%`;
 
 function BookingCard({ booking }) {
   const navigate = useNavigate();
   const currency = booking.currency || 'USD';
   const dates = [booking.start_date, booking.end_date].filter(Boolean).join(' → ') || 'Dates not set';
-  const [contact, setContact] = useState(null);
-  const [contactLoading, setContactLoading] = useState(false);
-  const [contactError, setContactError] = useState('');
-  const chatUnlocked = booking.contact_released === true
+  const contactReleased = booking.contact_released === true
     && ['deposit_paid', 'paid'].includes(booking.payment_status);
-
-  const loadContact = async () => {
-    if (!booking.contact_released || contactLoading) return;
-    setContactLoading(true);
-    setContactError('');
-    try {
-      const result = await fetchReleasedBookingContact(booking.id);
-      if (!result) throw new Error('Contact details are not available yet.');
-      setContact(result);
-    } catch (error) {
-      setContactError(error.message || 'Could not load contact details.');
-    } finally {
-      setContactLoading(false);
-    }
-  };
 
   return (
     <article className="rounded-2xl border border-white/[0.08] bg-[hsl(222,45%,14%)] p-5">
@@ -45,9 +26,7 @@ function BookingCard({ booking }) {
           <p className="mt-1 text-xs text-white/45">{dates}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
-            {booking.status}
-          </span>
+          <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">{booking.status}</span>
           <span className="text-[11px] text-white/40">Payment: {booking.payment_status}</span>
         </div>
       </div>
@@ -83,44 +62,26 @@ function BookingCard({ booking }) {
       </dl>
 
       <div className="mt-4 border-t border-white/[0.07] pt-4">
-        {chatUnlocked ? (
-          <div className="space-y-3">
-            <button
-              type="button"
-              onClick={() => navigate(`/chat/${booking.tourist_id}`)}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-500"
-            >
-              <MessageCircle className="h-3.5 w-3.5" />
-              Chat with traveler
-            </button>
-
-            {contact ? (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs">
-                <div className="flex items-center gap-2 text-emerald-300">
-                  <Contact className="h-4 w-4" />
-                  <span className="font-semibold">Traveler contact</span>
-                </div>
-                <p className="mt-2 font-medium text-white">{contact.full_name || 'Traveler'}</p>
-                {contact.email && <p className="mt-1 flex items-center gap-2 text-white/60"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
-                {contact.phone && <p className="mt-1 flex items-center gap-2 text-white/60"><Phone className="h-3.5 w-3.5" />{contact.phone}</p>}
-              </div>
-            ) : (
-              <div>
-                <button
-                  type="button"
-                  onClick={loadContact}
-                  disabled={contactLoading}
-                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-500/15 disabled:opacity-60"
-                >
-                  {contactLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Contact className="h-3.5 w-3.5" />}
-                  {contactLoading ? 'Loading contact…' : 'View traveler contact'}
-                </button>
-                {contactError && <p className="mt-2 text-xs text-red-300">{contactError}</p>}
-              </div>
-            )}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-xs font-semibold text-white">Chat with traveler</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-white/40">
+              {contactReleased
+                ? 'Payment is confirmed. Contact details and contact sharing are available.'
+                : 'Chat is available now. Private contact details remain locked until the traveler payment is confirmed.'}
+            </p>
           </div>
-        ) : (
-          <p className="text-xs text-white/35">Two-way chat and private traveler contact unlock only after the booking deposit is securely confirmed.</p>
+          <button
+            type="button"
+            onClick={() => navigate(`/chat/${booking.tourist_id}`)}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[hsl(178,85%,32%)] px-3.5 py-2.5 text-xs font-semibold text-white transition hover:bg-[hsl(178,85%,38%)]"
+          >
+            <MessageCircle className="h-3.5 w-3.5" /> Chat with traveler
+          </button>
+        </div>
+
+        {contactReleased && (
+          <BookingContactCard bookingId={booking.id} released dark className="mt-3" />
         )}
       </div>
     </article>
@@ -139,7 +100,7 @@ export default function BookingsView() {
   return (
     <section>
       <h2 className="text-xl font-bold text-white">My Bookings</h2>
-      <p className="mt-1 text-sm text-white/40">Server-confirmed commercial snapshots for your selected proposals.</p>
+      <p className="mt-1 text-sm text-white/40">Chat remains on-platform before payment; verified payment releases private contact details.</p>
       {bookings.length === 0 ? (
         <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] py-16 text-center">
           <CalendarDays className="mx-auto h-8 w-8 text-white/20" />
