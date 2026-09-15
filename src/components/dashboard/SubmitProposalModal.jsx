@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Loader2, DollarSign, AlertTriangle, Upload,
@@ -276,6 +276,8 @@ export default function SubmitProposalModal({
   const [hasTransportation, setHasTransportation] = useState(false);
   const [transportationItems, setTransportationItems] = useState([]);
   const [customTransport, setCustomTransport] = useState('');
+  const fileInputRef = useRef(null);
+  const filePickerOpenRef = useRef(false);
   const packageRequestKind = getPackageRequestKind(request);
   const sourceTourTitle = request?.source_tour?.title?.[lang]
     || request?.source_tour?.title?.en
@@ -295,6 +297,17 @@ export default function SubmitProposalModal({
     setPriceType(prefill.priceType || 'per_person');
     setPricePeriod(prefill.pricePeriod || 'entire_trip');
   }, [open, request, lang]);
+
+  // Native file pickers temporarily move focus outside Radix's dialog. Keep
+  // the proposal open while that picker is active, including when it is closed
+  // with Cancel (which does not fire an input change event).
+  useEffect(() => {
+    const releaseFilePicker = () => {
+      window.setTimeout(() => { filePickerOpenRef.current = false; }, 0);
+    };
+    window.addEventListener('focus', releaseFilePicker);
+    return () => window.removeEventListener('focus', releaseFilePicker);
+  }, []);
 
   const TRANSPORT_OPTIONS = [
     'Private car',
@@ -406,12 +419,28 @@ export default function SubmitProposalModal({
     }
   };
 
+  const openImagePicker = () => {
+    if (uploadingImages) return;
+    filePickerOpenRef.current = true;
+    fileInputRef.current?.click();
+  };
+
+  const handleImagePickerChange = (event) => {
+    filePickerOpenRef.current = false;
+    uploadProposalImages(event.target.files);
+    // Selecting the same file again should still open the picker and upload it.
+    event.target.value = '';
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent
         dir={dir}
         className="max-w-2xl p-0 border-0 bg-transparent shadow-none overflow-hidden"
         style={{ maxHeight: '92vh' }}
+        onInteractOutside={(event) => {
+          if (filePickerOpenRef.current) event.preventDefault();
+        }}
       >
         <motion.div
           initial={{ opacity: 0, scale: 0.97, y: 12 }}
@@ -660,11 +689,11 @@ export default function SubmitProposalModal({
                 placeholder="https://example.com/photo1.jpg"
                 className={inputCls}
               />
-              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition hover:border-teal-300/50 hover:text-white">
+              <button type="button" onClick={openImagePicker} disabled={uploadingImages} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition hover:border-teal-300/50 hover:text-white disabled:cursor-wait disabled:opacity-70">
                 {uploadingImages ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
                 {uploadingImages ? 'Uploading images…' : 'Upload images from device'}
-                <input type="file" accept="image/*" multiple className="sr-only" disabled={uploadingImages} onChange={event => uploadProposalImages(event.target.files)} />
-              </label>
+              </button>
+              <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleImagePickerChange} />
               {parseLines(imagesText).length > 0 && (
                 <div className="mt-3 grid grid-cols-4 gap-2">
                   {parseLines(imagesText).map((src, index) => <img key={`${src}-${index}`} src={src} alt="" className="aspect-square w-full rounded-lg border border-white/10 object-cover" />)}
