@@ -113,27 +113,67 @@ function EmptyState({ Icon, title, desc }) {
 
 function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
   if (loading) return <SectionLoader />;
-  if (!proposals.length) return <EmptyState Icon={CheckCircle2} title="All caught up" desc="No proposals are waiting for review." />;
+
+  const pendingCount = proposals.filter(proposal => proposal.approval_status === 'pending_review').length;
+  const approvedCount = proposals.filter(proposal => proposal.approval_status === 'approved').length;
+  const ordered = [...proposals].sort((a, b) => {
+    const rank = (proposal) => proposal.approval_status === 'pending_review' ? 0 : proposal.approval_status === 'approved' ? 1 : 2;
+    const statusDifference = rank(a) - rank(b);
+    if (statusDifference) return statusDifference;
+    return new Date(a.accepted_at || 0).getTime() - new Date(b.accepted_at || 0).getTime();
+  });
+
+  if (!ordered.length) {
+    return <EmptyState Icon={CheckCircle2} title="All caught up" desc="No pending or approved proposals to show yet." />;
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between"><h2 className="text-lg font-bold text-white">Proposal Review</h2><span className="text-xs text-white/40">{proposals.length} awaiting approval</span></div>
-      {proposals.map(proposal => (
-        <div key={proposal.id} className={`${CARD} p-5`}>
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-white">{proposal.provider?.full_name || 'Provider'}</p>
-              <p className="mt-1 text-xs text-white/45">{proposal.provider?.role || 'guide'} · Trip to {(proposal.request?.destination || []).join(', ') || 'Iran'}</p>
-              {proposal.price != null && <p className="mt-2 text-sm font-semibold text-[hsl(178,85%,55%)]">${Number(proposal.price).toLocaleString()} · {proposal.price_type?.replace('_', ' ')} · {proposal.price_period?.replace('_', ' ')}</p>}
-              {proposal.message && <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/60">{proposal.message}</p>}
-            </div>
-            <div className="flex gap-2">
-              <button disabled={busyId === proposal.id} onClick={() => onEdit(proposal)} className="rounded-xl bg-white/[0.07] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-white/[0.12] disabled:opacity-50">Edit</button>
-              <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50">Approve</button>
-              <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/20 disabled:opacity-50">Reject</button>
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div>
+          <h2 className="text-lg font-bold text-white">Proposal Review</h2>
+          <p className="mt-1 text-[11px] text-white/35">Approved proposals stay here as read-only history.</p>
+        </div>
+        <span className="text-xs text-white/40">{pendingCount} awaiting approval · {approvedCount} approved</span>
+      </div>
+
+      {ordered.map(proposal => {
+        const approved = proposal.approval_status === 'approved';
+        return (
+          <div
+            key={proposal.id}
+            className={`${CARD} p-5 transition-all ${approved ? 'grayscale opacity-60 border-white/[0.05] bg-white/[0.025]' : ''}`}
+          >
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-semibold text-white">{proposal.provider?.full_name || 'Provider'}</p>
+                  {approved && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold text-white/60">
+                      <CheckCircle2 className="h-3 w-3" /> Approved
+                    </span>
+                  )}
+                </div>
+                <p className="mt-1 text-xs text-white/45">{proposal.provider?.role || 'guide'} · Trip to {(proposal.request?.destination || []).join(', ') || 'Iran'}</p>
+                {proposal.price != null && <p className="mt-2 text-sm font-semibold text-[hsl(178,85%,55%)]">${Number(proposal.price).toLocaleString()} · {proposal.price_type?.replace('_', ' ')} · {proposal.price_period?.replace('_', ' ')}</p>}
+                {proposal.message && <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/60">{proposal.message}</p>}
+              </div>
+
+              {approved ? (
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-semibold text-white/55">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Reviewed
+                </span>
+              ) : (
+                <div className="flex gap-2">
+                  <button disabled={busyId === proposal.id} onClick={() => onEdit(proposal)} className="rounded-xl bg-white/[0.07] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-white/[0.12] disabled:opacity-50">Edit</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50">Approve</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/20 disabled:opacity-50">Reject</button>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
@@ -1531,7 +1571,7 @@ export default function AdminDashboard() {
   const fetchProposals = async () => {
     setLoadingProposals(true);
     try {
-      const { data, error: err } = await supabase.from('trip_slots').select('*').eq('approval_status', 'pending_review').order('accepted_at', { ascending: true });
+      const { data, error: err } = await supabase.from('trip_slots').select('*').in('approval_status', ['pending_review', 'approved']).order('accepted_at', { ascending: true });
       if (err) throw err;
       const rows = data || [];
       const requestIds = [...new Set(rows.map(row => row.trip_request_id))];
@@ -1578,7 +1618,10 @@ export default function AdminDashboard() {
       const { data, error: err } = await supabase.rpc('review_trip_proposal', { proposal_id: id, decision });
       if (err) throw err;
       if (!data) throw new Error('This proposal is no longer awaiting review.');
-      setProposals(current => current.filter(proposal => proposal.id !== id));
+      setProposals(current => decision === 'approved'
+      ? current.map(proposal => proposal.id === id ? { ...proposal, approval_status: 'approved' } : proposal)
+      : current.filter(proposal => proposal.id !== id));
+    toast.success(decision === 'approved' ? 'Proposal approved and kept in review history.' : 'Proposal rejected.');
     } catch (err) { setError(err.message); } finally { setBusyId(null); }
   };
 
@@ -1657,7 +1700,7 @@ export default function AdminDashboard() {
 
   const counts = {
     pending:  tours.filter(t => t.status === 'pending_review' || t.status === 'draft').length,
-    proposals: proposals.length,
+    proposals: proposals.filter(proposal => proposal.approval_status === 'pending_review').length,
     tours:    tours.length,
     platform: platformTours.length,
     guides:   guides.length,
