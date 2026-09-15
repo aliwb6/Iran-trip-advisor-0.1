@@ -1,0 +1,145 @@
+/*
+ * Guide/agency proposal workspace
+ *
+ * SubmitProposalModal intentionally keeps its existing request/proposal markup and
+ * business logic untouched. This stylesheet only changes the presentation of that
+ * dialog into a two-pane workspace on larger screens.
+ *
+ * The selector is deliberately scoped to the proposal dialog's stable form
+ * signature so other Radix dialogs are not affected.
+ */
+
+@supports selector(:has(*)) {
+  :where(
+    [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+  ) {
+    --proposal-request-pane: 36%;
+    --proposal-workspace-gap: 1.5rem;
+  }
+
+  /* Keep the tourist request vertically readable even when the viewport is wide. */
+  :where(
+    [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+  ) > div:first-child > div:nth-child(2) > div:first-child > div {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  :where(
+    [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+  ) > div:first-child > div:nth-child(2) > div:first-child > div > * {
+    grid-column: 1 !important;
+  }
+
+  @media (min-width: 960px) {
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) {
+      width: min(96vw, 1180px) !important;
+      max-width: 1180px !important;
+      max-height: 92dvh !important;
+    }
+
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child {
+      height: min(92dvh, 860px);
+      min-height: min(680px, 92dvh);
+      max-height: 92dvh !important;
+    }
+
+    /*
+     * The existing modal body remains the proposal scroll container. The request
+     * card is a sticky, independently scrollable float on the physical left. This
+     * gives both sides separate scrolling without moving or duplicating form state.
+     */
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child > div:nth-child(2) {
+      display: flow-root !important;
+      min-height: 0;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      padding: 1.25rem 1.5rem !important;
+    }
+
+    /* Tourist request: narrower pane, fixed in view, with its own scroll. */
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child > div:nth-child(2) > div:first-child {
+      position: sticky;
+      top: 0;
+      float: left;
+      width: var(--proposal-request-pane);
+      height: calc(100% - 0.25rem);
+      max-height: calc(100% - 0.25rem);
+      margin: 0 !important;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      box-sizing: border-box;
+    }
+
+    /* Proposal fields: wider right side, preserving their existing structure. */
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child > div:nth-child(2) > div:not(:first-child) {
+      margin-left: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap)) !important;
+      margin-right: 0 !important;
+      margin-top: 0 !important;
+      margin-bottom: 1.5rem !important;
+    }
+
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child > div:nth-child(2) > div:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    /* Footer actions visually belong to the proposal (right) pane. */
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child > div:nth-child(3) {
+      padding-left: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap) + 1.5rem) !important;
+    }
+
+    /*
+     * Force physical left/right placement while preserving the language direction
+     * inside each form. This prevents RTL locales from swapping the workspace.
+     */
+    :where(
+      [role="dialog"].max-w-2xl[dir="rtl"]:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child > div:nth-child(2) > div {
+      direction: rtl;
+    }
+
+    :where(
+      [role="dialog"].max-w-2xl[dir="ltr"]:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child > div:nth-child(2) > div {
+      direction: ltr;
+    }
+  }
+
+  /*
+   * Phones and narrow tablets retain the safe stacked modal. We still keep the
+   * request details vertical so the same information is easy to scan before the
+   * proposal fields. Side-by-side panes resume once there is enough width.
+   */
+  @media (max-width: 959px) {
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) {
+      width: calc(100vw - 1rem) !important;
+      max-width: calc(100vw - 1rem) !important;
+      max-height: 94dvh !important;
+    }
+
+    :where(
+      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
+    ) > div:first-child {
+      max-height: 94dvh !important;
+    }
+  }
+}
