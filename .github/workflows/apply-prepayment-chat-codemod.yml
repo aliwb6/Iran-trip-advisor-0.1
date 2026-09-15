@@ -4,16 +4,12 @@ on:
   push:
     branches:
       - feature/prepayment-chat-contact-release
-    paths:
-      - scripts/apply-prepayment-chat-ui-patches.mjs
-      - .github/workflows/apply-prepayment-chat-codemod.yml
 
 permissions:
   contents: write
 
 jobs:
   patch-test-build:
-    if: contains(github.event.head_commit.message, 'chore: run prepayment chat codemod')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout feature branch
