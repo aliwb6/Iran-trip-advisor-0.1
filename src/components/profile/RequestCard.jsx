@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   MapPin, Users, Baby, ArrowRight, ArrowLeft,
   Car, Hotel, Sparkles, Clock, ChevronDown,
@@ -92,17 +92,11 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
     .replace('{max}', request.maxProposals);
   const proposalsBtnLabel = proposalsOpen ? t('card_hide_proposals') : t('card_view_proposals');
 
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5 }}
-      className="group bg-card/60 backdrop-blur-md border border-border/40 rounded-3xl p-5 sm:p-6 hover:border-amber-400/40 hover:shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-500"
-    >
+  const requestDetails = (
+    <>
       {/* Title */}
       <header className="flex items-start justify-between gap-4 mb-4">
-        <div>
+        <div className="min-w-0">
           <h3 className="font-heading text-xl sm:text-2xl font-semibold text-foreground leading-tight">
             {request.title}
           </h3>
@@ -121,7 +115,7 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2 justify-end">
+        <div className="flex flex-wrap gap-2 justify-end shrink-0">
           {request.adults != null && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/60 border border-border/40 text-xs text-foreground">
               <Users className="w-3 h-3 text-accent" />
@@ -169,7 +163,7 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
       )}
 
       {/* Preferences grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
+      <div className="grid grid-cols-1 gap-2.5 mb-4">
         <PrefCell icon={Car}      label={labels.transportation} value={request.transportation} />
         <PrefCell icon={Hotel}    label={labels.accommodation}  value={request.accommodation} />
         <PrefCell icon={Sparkles} label={labels.tourType}       value={request.tourType} />
@@ -181,26 +175,23 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-1.5">
             {labels.requirements}
           </p>
-          <p className="text-sm text-foreground/80 leading-relaxed line-clamp-2">{request.requirements}</p>
+          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{request.requirements}</p>
         </div>
       )}
 
       {/* Footer: status pill + guides-accepted pill + actions */}
       <footer className="flex items-center justify-between gap-3 pt-4 border-t border-border/30 flex-wrap">
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Status pill */}
           <span className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${STATUS_STYLES[status] || STATUS_STYLES.waiting}`}>
             {statusLabel}
           </span>
 
-          {/* Level 1 — guides-accepted counter pill */}
           <span className="px-2.5 py-1 rounded-full text-xs font-medium border bg-teal-500/10 text-teal-600 border-teal-400/30 dark:text-teal-400">
             {guidesAcceptedLabel}
           </span>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Proposals are expanded by default as soon as at least one arrives. */}
           {slotCount > 0 && (
             <button
               onClick={() => setProposalsOpen(prev => !prev)}
@@ -214,7 +205,6 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
             </button>
           )}
 
-          {/* Existing See Details */}
           <button
             onClick={() => onOpen?.(request)}
             className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:text-accent/80 transition group/btn"
@@ -224,28 +214,49 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
           </button>
         </div>
       </footer>
+    </>
+  );
 
-      {/* Inline proposals panel: visible by default when proposals exist. */}
-      <AnimatePresence initial={false}>
-        {slotCount > 0 && proposalsOpen && (
-          <motion.div
-            key="proposals-panel"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            style={{ overflow: 'hidden' }}
+  const hasVisibleProposals = slotCount > 0 && proposalsOpen;
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.5 }}
+      className={`group bg-card/60 backdrop-blur-md border border-border/40 rounded-3xl hover:border-amber-400/40 hover:shadow-[0_20px_60px_rgba(0,0,0,0.35)] transition-all duration-500 ${
+        hasVisibleProposals ? 'overflow-hidden p-0' : 'p-5 sm:p-6'
+      }`}
+    >
+      {hasVisibleProposals ? (
+        <div
+          dir="ltr"
+          className="lg:grid lg:grid-cols-[minmax(300px,38fr)_minmax(0,62fr)] lg:h-[min(72vh,760px)] lg:min-h-[560px]"
+        >
+          <section
+            dir={dir}
+            aria-label={lang === 'fa' ? 'جزئیات درخواست سفر' : lang === 'ar' ? 'تفاصيل طلب الرحلة' : 'Your request details'}
+            className="p-5 sm:p-6 min-w-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-gutter-stable lg:border-r lg:border-border/30"
           >
-            <div className="mt-4">
-              <ProposalsPanel
-                requestId={request.id}
-                proposalRound={request.proposalRound}
-                requestStatus={request.canonicalStatus}
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {requestDetails}
+          </section>
+
+          <section
+            dir={dir}
+            aria-label={lang === 'fa' ? 'پیشنهادهای راهنماها و آژانس‌ها' : lang === 'ar' ? 'عروض المرشدين والوكالات' : 'Guide and agency proposals'}
+            className="min-w-0 border-t border-border/30 p-5 sm:p-6 lg:border-t-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-gutter-stable [&>div]:border-t-0 [&>div]:pt-0"
+          >
+            <ProposalsPanel
+              requestId={request.id}
+              proposalRound={request.proposalRound}
+              requestStatus={request.canonicalStatus}
+            />
+          </section>
+        </div>
+      ) : (
+        requestDetails
+      )}
     </motion.article>
   );
 }
