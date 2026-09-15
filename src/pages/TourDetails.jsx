@@ -5,25 +5,23 @@ import { motion } from 'framer-motion';
 import {
   CheckCircle, XCircle,
   ArrowRight, ArrowLeft, Star, Lock, Loader2, ChevronLeft, ChevronRight,
-  Send, UserRoundSearch, Hash,
+  Send, UserRoundSearch, Hash, Building2, UserRound,
 } from 'lucide-react';
 import { useTourBySlug, FALLBACK_IMAGE } from '@/hooks/useSupabase';
 import { useAuth } from '@/lib/AuthContext';
+import { supabase } from '@/supabaseClient';
+import { selectPublicProfiles } from '@/lib/publicProfiles';
+import { avatarFor } from '@/lib/avatar';
 import { lookupInclusionLabel, computeNotIncludedLabels } from '@/lib/tourInclusions';
-import { toast } from 'sonner';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { TourDetailsSkeleton } from '@/components/ui/Skeletons';
 import { transformImage, imgPresets } from '@/lib/imageTransform';
+import { toast } from 'sonner';
 import TripRequestForm from '@/components/profile/TripRequestForm';
-import {
-  beginPackageTripRequest,
-  cancelPackageTripRequestIntent,
-} from '@/api/packageTripRequests';
+import { beginPackageTripRequest, cancelPackageTripRequestIntent } from '@/api/packageTripRequests';
 import { buildPackageTripRequestInitialData } from '@/lib/packageTripRequest';
 
 const purposeBadgeConfig = {
@@ -119,6 +117,8 @@ export default function TourDetails() {
   const [requestStarting, setRequestStarting] = useState(false);
   const [requestIntentId, setRequestIntentId] = useState(null);
   const [requestTarget, setRequestTarget] = useState(null);
+  const [provider, setProvider] = useState(null);
+  const [providerLoading, setProviderLoading] = useState(false);
 
   // Lightbox state for the sidebar gallery thumbnails. `lightboxIndex` is the
   // index into `tour.gallery` of the currently-opened image; null means closed.
@@ -147,6 +147,34 @@ export default function TourDetails() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [lightboxIndex, dir]);
+
+  // Tours created by providers use owner_id. The two legacy fields remain as
+  // fallbacks so older guide/agency tours still show their actual organiser.
+  useEffect(() => {
+    let active = true;
+    const providerId = tour?.owner_id || tour?.guide_id || tour?.agency_id;
+
+    if (!providerId) {
+      setProvider(null);
+      setProviderLoading(false);
+      return () => { active = false; };
+    }
+
+    setProviderLoading(true);
+    setProvider(null);
+
+    selectPublicProfiles(supabase).eq('id', providerId).maybeSingle().then((profileResult) => {
+      if (!active) return;
+      setProvider(profileResult.data || null);
+    }).catch(() => {
+      // A public tour remains usable even if an old record has no public provider profile.
+      if (active) setProvider(null);
+    }).finally(() => {
+      if (active) setProviderLoading(false);
+    });
+
+    return () => { active = false; };
+  }, [tour?.owner_id, tour?.guide_id, tour?.agency_id]);
 
   // Guard: while data is still loading (or before a non-existent slug resolves
   // to a Supabase 400 and `tour` is still null), show the skeleton instead of
@@ -188,8 +216,7 @@ export default function TourDetails() {
       setRequestFormOpen(true);
       setProviderCode('');
     } catch (requestError) {
-      const message = requestError?.message || t('request_generic_error');
-      toast.error(message);
+      toast.error(requestError?.message || t('request_generic_error'));
     } finally {
       setRequestStarting(false);
     }
@@ -200,11 +227,7 @@ export default function TourDetails() {
     setRequestFormOpen(false);
     setRequestIntentId(null);
     setRequestTarget(null);
-    if (intentId) {
-      cancelPackageTripRequestIntent(intentId).catch(() => {
-        // Intents expire automatically; closing the form must remain responsive.
-      });
-    }
+    if (intentId) cancelPackageTripRequestIntent(intentId).catch(() => {});
   };
 
   const handlePackageRequestSuccess = () => {
@@ -252,7 +275,6 @@ export default function TourDetails() {
   const themes = Array.isArray(tour.theme) ? tour.theme : (tour.theme ? [tour.theme] : []);
 
   const heroImage = pickHeroImage(tour);
-
   const packageRequestInitialData = buildPackageTripRequestInitialData(tour, lang);
 
   return (
@@ -358,14 +380,48 @@ export default function TourDetails() {
             )}
           </div>
 
-          {priceFrom != null && (
-            <div className="text-start">
-              <p className="font-body text-xs text-muted-foreground mb-1">
-                {lang === 'fa' ? 'قیمت از' : lang === 'ar' ? 'السعر من' : 'from'}
-              </p>
-              <p className="font-heading text-3xl font-bold text-accent">
-                ${Number(priceFrom).toLocaleString()}
-              </p>
+          {(priceFrom != null || provider || providerLoading) && (
+            <div className="flex w-full flex-wrap items-center justify-between gap-5 rounded-2xl bg-accent/[0.06] px-4 py-3 sm:w-auto sm:flex-nowrap sm:bg-transparent sm:p-0">
+              {priceFrom != null && (
+                <div className="shrink-0 text-start">
+                  <p className="font-body text-xs text-muted-foreground mb-1">
+                    {lang === 'fa' ? 'قیمت' : lang === 'ar' ? 'السعر' : 'Price'}
+                  </p>
+                  <p className="font-heading text-3xl font-bold text-accent">
+                    ${Number(priceFrom).toLocaleString()}
+                  </p>
+                </div>
+              )}
+
+              {(provider || providerLoading) && <div className="hidden h-12 w-px bg-border/70 sm:block" />}
+
+              {providerLoading ? (
+                <div className="flex items-center gap-3 animate-pulse">
+                  <div className="h-11 w-11 rounded-full bg-muted" />
+                  <div className="space-y-2"><div className="h-3.5 w-24 rounded bg-muted" /><div className="h-3 w-16 rounded bg-muted" /></div>
+                </div>
+              ) : provider ? (
+                <button
+                  type="button"
+                  onClick={() => navigate(provider.role === 'agency' ? `/agencies/${provider.id}` : `/guides/${provider.id}`)}
+                  className="flex min-w-0 items-center gap-3 rounded-xl text-start transition-colors hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-accent sm:-my-2 sm:px-2 sm:py-2"
+                >
+                  <img decoding="async" loading="lazy" src={avatarFor(provider)} alt={provider.full_name || ''} className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-accent/20" />
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-1.5 font-heading text-sm font-semibold text-foreground">
+                      <span className="truncate">{provider.full_name || (provider.role === 'agency' ? (lang === 'fa' ? 'آژانس' : 'Agency') : (lang === 'fa' ? 'راهنما' : 'Guide'))}</span>
+                      {provider.role === 'agency' ? <Building2 className="h-4 w-4 shrink-0 text-accent" /> : <UserRound className="h-4 w-4 shrink-0 text-accent" />}
+                    </span>
+                    <span className="mt-0.5 flex items-center gap-1 font-body text-xs text-muted-foreground">
+                      <span>{provider.role === 'agency' ? (lang === 'fa' ? 'آژانس مسافرتی' : lang === 'ar' ? 'وكالة سفر' : 'Travel agency') : (lang === 'fa' ? 'راهنمای محلی' : lang === 'ar' ? 'مرشد محلي' : 'Local guide')}</span>
+                      <span className="flex items-center gap-0.5 text-gold">
+                        <Star className="h-3.5 w-3.5 fill-gold" />
+                        <span className="font-semibold">{provider.rating != null ? Number(provider.rating).toFixed(1) : '—'}</span>
+                      </span>
+                    </span>
+                  </span>
+                </button>
+              ) : null}
             </div>
           )}
         </motion.div>
@@ -475,10 +531,9 @@ export default function TourDetails() {
           {/* Sidebar */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              {/* Booking Card */}
               <div className="p-6 rounded-2xl bg-card border border-border/50">
                 <h3 className="font-heading text-xl font-semibold text-foreground mb-4">
-                  {lang === 'fa' ? 'رزرو کنید' : lang === 'ar' ? 'احجز الآن' : 'Book This Tour'}
+                  {lang === 'fa' ? 'رزرو تور' : lang === 'ar' ? 'احجز الجولة' : 'Book This Tour'}
                 </h3>
 
                 <div className="space-y-3 mb-6">
@@ -510,7 +565,6 @@ export default function TourDetails() {
                   </button>
                 </div>
 
-                {/* Contact details are intentionally hidden until booking confirmation. */}
                 <div className="pt-4 border-t border-border/50">
                   <div className="flex items-start gap-3 p-3 rounded-xl bg-muted/40 border border-border/40">
                     <Lock className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -560,7 +614,6 @@ export default function TourDetails() {
         </div>
       </div>
 
-      {/* Select another guide/agency by the stable public numeric ID. */}
       <Dialog
         open={providerDialogOpen}
         onOpenChange={(open) => {
@@ -574,49 +627,36 @@ export default function TourDetails() {
             <DialogTitle>{t('request_another_provider_title')}</DialogTitle>
             <DialogDescription>{t('request_another_provider_desc')}</DialogDescription>
           </DialogHeader>
-
-          <div className="space-y-3 pt-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="package-provider-code">{t('request_provider_code_label')}</Label>
-              <div className="relative">
-                <Hash className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="package-provider-code"
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  autoComplete="off"
-                  value={providerCode}
-                  onChange={(event) => setProviderCode(event.target.value.replace(/\D/g, '').slice(0, 12))}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && providerCode && !requestStarting) {
-                      event.preventDefault();
-                      startPackageRequest(providerCode);
-                    }
-                  }}
-                  placeholder={t('request_provider_code_ph')}
-                  className="ps-9"
-                  dir="ltr"
-                />
-              </div>
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                {t('request_provider_code_help')}
-              </p>
+          <div className="space-y-1.5 pt-2">
+            <Label htmlFor="package-provider-code">{t('request_provider_code_label')}</Label>
+            <div className="relative">
+              <Hash className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="package-provider-code"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete="off"
+                value={providerCode}
+                onChange={(event) => setProviderCode(event.target.value.replace(/\D/g, '').slice(0, 12))}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && providerCode && !requestStarting) {
+                    event.preventDefault();
+                    startPackageRequest(providerCode);
+                  }
+                }}
+                placeholder={t('request_provider_code_ph')}
+                className="ps-9"
+                dir="ltr"
+              />
             </div>
+            <p className="text-xs leading-relaxed text-muted-foreground">{t('request_provider_code_help')}</p>
           </div>
-
           <div className="flex justify-end gap-2 pt-2">
-            <Button
-              variant="outline"
-              onClick={() => { setProviderDialogOpen(false); setProviderCode(''); }}
-              disabled={requestStarting}
-            >
+            <Button variant="outline" onClick={() => { setProviderDialogOpen(false); setProviderCode(''); }} disabled={requestStarting}>
               {t('request_cancel')}
             </Button>
-            <Button
-              onClick={() => startPackageRequest(providerCode)}
-              disabled={requestStarting || !providerCode}
-            >
+            <Button onClick={() => startPackageRequest(providerCode)} disabled={requestStarting || !providerCode}>
               {requestStarting && <Loader2 className="w-4 h-4 animate-spin me-2" />}
               {t('request_continue')}
             </Button>
@@ -637,13 +677,8 @@ export default function TourDetails() {
           location,
           price: priceFrom,
           meta: requestTarget.provider_code
-            ? t('package_request_target_with_code', {
-                name: requestTarget.provider_name || t('package_request_provider_fallback'),
-                code: requestTarget.provider_code,
-              })
-            : t('package_request_target', {
-                name: requestTarget.provider_name || t('package_request_provider_fallback'),
-              }),
+            ? t('package_request_target_with_code', { name: requestTarget.provider_name || t('package_request_provider_fallback'), code: requestTarget.provider_code })
+            : t('package_request_target', { name: requestTarget.provider_name || t('package_request_provider_fallback') }),
         } : null}
       />
 
