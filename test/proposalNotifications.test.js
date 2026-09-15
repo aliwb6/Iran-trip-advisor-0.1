@@ -6,22 +6,27 @@ async function source(path) {
   return readFile(new URL(path, import.meta.url), 'utf8');
 }
 
-const migrationPath = '../supabase/migrations/20260910123718_notify_traveler_on_proposal.sql';
+const legacyNotificationMigration = '../supabase/migrations/20260910123718_notify_traveler_on_proposal.sql';
+const queueMigration = '../supabase/migrations/20260916001500_traveler_proposal_queue_and_pending.sql';
 
-test('every newly inserted proposal notifies the traveler while the final proposal stays proposals_ready', async () => {
-  const migration = await source(migrationPath);
+test('latest proposal lifecycle notifies traveler only when an approved offer is revealed', async () => {
+  const migration = await source(queueMigration);
 
   assert.match(migration, /CREATE OR REPLACE FUNCTION public\.handle_trip_slot_insert\(\)/);
-  assert.match(migration, /v_notification_type := 'proposal_received'/);
-  assert.match(migration, /v_notification_type := 'proposals_ready'/);
-  assert.match(migration, /INSERT INTO public\.notifications \(user_id, type, message, related_request_id\)/);
-  assert.match(migration, /NEW\.trip_request_id/);
-  assert.match(migration, /Travel agency/);
-  assert.match(migration, /Guide /);
+  assert.match(migration, /CREATE OR REPLACE FUNCTION private\.reveal_available_trip_proposals/);
+  assert.match(migration, /s\.approval_status = 'approved'/);
+  assert.match(migration, /s\.traveler_visible_at IS NULL/);
+  assert.match(migration, /'proposal_received'/);
+  assert.match(migration, /PERFORM private\.reveal_available_trip_proposals\(v_request_id, v_round\)/);
+
+  const handlerStart = migration.indexOf('CREATE OR REPLACE FUNCTION public.handle_trip_slot_insert');
+  const revealStart = migration.indexOf('CREATE OR REPLACE FUNCTION private.reveal_available_trip_proposals', handlerStart);
+  const insertHandler = migration.slice(handlerStart, revealStart);
+  assert.doesNotMatch(insertHandler, /INSERT INTO public\.notifications/);
 });
 
-test('proposal notifications are published to Supabase realtime', async () => {
-  const migration = await source(migrationPath);
+test('proposal notifications remain published to Supabase realtime', async () => {
+  const migration = await source(legacyNotificationMigration);
 
   assert.match(migration, /pg_publication_tables/);
   assert.match(migration, /pubname = 'supabase_realtime'/);
@@ -44,4 +49,11 @@ test('proposal notification click opens the exact tourist request detail page', 
   assert.match(bell, /return `\/profile\/requests\/\$\{requestId\}`/);
   assert.match(bell, /notification\.message/);
   assert.match(bell, /await markOneRead\(notification\.id\)/);
+});
+
+test('pending notification opens the exact provider request detail page', async () => {
+  const bell = await source('../src/components/layout/NotificationBell.jsx');
+
+  assert.match(bell, /proposal_pending/);
+  assert.match(bell, /return `\/dashboard\/requests\/\$\{requestId\}`/);
 });
