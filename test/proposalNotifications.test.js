@@ -7,7 +7,7 @@ async function source(path) {
 }
 
 const legacyNotificationMigration = '../supabase/migrations/20260910123718_notify_traveler_on_proposal.sql';
-const queueMigration = '../supabase/migrations/20260916001500_traveler_proposal_queue_and_pending.sql';
+const queueMigration = '../supabase/migrations/20260915205338_traveler_proposal_queue_and_pending.sql';
 
 test('latest proposal lifecycle notifies traveler only when an approved offer is revealed', async () => {
   const migration = await source(queueMigration);
