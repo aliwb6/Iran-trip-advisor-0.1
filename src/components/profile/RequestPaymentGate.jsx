@@ -63,10 +63,10 @@ export default function RequestPaymentGate({ requestId, requestStatus }) {
 
   const tx = {
     waiting: lang === 'fa'
-      ? 'راهنما یا آژانس انتخاب‌شده باید ابتدا رزرو را تأیید کند. بعد از تأیید، پرداخت ۱۵٪ فعال می‌شود.'
+      ? 'در حال آماده‌سازی پرداخت رزرو هستیم. لطفاً چند لحظه دیگر صفحه را تازه‌سازی کنید.'
       : lang === 'ar'
-        ? 'يجب أن يؤكد المرشد أو الوكالة الحجز أولاً. بعد التأكيد سيتم تفعيل دفعة 15٪.'
-        : 'The selected guide or agency must confirm the booking first. The 15% deposit will unlock after confirmation.',
+        ? 'يجري تجهيز دفعة الحجز. يرجى تحديث الصفحة بعد لحظات.'
+        : 'Your booking payment is being prepared. Please refresh in a moment.',
     paymentRequired: lang === 'fa' ? 'پرداخت برای فعال شدن چت' : lang === 'ar' ? 'الدفع لتفعيل المحادثة' : 'Payment required to unlock chat',
     depositCopy: lang === 'fa'
       ? 'برای قطعی شدن رزرو، ۱۵٪ مبلغ را پرداخت کن. بعد از تأیید امن پرداخت، چت دوطرفه باز می‌شود.'

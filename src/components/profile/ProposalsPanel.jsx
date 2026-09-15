@@ -441,7 +441,7 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
         queryClient.invalidateQueries({ queryKey: ['trip_request', requestId] }),
         queryClient.invalidateQueries({ queryKey: ['trip_request_detail', requestId] }),
       ]);
-      toast.success('Guide selected. Waiting for the provider to confirm the booking.');
+      toast.success('Guide selected. Your 15% deposit is ready to pay.');
     } catch (error) {
       toast.error(error?.message || 'Could not select this guide.');
     } finally {
