@@ -31,7 +31,10 @@ export async function fetchAvailableRequests(guideId) {
   // not have a marketplace dispatch row yet, so preserve that inbox path.
   const { data: directRequests, error: directError } = await supabase
     .from('trip_requests')
-    .select('*, source_tour:tours!source_tour_id(id, slug, title, description, itinerary, duration, price, price_basis, cities, city, location, included, image_url, gallery, tour_type)')
+    // Keep the live request inbox compatible with databases that have not yet
+    // received the optional tour price-basis migration. Existing tours fall
+    // back to the established per-person price convention in the UI.
+    .select('*, source_tour:tours!source_tour_id(id, slug, title, description, itinerary, duration, price, cities, city, location, included, image_url, gallery, tour_type)')
     .eq('request_channel', 'direct_profile')
     .eq('direct_provider_id', guideId)
     .is('direct_escalated_at', null)

@@ -46,6 +46,8 @@ const TITLE_EXAMPLES = [
   'Desert Stars & Ancient Cities Adventure',
 ];
 
+const isMissingPriceBasisColumn = (error) => /price_basis.*does not exist|column .*price_basis/i.test(error?.message || '');
+
 export const DIFFICULTY_OPTIONS = [
   { value: 'easy',        en: 'Easy',        fa: 'آسان',   ar: 'سهل' },
   { value: 'moderate',    en: 'Moderate',    fa: 'متوسط',  ar: 'متوسط' },
@@ -369,8 +371,13 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
         const updatePayload = isPlatform
           ? { ...payload, status: 'published', owner_id: null, is_platform_tour: true }
           : payload;
-        const { data: updated, error: err } = await supabase
+        let { data: updated, error: err } = await supabase
           .from('tours').update(updatePayload).eq('id', editing.id).select().single();
+        if (isMissingPriceBasisColumn(err)) {
+          const { price_basis: _priceBasis, ...legacyPayload } = updatePayload;
+          ({ data: updated, error: err } = await supabase
+            .from('tours').update(legacyPayload).eq('id', editing.id).select().single());
+        }
         if (err) throw err;
         onDone(updated, false);
       } else {
@@ -381,8 +388,13 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           const { data: { user } } = await supabase.auth.getUser();
           insertPayload = { ...payload, status: 'draft', owner_id: user.id };
         }
-        const { data: created, error: err } = await supabase
+        let { data: created, error: err } = await supabase
           .from('tours').insert(insertPayload).select().single();
+        if (isMissingPriceBasisColumn(err)) {
+          const { price_basis: _priceBasis, ...legacyPayload } = insertPayload;
+          ({ data: created, error: err } = await supabase
+            .from('tours').insert(legacyPayload).select().single());
+        }
         if (err) throw err;
         setSuccess(true);
         setTimeout(() => {
