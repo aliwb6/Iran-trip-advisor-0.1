@@ -173,7 +173,7 @@ export default function Chat() {
     ? 'تا قبل از تأیید پرداخت، ارسال شماره تلفن، ایمیل، لینک یا شناسه شبکه‌های اجتماعی مجاز نیست. گفتگو را داخل سایت ادامه دهید.'
     : lang === 'ar'
       ? 'قبل تأكيد الدفع لا يمكن مشاركة رقم الهاتف أو البريد الإلكتروني أو الروابط أو حسابات التواصل. تابع المحادثة داخل الموقع.'
-      : 'Phone numbers, email addresses, links, and social-media IDs cannot be shared until payment is confirmed. Please keep the conversation on the platform.';
+      : 'Phone numbers, direct contact addresses, links, and social-media IDs cannot be shared until payment is confirmed. Please keep the conversation on the platform.';
 
   const handleSend = async event => {
     event.preventDefault();
@@ -264,7 +264,7 @@ export default function Chat() {
               <p className={`text-xs leading-relaxed ${contactSharingAllowed ? 'text-emerald-800' : 'text-amber-900'}`}>
                 {contactSharingAllowed
                   ? (lang === 'fa' ? 'پرداخت تأیید شده است؛ اشتراک اطلاعات تماس برای هماهنگی رزرو مجاز است.' : lang === 'ar' ? 'تم تأكيد الدفع؛ يمكن الآن مشاركة معلومات الاتصال لتنسيق الحجز.' : 'Payment is confirmed. Contact information may now be shared for booking coordination.')
-                  : (lang === 'fa' ? 'برای امنیت شما، گفتگوها ممکن است توسط تیم Iran Trip Advisor بررسی شوند. تا قبل از پرداخت، شماره تلفن، ایمیل، لینک و شناسه شبکه‌های اجتماعی قابل اشتراک نیست.' : lang === 'ar' ? 'لأمانك قد تتم مراجعة المحادثات من فريق Iran Trip Advisor. قبل الدفع لا يمكن مشاركة الهاتف أو البريد أو الروابط أو حسابات التواصل.' : 'For your safety, conversations may be reviewed by the Iran Trip Advisor team. Before payment, phone numbers, email addresses, links, and social-media IDs cannot be shared.')}
+                  : (lang === 'fa' ? 'برای امنیت شما، گفتگوها ممکن است توسط تیم Iran Trip Advisor بررسی شوند. تا قبل از پرداخت، شماره تلفن، ایمیل، لینک و شناسه شبکه‌های اجتماعی قابل اشتراک نیست.' : lang === 'ar' ? 'لأمانك قد تتم مراجعة المحادثات من فريق Iran Trip Advisor. قبل الدفع لا يمكن مشاركة الهاتف أو البريد أو الروابط أو حسابات التواصل.' : 'For your safety, conversations may be reviewed by the Iran Trip Advisor team. Before payment, phone numbers, direct contact addresses, links, and social-media IDs cannot be shared.')}
               </p>
             </div>
           </div>

@@ -11,7 +11,7 @@ import { preloadRoute, routeLoaders } from '@/lib/route-loaders';
 import './public-profile-layout.css';
 
 import Layout from '@/components/layout/Layout';
-import PaidChatRoute from '@/components/chat/PaidChatRoute';
+import ChatRelationshipRoute from '@/components/chat/ChatRelationshipRoute';
 import Home from '@/pages/Home';
 
 const Tours = lazy(routeLoaders.tours);
@@ -231,9 +231,9 @@ const AuthenticatedApp = () => {
           <Route
             path="/chat/:guideId"
             element={(
-              <PaidChatRoute>
+              <ChatRelationshipRoute>
                 <PublicStandaloneShell><Chat /></PublicStandaloneShell>
-              </PaidChatRoute>
+              </ChatRelationshipRoute>
             )}
           />
           <Route path="/trip-requests" element={<TripRequestsRedirect />} />

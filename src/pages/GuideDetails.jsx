@@ -297,9 +297,9 @@ export default function GuideDetails() {
         ]);
         if (profileErr) throw profileErr;
 
-        // Keep the profile CTA on the exact same server-side paid-booking
-        // predicate used by the chat route and message RLS. Authorization
-        // failures must fail closed without making the public profile unusable.
+        // Chat access follows the server-side request/proposal relationship
+        // predicate. Payment is intentionally not required to start messaging.
+        // Authorization failures fail closed without breaking the public profile.
         let unlocked = false;
         if (user?.id) {
           try {
@@ -374,7 +374,7 @@ export default function GuideDetails() {
 
   const handleChat = () => {
     if (!chatUnlocked) {
-      toast(lang === 'fa' ? 'برای چت، ابتدا یک تور پرداخت‌شده رزرو کنید.' : lang === 'ar' ? 'للدردشة، أكمل حجزاً مدفوعاً أولاً.' : 'Complete a paid booking to unlock chat.');
+      toast(lang === 'fa' ? 'برای شروع چت ابتدا یک درخواست یا پروپوزال فعال با این راهنما داشته باشید.' : lang === 'ar' ? 'لبدء المحادثة يجب أن يكون لديك طلب أو عرض نشط مع هذا المرشد.' : 'Start a request or proposal relationship with this guide to open chat.');
       return;
     }
     navigate(`/chat/${id}`);
@@ -576,7 +576,7 @@ export default function GuideDetails() {
               <button
                 onClick={() => handleChat()}
                 disabled={!chatUnlocked}
-                title={chatUnlocked ? '' : (lang === 'fa' ? 'پس از پرداخت تور در دسترس است' : lang === 'ar' ? 'متاح بعد الدفع' : 'Available after booking payment')}
+                title={chatUnlocked ? '' : (lang === 'fa' ? 'پس از ایجاد درخواست یا پروپوزال فعال می‌شود' : lang === 'ar' ? 'متاح بعد إنشاء طلب أو عرض' : 'Available after a request or proposal relationship exists')}
                 className={`flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-body font-semibold text-sm active:scale-[0.98] transition-all ${
                   chatUnlocked
                     ? 'border-2 border-gold text-gold hover:bg-gold/5'
