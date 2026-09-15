@@ -11,7 +11,7 @@ const bell = await readFile(
   'utf8',
 );
 const migration = await readFile(
-  new URL('../supabase/migrations/20260916001500_traveler_proposal_queue_and_pending.sql', import.meta.url),
+  new URL('../supabase/migrations/20260915205338_traveler_proposal_queue_and_pending.sql', import.meta.url),
   'utf8',
 );
 
