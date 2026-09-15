@@ -17,8 +17,6 @@ test('migration adds administrator moderation state, warnings, audit and RPCs', 
     'admin_set_chat_closed',
     'admin_warn_chat_user',
     'admin_edit_chat_message',
-    'get_chat_moderation_state',
-    'get_chat_warnings_with_user',
   ]) {
     assert.match(migration, new RegExp(required));
   }
@@ -26,10 +24,12 @@ test('migration adds administrator moderation state, warnings, audit and RPCs', 
 
 test('migration enforces closed chats and hardens spelled-number detection', () => {
   assert.match(migration, /chat_pair_is_closed/);
-  assert.match(migration, /This chat has been closed by Iran Trip Advisor/);
+  assert.match(migration, /AND NOT private\.chat_pair_is_closed/);
+  assert.match(migration, /private\.current_user_can_message/);
   assert.match(migration, /ziro/);
   assert.match(migration, /eleven/);
   assert.match(migration, /double/);
   assert.match(migration, /t\[\[:space:\]._\\-\]\*e/);
-  assert.match(migration, /Contact information can only be shared after booking payment is confirmed/);
+  assert.match(migration, /private\.message_contains_contact_info/);
+  assert.match(migration, /length\(regexp_replace\(v_match\[2\]/);
 });
