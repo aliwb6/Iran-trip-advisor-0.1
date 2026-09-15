@@ -25,7 +25,17 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee prepayment-chat-test-output.txt
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepayment-chat-test-output
+          path: prepayment-chat-test-output.txt
+          if-no-files-found: warn
 
       - name: Build production bundle
         run: npm run build
@@ -34,6 +44,7 @@ jobs:
         run: |
           rm -f scripts/apply-prepayment-chat-ui-patches.mjs
           rm -f .github/workflows/apply-prepayment-chat-codemod.yml
+          rm -f prepayment-chat-test-output.txt
 
       - name: Commit verified changes
         run: |
