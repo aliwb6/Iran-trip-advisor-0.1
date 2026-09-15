@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Loader2, Star, MapPin, XCircle, ChevronDown } from 'lucide-react';
+import {
+  CheckCircle2,
+  ChevronDown,
+  Clock3,
+  Loader2,
+  MapPin,
+  Star,
+  XCircle,
+} from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -59,10 +67,10 @@ function proposalImages(value) {
 
 function formatPrice(slot, t) {
   if (slot.price == null) return t('proposal_no_price');
-  const num      = Number(slot.price).toLocaleString('en-US');
+  const num = Number(slot.price).toLocaleString('en-US');
   const currency = slot.currency ? ` ${slot.currency}` : '';
-  const type     = slot.price_type   ? ` · ${humanizeEnum(slot.price_type)}`   : '';
-  const period   = slot.price_period ? ` · ${humanizeEnum(slot.price_period)}` : '';
+  const type = slot.price_type ? ` · ${humanizeEnum(slot.price_type)}` : '';
+  const period = slot.price_period ? ` · ${humanizeEnum(slot.price_period)}` : '';
   return `${num}${currency}${type}${period}`;
 }
 
@@ -93,7 +101,9 @@ function GuideAvatar({ guide, size = 'md' }) {
   const sz = size === 'lg' ? 'w-12 h-12 text-base' : 'w-9 h-9 text-sm';
   if (guide?.avatar_url) {
     return (
-      <img decoding="async" loading="lazy"
+      <img
+        decoding="async"
+        loading="lazy"
         src={guide.avatar_url}
         alt={guide.full_name}
         className={`${sz} rounded-full object-cover border border-border/40 shrink-0`}
@@ -121,7 +131,8 @@ function ProposalDetailContent({ slot }) {
   const guide = slot.guide || {};
   const path = profilePath(guide);
   const submitted = hasSubmittedDetails(slot);
-  const rejected = slot.status === 'rejected';
+  const rejected = slot.traveler_decision === 'rejected' || slot.status === 'rejected';
+  const pending = slot.traveler_decision === 'pending' && !rejected;
   const images = proposalImages(slot.images);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
@@ -133,7 +144,21 @@ function ProposalDetailContent({ slot }) {
 
       {rejected && (
         <div className="rounded-xl border border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800/60 px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-          {lang === 'fa' ? 'این پیشنهاد رد شده و فقط برای سابقه نگه‌داری می‌شود.' : lang === 'ar' ? 'تم رفض هذا العرض وهو محفوظ للرجوع إليه.' : 'This proposal was rejected and is kept for your records.'}
+          {lang === 'fa'
+            ? 'این پیشنهاد رد شده و فقط برای سابقه نگه‌داری می‌شود. رد کردن قابل بازگشت نیست.'
+            : lang === 'ar'
+            ? 'تم رفض هذا العرض نهائياً وهو محفوظ للرجوع إليه.'
+            : 'This proposal was rejected permanently and is kept for your records.'}
+        </div>
+      )}
+
+      {pending && (
+        <div className="rounded-xl border border-amber-300/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+          {lang === 'fa'
+            ? 'این پیشنهاد در حالت Pending است. همچنان فعال می‌ماند و می‌توانید بعداً آن را تأیید کنید.'
+            : lang === 'ar'
+            ? 'هذا العرض في حالة Pending. يبقى فعالاً ويمكنك الموافقة عليه لاحقاً.'
+            : 'This proposal is Pending. It stays active and you can approve it later.'}
         </div>
       )}
 
@@ -187,9 +212,7 @@ function ProposalDetailContent({ slot }) {
               <ul className="space-y-1.5">
                 {slot.included.map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
-                    <span className="mt-0.5 w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0 font-bold">
-                      ✓
-                    </span>
+                    <span className="mt-0.5 w-4 h-4 rounded-full bg-emerald-500/15 text-emerald-500 dark:text-emerald-400 flex items-center justify-center text-[10px] shrink-0 font-bold">✓</span>
                     {item}
                   </li>
                 ))}
@@ -202,9 +225,7 @@ function ProposalDetailContent({ slot }) {
               <ul className="space-y-1.5">
                 {slot.excluded.map((item, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm text-foreground/80">
-                    <span className="mt-0.5 w-4 h-4 rounded-full bg-red-500/15 text-red-500 dark:text-red-400 flex items-center justify-center text-[10px] shrink-0 font-bold">
-                      ✕
-                    </span>
+                    <span className="mt-0.5 w-4 h-4 rounded-full bg-red-500/15 text-red-500 dark:text-red-400 flex items-center justify-center text-[10px] shrink-0 font-bold">✕</span>
                     {item}
                   </li>
                 ))}
@@ -261,13 +282,25 @@ function ProposalDetailContent({ slot }) {
   );
 }
 
-function ProposalRow({ slot, index, onReject, onSelect, rejecting, selecting, canSelect }) {
+function ProposalRow({
+  slot,
+  index,
+  onReject,
+  onSelect,
+  onTogglePending,
+  rejecting,
+  selecting,
+  pendingBusy,
+  canSelect,
+}) {
   const { t, lang } = useI18n();
   const [showDetail, setShowDetail] = useState(false);
   const guide = slot.guide || {};
   const path = profilePath(guide);
-  const rejected = slot.status === 'rejected';
-  const cannotReject = ['rejected', 'finalized', 'selected', 'closed'].includes(slot.status);
+  const rejected = slot.traveler_decision === 'rejected' || slot.status === 'rejected';
+  const pending = slot.traveler_decision === 'pending' && !rejected;
+  const approved = slot.traveler_decision === 'approved' || slot.status === 'selected';
+  const actionable = ['accepted', 'chatting'].includes(slot.status) && !rejected && !approved;
   const tone = PROPOSAL_TONES[index % PROPOSAL_TONES.length];
   const proposalLabel = lang === 'fa'
     ? `پیشنهاد ${index + 1}`
@@ -279,10 +312,18 @@ function ProposalRow({ slot, index, onReject, onSelect, rejecting, selecting, ca
     : t('proposal_see_details');
   const detailId = `proposal-details-${slot.id}`;
 
+  const approveLabel = lang === 'fa' ? 'تأیید' : lang === 'ar' ? 'موافقة' : 'Approve';
+  const pendingLabel = pending
+    ? (lang === 'fa' ? 'خروج از Pending' : lang === 'ar' ? 'إلغاء Pending' : 'Remove Pending')
+    : 'Pending';
+  const rejectLabel = lang === 'fa' ? 'رد' : lang === 'ar' ? 'رفض' : 'Reject';
+
   return (
     <div className={`rounded-2xl border-2 p-4 transition-all duration-300 ${
       rejected
         ? 'bg-gray-100/80 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700 grayscale opacity-70'
+        : pending
+        ? 'border-amber-300/90 bg-amber-50/60 dark:border-amber-500/45 dark:bg-amber-950/20 shadow-sm'
         : `${tone.card} shadow-sm hover:shadow-md`
     }`}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -301,7 +342,17 @@ function ProposalRow({ slot, index, onReject, onSelect, rejecting, selecting, ca
               <RoleBadge role={guide.role} t={t} />
               {rejected && (
                 <span className="px-2 py-0.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-[10px] font-semibold">
-                  {lang === 'fa' ? 'رد شده' : lang === 'ar' ? 'مرفوض' : 'Rejected'}
+                  {lang === 'fa' ? 'رد شده · نهایی' : lang === 'ar' ? 'مرفوض · نهائي' : 'Rejected · Final'}
+                </span>
+              )}
+              {pending && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300 text-[10px] font-bold">
+                  <Clock3 className="w-3 h-3" /> Pending
+                </span>
+              )}
+              {approved && !rejected && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-emerald-300 bg-emerald-100 text-emerald-800 dark:border-emerald-500/40 dark:bg-emerald-500/15 dark:text-emerald-300 text-[10px] font-bold">
+                  <CheckCircle2 className="w-3 h-3" /> {approveLabel}
                 </span>
               )}
               {guide.rating > 0 && (
@@ -346,25 +397,44 @@ function ProposalRow({ slot, index, onReject, onSelect, rejecting, selecting, ca
             />
           </button>
 
-          {!cannotReject && (
+          {canSelect && actionable && (
             <button
-              onClick={() => onReject(slot)}
-              disabled={rejecting}
-              className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/15 hover:text-red-600 disabled:opacity-50 transition-colors"
+              type="button"
+              onClick={() => onSelect(slot)}
+              disabled={selecting || rejecting || pendingBusy}
+              className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
             >
-              {rejecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
-              {lang === 'fa' ? 'رد' : lang === 'ar' ? 'رفض' : 'Reject'}
+              {selecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              {selecting ? (lang === 'fa' ? 'در حال تأیید…' : 'Approving…') : approveLabel}
             </button>
           )}
 
-          {canSelect && ['accepted', 'chatting'].includes(slot.status) && (
+          {canSelect && actionable && (
             <button
-              onClick={() => onSelect(slot)}
-              disabled={selecting}
-              className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50"
+              type="button"
+              onClick={() => onTogglePending(slot)}
+              disabled={pendingBusy || rejecting || selecting}
+              aria-pressed={pending}
+              className={`shrink-0 inline-flex items-center gap-1 rounded-xl border px-3 py-2 text-xs font-semibold disabled:opacity-50 transition-colors ${
+                pending
+                  ? 'border-amber-500/50 bg-amber-500 text-white hover:bg-amber-600'
+                  : 'border-amber-400/45 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300'
+              }`}
             >
-              {selecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
-              {selecting ? 'Selecting…' : 'Select guide'}
+              {pendingBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock3 className="w-3.5 h-3.5" />}
+              {pendingBusy ? (lang === 'fa' ? 'در حال ذخیره…' : 'Saving…') : pendingLabel}
+            </button>
+          )}
+
+          {actionable && (
+            <button
+              type="button"
+              onClick={() => onReject(slot)}
+              disabled={rejecting || selecting || pendingBusy}
+              className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/15 hover:text-red-600 disabled:opacity-50 transition-colors"
+            >
+              {rejecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+              {rejectLabel}
             </button>
           )}
         </div>
@@ -397,6 +467,7 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
   const queryClient = useQueryClient();
   const [rejectingId, setRejectingId] = useState(null);
   const [selectingId, setSelectingId] = useState(null);
+  const [pendingId, setPendingId] = useState(null);
   const canSelect = ['open', 'active', 'pending', 'proposals_ready'].includes(requestStatus);
 
   const { data: slots = [], isLoading } = useQuery({
@@ -430,49 +501,117 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
     staleTime: 30_000,
   });
 
-  const rejectProposal = async (slot) => {
-    const confirmed = window.confirm(lang === 'fa' ? 'این پیشنهاد رد شود؟ پیشنهاد در فهرست باقی می‌ماند.' : lang === 'ar' ? 'هل تريد رفض هذا العرض؟ سيبقى ظاهراً في القائمة.' : 'Reject this proposal? It will remain visible in your list.');
-    if (!confirmed) return;
-    setRejectingId(slot.id);
-    const { data: rejected, error } = await supabase.rpc('reject_trip_proposal', { proposal_id: slot.id });
-    setRejectingId(null);
-    if (error || !rejected) {
-      toast.error(error?.message || 'Could not reject the proposal.');
-      return;
-    }
+  const refreshProposalState = async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ['trip_slots_proposals', requestId] }),
       queryClient.invalidateQueries({ queryKey: ['trip_slots_counts'] }),
+      queryClient.invalidateQueries({ queryKey: ['trip_requests'] }),
       queryClient.invalidateQueries({ queryKey: ['trip_request', requestId] }),
       queryClient.invalidateQueries({ queryKey: ['trip_request_detail', requestId] }),
     ]);
-    toast.success(lang === 'fa' ? 'پیشنهاد رد شد و در فهرست باقی ماند.' : lang === 'ar' ? 'تم رفض العرض وسيبقى في القائمة.' : 'Proposal rejected and kept in the list.');
+  };
+
+  const rejectProposal = async (slot) => {
+    const warning = lang === 'fa'
+      ? 'آیا مطمئنی می‌خواهی این پروپوزال را رد کنی؟ این تصمیم نهایی است و بعد از رد کردن دیگر نمی‌توانی پروپوزال را برگردانی یا تأییدش کنی.'
+      : lang === 'ar'
+      ? 'هل أنت متأكد من رفض هذا العرض؟ هذا القرار نهائي، وبعد الرفض لن تتمكن من استعادة العرض أو الموافقة عليه لاحقاً.'
+      : 'Are you sure you want to reject this proposal? This decision is final. Once rejected, you cannot restore or approve it later.';
+
+    if (!window.confirm(warning)) return;
+
+    setRejectingId(slot.id);
+    try {
+      const { data: rejected, error } = await supabase.rpc('reject_trip_proposal', {
+        proposal_id: slot.id,
+      });
+      if (error || !rejected) {
+        throw error || new Error('Could not reject the proposal.');
+      }
+      await refreshProposalState();
+      toast.success(
+        lang === 'fa'
+          ? 'پروپوزال برای همیشه رد شد. اگر پیشنهادی در صف آماده باشد، حالا نمایش داده می‌شود.'
+          : lang === 'ar'
+          ? 'تم رفض العرض نهائياً. سيظهر العرض التالي إذا كان جاهزاً.'
+          : 'Proposal rejected permanently. The next queued proposal is now available when ready.',
+      );
+    } catch (error) {
+      toast.error(error?.message || 'Could not reject the proposal.');
+    } finally {
+      setRejectingId(null);
+    }
+  };
+
+  const togglePending = async (slot) => {
+    const moveToPending = slot.traveler_decision !== 'pending';
+    setPendingId(slot.id);
+    try {
+      const { data, error } = await supabase.rpc('set_trip_proposal_pending', {
+        proposal_id: slot.id,
+        is_pending: moveToPending,
+      });
+      if (error || !data) {
+        throw error || new Error('Could not update the proposal decision.');
+      }
+      await refreshProposalState();
+
+      if (moveToPending) {
+        toast.success(
+          lang === 'fa'
+            ? 'پروپوزال Pending شد. راهنما/آژانس با نوتیفیکیشن و ایمیل مطلع می‌شود و پیشنهاد بعدیِ آماده می‌تواند نمایش داده شود.'
+            : lang === 'ar'
+            ? 'تم وضع العرض في حالة Pending وإبلاغ مقدم الخدمة. يمكن الآن إظهار العرض التالي الجاهز.'
+            : 'Proposal moved to Pending. The provider is notified, and the next ready proposal can now be shown.',
+        );
+      } else {
+        toast.success(
+          lang === 'fa'
+            ? 'پروپوزال از Pending خارج شد و همچنان می‌توانید آن را تأیید یا رد کنید.'
+            : lang === 'ar'
+            ? 'تمت إزالة حالة Pending. لا يزال بإمكانك الموافقة على العرض أو رفضه.'
+            : 'Pending removed. You can still approve or reject this proposal.',
+        );
+      }
+    } catch (error) {
+      toast.error(error?.message || 'Could not update the proposal decision.');
+    } finally {
+      setPendingId(null);
+    }
   };
 
   const selectProposal = async (slot) => {
-    if (!window.confirm('Select this guide or agency for your trip?')) return;
+    const confirmation = lang === 'fa'
+      ? 'این پروپوزال تأیید شود؟ با تأیید، این راهنما/آژانس برای سفر انتخاب می‌شود و مرحله پرداخت برای شما فعال خواهد شد.'
+      : lang === 'ar'
+      ? 'هل تريد الموافقة على هذا العرض؟ سيتم اختيار مقدم الخدمة وتفعيل مرحلة الدفع.'
+      : 'Approve this proposal? This selects the guide or agency for your trip and enables the payment step.';
+
+    if (!window.confirm(confirmation)) return;
+
     setSelectingId(slot.id);
     try {
       await touristSelectGuide(requestId, slot.guide_id);
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['trip_slots_proposals', requestId] }),
-        queryClient.invalidateQueries({ queryKey: ['trip_requests'] }),
-        queryClient.invalidateQueries({ queryKey: ['trip_request', requestId] }),
-        queryClient.invalidateQueries({ queryKey: ['trip_request_detail', requestId] }),
-      ]);
-      toast.success('Guide selected. Your 15% deposit is ready to pay.');
+      await refreshProposalState();
+      toast.success(
+        lang === 'fa'
+          ? 'پروپوزال تأیید شد. پرداخت ۱۵٪ برای شما آماده است.'
+          : lang === 'ar'
+          ? 'تمت الموافقة على العرض. دفعة 15٪ جاهزة الآن.'
+          : 'Proposal approved. Your 15% deposit is ready to pay.',
+      );
     } catch (error) {
-      toast.error(error?.message || 'Could not select this guide.');
+      toast.error(error?.message || 'Could not approve this proposal.');
     } finally {
       setSelectingId(null);
     }
   };
 
   const panelSubtitle = lang === 'fa'
-    ? 'پیشنهادها را سریع مقایسه کنید و جزئیات هر کدام را ببینید.'
+    ? 'فقط پروپوزال‌های تأییدشده توسط ادمین نمایش داده می‌شوند. Pending به شما اجازه می‌دهد پیشنهاد را نگه دارید و گزینه بعدی را هم ببینید.'
     : lang === 'ar'
-    ? 'قارن العروض بسرعة وافتح تفاصيل كل عرض.'
-    : 'Compare offers at a glance, then open any proposal for full details.';
+    ? 'تظهر فقط العروض المعتمدة من الإدارة. استخدم Pending للاحتفاظ بالعرض ومقارنته بالعرض التالي.'
+    : 'Only admin-approved proposals appear here. Use Pending to keep an offer active while comparing the next available proposal.';
 
   return (
     <div className="pt-5 border-t border-border/30" dir={dir}>
@@ -481,7 +620,7 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
           <p className="font-heading text-base sm:text-lg font-bold text-foreground">
             {t('card_view_proposals')}
           </p>
-          <p className="mt-1 text-xs text-muted-foreground">
+          <p className="mt-1 text-xs text-muted-foreground max-w-2xl">
             {panelSubtitle}
           </p>
         </div>
@@ -509,8 +648,10 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
               index={index}
               onReject={rejectProposal}
               onSelect={selectProposal}
+              onTogglePending={togglePending}
               rejecting={rejectingId === slot.id}
               selecting={selectingId === slot.id}
+              pendingBusy={pendingId === slot.id}
               canSelect={canSelect}
             />
           ))}

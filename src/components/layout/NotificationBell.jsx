@@ -15,17 +15,18 @@ function timeAgo(dateStr) {
 }
 
 const TYPE_CONFIG = {
-  info:              { label: 'Info',            color: 'bg-blue-500/10 text-blue-500' },
-  success:           { label: 'Success',         color: 'bg-emerald-500/10 text-emerald-500' },
-  warning:           { label: 'Warning',         color: 'bg-amber-500/10 text-amber-500' },
-  request:           { label: 'Request',         color: 'bg-accent/10 text-accent' },
-  tour_request:      { label: 'Trip Request',    color: 'bg-blue-500/10 text-blue-500' },
-  new_request:       { label: 'Trip Request',    color: 'bg-blue-500/10 text-blue-500' },
-  proposal_received: { label: 'New Proposal',    color: 'bg-violet-500/10 text-violet-500' },
-  proposals_ready:   { label: 'Proposals Ready', color: 'bg-violet-500/10 text-violet-500' },
-  guide_selected:    { label: 'Selected',        color: 'bg-emerald-500/10 text-emerald-500' },
-  request_filled:    { label: 'Trip Update',     color: 'bg-muted text-muted-foreground' },
-  message:           { label: 'Message',         color: 'bg-violet-500/10 text-violet-500' },
+  info:              { label: 'Info',             color: 'bg-blue-500/10 text-blue-500' },
+  success:           { label: 'Success',          color: 'bg-emerald-500/10 text-emerald-500' },
+  warning:           { label: 'Warning',          color: 'bg-amber-500/10 text-amber-500' },
+  request:           { label: 'Request',          color: 'bg-accent/10 text-accent' },
+  tour_request:      { label: 'Trip Request',     color: 'bg-blue-500/10 text-blue-500' },
+  new_request:       { label: 'Trip Request',     color: 'bg-blue-500/10 text-blue-500' },
+  proposal_received: { label: 'New Proposal',     color: 'bg-violet-500/10 text-violet-500' },
+  proposals_ready:   { label: 'Proposals Ready',  color: 'bg-violet-500/10 text-violet-500' },
+  proposal_pending:  { label: 'Proposal Pending', color: 'bg-amber-500/10 text-amber-600 dark:text-amber-400' },
+  guide_selected:    { label: 'Selected',         color: 'bg-emerald-500/10 text-emerald-500' },
+  request_filled:    { label: 'Trip Update',      color: 'bg-muted text-muted-foreground' },
+  message:           { label: 'Message',          color: 'bg-violet-500/10 text-violet-500' },
 };
 
 function notificationDestination(notification) {
@@ -36,7 +37,12 @@ function notificationDestination(notification) {
     return `/profile/requests/${requestId}`;
   }
 
-  if (notification.type === 'tour_request' || notification.type === 'new_request' || notification.type === 'direct_trip_request') {
+  if (
+    notification.type === 'tour_request' ||
+    notification.type === 'new_request' ||
+    notification.type === 'direct_trip_request' ||
+    notification.type === 'proposal_pending'
+  ) {
     return `/dashboard/requests/${requestId}`;
   }
 
