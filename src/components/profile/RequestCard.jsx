@@ -128,6 +128,11 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
               {request.adults} {labels.adults}
             </span>
           )}
+          {(request.male_adults != null || request.female_adults != null) && (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/60 border border-border/40 text-xs text-foreground">
+              <Users className="w-3 h-3 text-accent" /> {request.male_adults || 0} {lang === 'fa' ? 'آقا' : 'men'} · {request.female_adults || 0} {lang === 'fa' ? 'خانم' : 'women'}
+            </span>
+          )}
           {request.children != null && request.children > 0 && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/60 border border-border/40 text-xs text-foreground">
               <Baby className="w-3 h-3 text-accent" />

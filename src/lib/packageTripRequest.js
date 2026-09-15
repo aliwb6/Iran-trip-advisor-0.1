@@ -29,6 +29,15 @@ const asList = (value, lang = 'en') => {
     .filter(item => item && !/^iran$/i.test(item));
 };
 
+const derivedNotIncluded = (included) => {
+  const values = (included || []).map(item => String(item).toLowerCase());
+  const missing = [];
+  if (!values.some(item => /hotel|hostel|accommodation|guesthouse|lodge/.test(item))) missing.push('Accommodation');
+  if (!values.some(item => /transport|transfer|vehicle|car|train|flight|bus/.test(item))) missing.push('Transportation');
+  if (!values.some(item => /breakfast|lunch|dinner|meal/.test(item))) missing.push('Meals');
+  return missing;
+};
+
 const normalizeTourType = (value) => {
   const normalized = String(value || '').toLowerCase();
   if (normalized.includes('private')) return 'Private Tour';
@@ -96,6 +105,8 @@ export function buildPackageProposalPrefill(request, lang = 'en') {
   if (!tour) return null;
 
   const price = tour.price ?? tour.price_usd ?? tour.price_from ?? '';
+  const included = asList(tour.included, lang);
+  const explicitExcluded = asList(tour.excluded ?? tour.not_included, lang);
   const itinerary = Array.isArray(tour.itinerary)
     ? tour.itinerary.map((day, index) => {
       if (typeof day === 'string') return day.trim();
@@ -107,9 +118,11 @@ export function buildPackageProposalPrefill(request, lang = 'en') {
 
   return {
     price: price == null ? '' : String(price),
+    priceType: tour.price_basis === 'per_day' ? 'entire_group' : 'per_person',
+    pricePeriod: tour.price_basis === 'per_day' ? 'per_day' : 'entire_trip',
     itinerary,
-    included: asList(tour.included, lang),
-    excluded: asList(tour.excluded ?? tour.not_included, lang),
+    included,
+    excluded: explicitExcluded.length ? explicitExcluded : derivedNotIncluded(included),
     message: getPackageRequestKind(request) === 'package_booking'
       ? 'Thank you for your booking request. I have reviewed the package details and availability.'
       : 'Thank you for your private tour request. This offer is based on the reference package and can be tailored to your needs.',

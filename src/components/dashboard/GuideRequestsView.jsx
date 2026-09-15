@@ -184,6 +184,9 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
               {(req.children || req.child_count) > 0 ? `, ${req.children || req.child_count} child` : ''}
             </Tag>
           )}
+          {((req.male_adults != null) || (req.female_adults != null)) && (
+            <Tag><Users className="w-3 h-3 mr-1 inline-block" />{req.male_adults || 0} men · {req.female_adults || 0} women</Tag>
+          )}
           {req.guide_languages?.length > 0 && (
             <Tag><Globe className="w-3 h-3 mr-1 inline-block" />{req.guide_languages.join(', ')}</Tag>
           )}

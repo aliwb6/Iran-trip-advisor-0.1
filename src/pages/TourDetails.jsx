@@ -267,6 +267,9 @@ export default function TourDetails() {
 
   // Price — accept fixture `priceFrom`, normalised `price_from`, DB `price_usd` or `price`.
   const priceFrom = tour.priceFrom ?? tour.price_from ?? tour.price_usd ?? tour.price ?? null;
+  const priceBasis = tour.price_basis === 'per_day'
+    ? (lang === 'fa' ? 'در روز' : lang === 'ar' ? 'يومياً' : 'per day')
+    : (lang === 'fa' ? 'برای هر نفر' : lang === 'ar' ? 'لكل شخص' : 'per person');
 
   // Cultural intensity comes from `cultural` (fixture) or `cultural_intensity` (DB).
   const cultural = tour.cultural || tour.cultural_intensity || null;
@@ -390,6 +393,7 @@ export default function TourDetails() {
                   <p className="font-heading text-3xl font-bold text-accent">
                     ${Number(priceFrom).toLocaleString()}
                   </p>
+                  <p className="font-body text-xs text-muted-foreground">{priceBasis}</p>
                 </div>
               )}
 

@@ -47,6 +47,20 @@ function humanizeEnum(str) {
   return str ? str.replace(/_/g, ' ') : '';
 }
 
+function proposalImages(value) {
+  if (Array.isArray(value)) return value.filter(Boolean);
+  if (typeof value !== 'string') return [];
+  const raw = value.trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) return parsed.filter(Boolean);
+  } catch {
+    // Legacy records may contain one URL or one URL per line.
+  }
+  return raw.split(/\n|,/).map(item => item.trim()).filter(Boolean);
+}
+
 function formatPrice(slot, t) {
   if (slot.price == null) return t('proposal_no_price');
   const num      = Number(slot.price).toLocaleString('en-US');
@@ -112,6 +126,7 @@ function ProposalDetailModal({ slot, onClose }) {
   const path  = profilePath(guide);
   const submitted = hasSubmittedDetails(slot);
   const rejected = slot.status === 'rejected';
+  const images = proposalImages(slot.images);
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -214,13 +229,13 @@ function ProposalDetailModal({ slot, onClose }) {
                 </DetailBlock>
               )}
 
-              {slot.images?.length > 0 && (
+              {images.length > 0 && (
                 <div>
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-2">
                     {t('proposal_images')}
                   </p>
                   <div className="grid grid-cols-3 gap-2">
-                    {slot.images.map((img, i) => (
+                    {images.map((img, i) => (
                       <a key={i} href={img} target="_blank" rel="noreferrer">
                         <img decoding="async" loading="lazy"
                           src={img}

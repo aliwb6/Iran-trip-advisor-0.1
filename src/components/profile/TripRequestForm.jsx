@@ -626,6 +626,7 @@ function PackageRequestSummary({ context, form, lang }) {
 
 function Step1({ form, set, toggle, toggleAssistance, errors }) {
   const starsRef = useRef(null);
+  const [customAssistance, setCustomAssistance] = useState('');
 
   useEffect(() => {
     if (form.assistance.includes('Accommodation') && starsRef.current) {
@@ -673,6 +674,30 @@ function Step1({ form, set, toggle, toggleAssistance, errors }) {
           />
           <FieldError msg={errors?.start_date} />
         </div>
+        <div className="mt-3 flex gap-2">
+          <input
+            value={customAssistance}
+            onChange={event => setCustomAssistance(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                const value = customAssistance.trim();
+                if (value && !form.assistance.includes(value)) toggleAssistance(value);
+                setCustomAssistance('');
+              }
+            }}
+            placeholder="Add another assistance need…"
+            className="min-w-0 flex-1 rounded-xl border border-border/40 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-accent focus:outline-none"
+          />
+          <button type="button" onClick={() => { const value = customAssistance.trim(); if (value && !form.assistance.includes(value)) toggleAssistance(value); setCustomAssistance(''); }} className="rounded-xl border border-accent/30 px-3 text-sm font-medium text-accent hover:bg-accent/10">Add</button>
+        </div>
+        {form.assistance.filter(item => !['Transportation', 'Accommodation'].includes(item)).length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {form.assistance.filter(item => !['Transportation', 'Accommodation'].includes(item)).map(item => (
+              <button type="button" key={item} onClick={() => toggleAssistance(item)} className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs text-accent">{item} ×</button>
+            ))}
+          </div>
+        )}
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">End Date</p>
           <DatePickerInput
@@ -1111,10 +1136,12 @@ export default function TripRequestForm({
         initialData.tour_type === 'private' ? 'Private Tour'
         : initialData.tour_type === 'group' ? 'Group Tour'
         : initialData.tour_type || '',
-      assistance: [
-        ...(initialData.needs_accommodation ? ['Accommodation'] : []),
-        ...(initialData.needs_transport     ? ['Transportation'] : []),
-      ],
+      assistance: initialData.assistance?.length
+        ? initialData.assistance
+        : [
+            ...(initialData.needs_accommodation ? ['Accommodation'] : []),
+            ...(initialData.needs_transport     ? ['Transportation'] : []),
+          ],
       accommodation_stars: initialData.accommodation_stars || null,
     }));
   }, [initialData, isOpen]);
@@ -1364,6 +1391,10 @@ export default function TripRequestForm({
                     )}
                   </div>
                 )}
+                <div className="mb-5 rounded-2xl border border-border/40 bg-background/45 p-3 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">Your request at a glance: </span>
+                  {form.destinations.length ? form.destinations.join(', ') : 'Destination pending'} · {form.start_date && form.end_date ? `${formatDateDisplay(form.start_date)} — ${formatDateDisplay(form.end_date)}` : 'Dates pending'} · {form.maleAdults + form.femaleAdults} adults ({form.maleAdults} men, {form.femaleAdults} women){form.children ? `, ${form.children} children` : ''}
+                </div>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
                     key={step}

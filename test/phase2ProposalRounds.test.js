@@ -31,11 +31,9 @@ test('guide dashboard duplicate checks and accepted requests are current-round a
   assert.match(flow, /proposal_round: Math\.max\(1, Number\(request\.proposal_round\) \|\| 1\)/);
 });
 
-test('proposal modal renders request max_proposals instead of a hardcoded closing cap', async () => {
+test('proposal modal does not expose the request-closing message', async () => {
   const modal = await source('../src/components/dashboard/SubmitProposalModal.jsx');
-  assert.match(modal, /const maxProposals = Math\.max\(1, Number\(request\?\.max_proposals\) \|\| 5\)/);
-  assert.match(modal, /Request closes when \{maxProposals\} guide/);
-  assert.doesNotMatch(modal, /Request closes when 5 guides apply/);
+  assert.doesNotMatch(modal, /Request closes when/);
 });
 
 test('selection, rejection and finalization operate only on the current round', async () => {

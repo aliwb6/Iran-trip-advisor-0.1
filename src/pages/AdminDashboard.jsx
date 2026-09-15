@@ -29,6 +29,7 @@ import { buildReviewModerationUpdates, persistReviewModeration } from '@/lib/rev
 const NAV = [
   { id: 'overview', label: 'Overview',       Icon: LayoutDashboard },
   { id: 'pending',  label: 'Pending Tours',  Icon: Clock },
+  { id: 'proposals', label: 'Proposal Review', Icon: FileText },
   { id: 'tours',    label: 'All Tours',      Icon: Briefcase },
   { id: 'platform', label: 'Platform Tours', Icon: Sparkles },
   { id: 'guides',   label: 'All Guides',     Icon: Users },
@@ -109,6 +110,32 @@ function EmptyState({ Icon, title, desc }) {
   );
 }
 
+function ProposalReviewView({ proposals, loading, busyId, onReview }) {
+  if (loading) return <SectionLoader />;
+  if (!proposals.length) return <EmptyState Icon={CheckCircle2} title="All caught up" desc="No proposals are waiting for review." />;
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between"><h2 className="text-lg font-bold text-white">Proposal Review</h2><span className="text-xs text-white/40">{proposals.length} awaiting approval</span></div>
+      {proposals.map(proposal => (
+        <div key={proposal.id} className={`${CARD} p-5`}>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-sm font-semibold text-white">{proposal.provider?.full_name || 'Provider'}</p>
+              <p className="mt-1 text-xs text-white/45">{proposal.provider?.role || 'guide'} · Trip to {(proposal.request?.destination || []).join(', ') || 'Iran'}</p>
+              {proposal.price != null && <p className="mt-2 text-sm font-semibold text-[hsl(178,85%,55%)]">${Number(proposal.price).toLocaleString()} · {proposal.price_type?.replace('_', ' ')} · {proposal.price_period?.replace('_', ' ')}</p>}
+              {proposal.message && <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/60">{proposal.message}</p>}
+            </div>
+            <div className="flex gap-2">
+              <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50">Approve</button>
+              <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/20 disabled:opacity-50">Reject</button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
 
 function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
@@ -116,6 +143,7 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
 
   const badgeFor = (id) => {
     if (id === 'pending')  return counts.pending;
+    if (id === 'proposals') return counts.proposals;
     if (id === 'tours')    return counts.tours;
     if (id === 'platform') return counts.platform;
     if (id === 'guides')   return counts.guides;
@@ -1400,10 +1428,12 @@ export default function AdminDashboard() {
   const [tours, setTours]     = useState([]);
   const [guides, setGuides]   = useState([]);
   const [reviews, setReviews] = useState([]);
+  const [proposals, setProposals] = useState([]);
 
   const [loadingTours,    setLoadingTours]    = useState(true);
   const [loadingGuides,   setLoadingGuides]   = useState(true);
   const [loadingReviews,  setLoadingReviews]  = useState(true);
+  const [loadingProposals, setLoadingProposals] = useState(true);
 
   const [error, setError]   = useState('');
   const [busyId, setBusyId] = useState(null);
@@ -1495,11 +1525,32 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchProposals = async () => {
+    setLoadingProposals(true);
+    try {
+      const { data, error: err } = await supabase.from('trip_slots').select('*').eq('approval_status', 'pending_review').order('accepted_at', { ascending: true });
+      if (err) throw err;
+      const rows = data || [];
+      const requestIds = [...new Set(rows.map(row => row.trip_request_id))];
+      const providerIds = [...new Set(rows.map(row => row.guide_id))];
+      const [{ data: requests, error: requestError }, { data: providers, error: providerError }] = await Promise.all([
+        requestIds.length ? supabase.from('trip_requests').select('id, destination').in('id', requestIds) : Promise.resolve({ data: [] }),
+        providerIds.length ? supabase.from('profiles').select('id, full_name, role').in('id', providerIds) : Promise.resolve({ data: [] }),
+      ]);
+      if (requestError) throw requestError;
+      if (providerError) throw providerError;
+      const requestById = new Map((requests || []).map(row => [row.id, row]));
+      const providerById = new Map((providers || []).map(row => [row.id, row]));
+      setProposals(rows.map(row => ({ ...row, request: requestById.get(row.trip_request_id), provider: providerById.get(row.guide_id) })));
+    } catch (err) { setError(err.message); } finally { setLoadingProposals(false); }
+  };
+
   useEffect(() => {
     if (!authChecked || !profile) return;
     fetchTours();
     fetchGuides();
     fetchReviews();
+    fetchProposals();
   }, [authChecked, profile]);
 
   // ── Actions ──
@@ -1515,6 +1566,17 @@ export default function AdminDashboard() {
     } finally {
       setBusyId(null);
     }
+  };
+
+  const reviewProposal = async (id, decision) => {
+    setBusyId(id);
+    setError('');
+    try {
+      const { data, error: err } = await supabase.rpc('review_trip_proposal', { proposal_id: id, decision });
+      if (err) throw err;
+      if (!data) throw new Error('This proposal is no longer awaiting review.');
+      setProposals(current => current.filter(proposal => proposal.id !== id));
+    } catch (err) { setError(err.message); } finally { setBusyId(null); }
   };
 
   const handleTourEdit = (updated) => {
@@ -1577,6 +1639,7 @@ export default function AdminDashboard() {
 
   const counts = {
     pending:  tours.filter(t => t.status === 'pending_review' || t.status === 'draft').length,
+    proposals: proposals.length,
     tours:    tours.length,
     platform: platformTours.length,
     guides:   guides.length,
@@ -1641,6 +1704,8 @@ export default function AdminDashboard() {
             onEdit={setEditingTour}
           />
         );
+      case 'proposals':
+        return <ProposalReviewView proposals={proposals} loading={loadingProposals} busyId={busyId} onReview={reviewProposal} />;
       case 'tours':
         return (
           <AllToursView

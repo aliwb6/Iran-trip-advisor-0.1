@@ -202,6 +202,8 @@ export default function RequestDetailPage() {
             {/* Travellers */}
             <Section title="Travellers">
               <DetailRow icon={Users} label="Adults"   value={r?.adults} />
+              <DetailRow icon={Users} label="Men"      value={r?.male_adults ?? null} />
+              <DetailRow icon={Users} label="Women"    value={r?.female_adults ?? null} />
               <DetailRow icon={Baby}  label="Children" value={r?.children > 0 ? r.children : null} />
             </Section>
 

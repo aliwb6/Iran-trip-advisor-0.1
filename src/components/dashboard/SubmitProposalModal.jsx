@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Loader2, DollarSign, AlertTriangle,
+  Loader2, DollarSign, AlertTriangle, Upload,
   MapPin, CalendarDays, Clock, Users, Globe, Sparkles,
   Briefcase, Plus, User, MessageSquare,
 } from 'lucide-react';
@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useI18n } from '@/lib/i18n.jsx';
+import { supabase } from '@/supabaseClient';
 import { guideSubmitProposal } from '@/api/tourRequestFlow';
 import { calculateProposalEstimate } from '@/lib/proposalPricing';
 import { buildPackageProposalPrefill, getPackageRequestKind } from '@/lib/packageTripRequest';
@@ -69,6 +70,8 @@ function TripDetailsPanel({ request, t }) {
   const endFmt    = fmtDate(request?.end_date);
   const duration  = daysBetween(request?.start_date, request?.end_date);
   const adults    = request?.adults ?? 0;
+  const maleAdults = request?.male_adults ?? adults;
+  const femaleAdults = request?.female_adults ?? 0;
   const children  = request?.children ?? 0;
 
   const travelersStr = [
@@ -126,7 +129,7 @@ function TripDetailsPanel({ request, t }) {
         {/* ROW 4 — Travelers */}
         {hasValue(travelersStr) && (
           <DetailRow icon={Users} label={t('travelers')}>
-            {travelersStr}
+            {travelersStr} <span className="text-white/55">({maleAdults} men, {femaleAdults} women)</span>
           </DetailRow>
         )}
 
@@ -267,6 +270,7 @@ export default function SubmitProposalModal({
   const [excludedText, setExcludedText] = useState('');
   const [message, setMessage]           = useState('');
   const [imagesText, setImagesText]     = useState('');
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [submitting, setSubmitting]     = useState(false);
   const [attempted, setAttempted]       = useState(false);
   const [hasTransportation, setHasTransportation] = useState(false);
@@ -288,6 +292,8 @@ export default function SubmitProposalModal({
     setIncludedText(prefill.included.join('\n'));
     setExcludedText(prefill.excluded.join('\n'));
     setMessage(prefill.message);
+    setPriceType(prefill.priceType || 'per_person');
+    setPricePeriod(prefill.pricePeriod || 'entire_trip');
   }, [open, request, lang]);
 
   const TRANSPORT_OPTIONS = [
@@ -333,7 +339,6 @@ export default function SubmitProposalModal({
   const destStr     = cityList(request?.destination).join(', ');
   const duration    = daysBetween(request?.start_date, request?.end_date);
   const totalPeople = (request?.adults ?? 0) + (request?.children ?? 0);
-  const maxProposals = Math.max(1, Number(request?.max_proposals) || 5);
   const subtitleParts = [
     destStr || null,
     duration ? `${duration} days` : null,
@@ -381,6 +386,26 @@ export default function SubmitProposalModal({
     }
   };
 
+  const uploadProposalImages = async (files) => {
+    const selected = Array.from(files || []).filter(file => file.type.startsWith('image/')).slice(0, 8);
+    if (!selected.length) return;
+    setUploadingImages(true);
+    try {
+      const uploaded = await Promise.all(selected.map(async (file) => {
+        const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+        const path = `${guideId}/${Date.now()}-${crypto.randomUUID()}-${safeName}`;
+        const { error } = await supabase.storage.from('proposal-images').upload(path, file, { upsert: false });
+        if (error) throw error;
+        return supabase.storage.from('proposal-images').getPublicUrl(path).data.publicUrl;
+      }));
+      setImagesText(current => [...parseLines(current), ...uploaded].join('\n'));
+    } catch (error) {
+      toast.error(error.message || 'Image upload failed.');
+    } finally {
+      setUploadingImages(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent
@@ -424,9 +449,6 @@ export default function SubmitProposalModal({
                   : 'Use the original package as a starting point and customize every offer detail.'}
               </div>
             )}
-            <span className="inline-block mt-2 text-[10px] font-medium text-amber-400/80 bg-amber-400/10 border border-amber-400/20 rounded-full px-3 py-1">
-              Request closes when {maxProposals} guide{maxProposals === 1 ? '' : 's'} apply
-            </span>
           </div>
 
           {/* ── Scrollable body ── */}
@@ -638,6 +660,16 @@ export default function SubmitProposalModal({
                 placeholder="https://example.com/photo1.jpg"
                 className={inputCls}
               />
+              <label className="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition hover:border-teal-300/50 hover:text-white">
+                {uploadingImages ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                {uploadingImages ? 'Uploading images…' : 'Upload images from device'}
+                <input type="file" accept="image/*" multiple className="sr-only" disabled={uploadingImages} onChange={event => uploadProposalImages(event.target.files)} />
+              </label>
+              {parseLines(imagesText).length > 0 && (
+                <div className="mt-3 grid grid-cols-4 gap-2">
+                  {parseLines(imagesText).map((src, index) => <img key={`${src}-${index}`} src={src} alt="" className="aspect-square w-full rounded-lg border border-white/10 object-cover" />)}
+                </div>
+              )}
             </div>
           </div>
 

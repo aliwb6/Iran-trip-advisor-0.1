@@ -42,6 +42,9 @@ export default function TourCard({ tour, image, index }) {
   const priceDisplay = rawPrice != null && rawPrice !== ''
     ? `$${Number(rawPrice).toLocaleString()}`
     : null;
+  const priceBasis = tour.price_basis === 'per_day'
+    ? (lang === 'fa' ? 'در روز' : lang === 'ar' ? 'يومياً' : 'per day')
+    : (lang === 'fa' ? 'برای هر نفر' : lang === 'ar' ? 'لكل شخص' : 'per person');
 
   const handleClick = () => {
     navigate(`/tours/${tour.slug}`);
@@ -78,7 +81,7 @@ export default function TourCard({ tour, image, index }) {
         {priceDisplay && (
           <div className="absolute bottom-4 end-4">
             <span className="font-heading text-white text-xl font-medium">
-              {priceDisplay}
+              {priceDisplay} <span className="text-xs font-body font-normal text-white/80">{priceBasis}</span>
             </span>
           </div>
         )}

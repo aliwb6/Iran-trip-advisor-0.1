@@ -60,7 +60,7 @@ export const TOUR_TYPE_OPTIONS = [
 export const EMPTY_TOUR = {
   title: '', slug: '', description: '', duration: '', price: '',
   highlights: '', itinerary: '',
-  image_url: '', gallery: '', status: 'draft', difficulty: '', tour_type: '',
+  image_url: '', gallery: '', status: 'draft', difficulty: '', tour_type: '', price_basis: 'per_person',
 };
 
 export default function TourForm({ editing, onDone, onCancel, isPlatform = false }) {
@@ -78,6 +78,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
       description: editing.description || '',
       duration:    editing.duration != null ? String(editing.duration) : '',
       price:       editing.price != null ? String(editing.price) : '',
+      price_basis: editing.price_basis === 'per_day' ? 'per_day' : 'per_person',
       highlights:  Array.isArray(editing.highlights) ? editing.highlights.join('\n') : (editing.highlights || ''),
       itinerary:   editing.itinerary || '',
       status:      editing.status || initialStatus,
@@ -340,6 +341,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
         description: form.description,
         duration:    form.duration ? Number(form.duration) : null,
         price:       form.price ? Number(form.price) : null,
+        price_basis: form.price_basis,
         tour_type:   form.tour_type,
         // Keep the legacy single-value fields in sync for older listing/detail
         // consumers while Cities remains the only editable source of truth.
@@ -496,6 +498,13 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           <div>
             <label className={labelClass}>Price (USD)</label>
             <input name="price" type="number" min="0" value={form.price} onChange={handleChange} className={inputClass} placeholder="1200" />
+          </div>
+          <div>
+            <label className={labelClass}>Price basis</label>
+            <select name="price_basis" value={form.price_basis} onChange={handleChange} className={`${inputClass} [color-scheme:dark]`}>
+              <option value="per_person">Per person</option>
+              <option value="per_day">Per day</option>
+            </select>
           </div>
         </div>
 
