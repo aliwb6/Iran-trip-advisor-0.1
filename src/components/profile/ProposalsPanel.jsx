@@ -136,21 +136,6 @@ function ProposalDetailModal({ slot, onClose }) {
       <DialogContent
         className="max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-border"
         dir={dir}
-        // The image preview is portaled to document.body. While it is open,
-        // its controls must not be treated as an outside interaction that
-        // dismisses this proposal dialog.
-        onPointerDownOutside={(event) => {
-          if (selectedImageIndex != null) event.preventDefault();
-        }}
-        onFocusOutside={(event) => {
-          if (selectedImageIndex != null) event.preventDefault();
-        }}
-        onEscapeKeyDown={(event) => {
-          if (selectedImageIndex != null) {
-            event.preventDefault();
-            setSelectedImageIndex(null);
-          }
-        }}
       >
         <DialogHeader>
           <DialogTitle className="font-heading text-lg font-semibold text-foreground">
