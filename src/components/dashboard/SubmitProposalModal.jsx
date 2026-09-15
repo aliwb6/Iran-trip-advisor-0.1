@@ -259,6 +259,8 @@ export default function SubmitProposalModal({
   guideId,
   commissionRate = 0.15,
   onSuccess,
+  proposalToEdit = null,
+  onAdminSave,
 }) {
   const { t, lang, dir } = useI18n();
 
@@ -278,6 +280,7 @@ export default function SubmitProposalModal({
   const [customTransport, setCustomTransport] = useState('');
   const fileInputRef = useRef(null);
   const filePickerOpenRef = useRef(false);
+  const isAdminReview = Boolean(proposalToEdit);
   const packageRequestKind = getPackageRequestKind(request);
   const sourceTourTitle = request?.source_tour?.title?.[lang]
     || request?.source_tour?.title?.en
@@ -286,6 +289,19 @@ export default function SubmitProposalModal({
 
   useEffect(() => {
     if (!open) return;
+    if (proposalToEdit) {
+      setPrice(proposalToEdit.price == null ? '' : String(proposalToEdit.price));
+      setPriceType(proposalToEdit.price_type || 'per_person');
+      setPricePeriod(proposalToEdit.price_period || 'entire_trip');
+      setItinerary(proposalToEdit.itinerary || '');
+      setIncludedText((proposalToEdit.included || []).join('\n'));
+      setExcludedText((proposalToEdit.excluded || []).join('\n'));
+      setMessage(proposalToEdit.message || '');
+      setImagesText((proposalToEdit.images || []).join('\n'));
+      setTransportationItems(proposalToEdit.transportation || []);
+      setHasTransportation((proposalToEdit.transportation || []).length > 0);
+      return;
+    }
     const prefill = buildPackageProposalPrefill(request, lang);
     if (!prefill) return;
 
@@ -296,7 +312,7 @@ export default function SubmitProposalModal({
     setMessage(prefill.message);
     setPriceType(prefill.priceType || 'per_person');
     setPricePeriod(prefill.pricePeriod || 'entire_trip');
-  }, [open, request, lang]);
+  }, [open, request, lang, proposalToEdit]);
 
   // Native file pickers temporarily move focus outside Radix's dialog. Keep
   // the proposal open while that picker is active, including when it is closed
@@ -377,7 +393,7 @@ export default function SubmitProposalModal({
 
     try {
       setSubmitting(true);
-      await guideSubmitProposal(guideId, request.id, {
+      const proposalPayload = {
         price: priceNum,
         currency: 'USD',
         price_type: priceType,
@@ -388,8 +404,14 @@ export default function SubmitProposalModal({
         message,
         images: parseLines(imagesText),
         transportation: hasTransportation ? transportationItems : [],
-      });
-      toast.success(t('proposal_sent'));
+      };
+      if (isAdminReview) {
+        await onAdminSave?.(proposalToEdit.id, proposalPayload);
+        toast.success('Proposal changes saved.');
+      } else {
+        await guideSubmitProposal(guideId, request.id, proposalPayload);
+        toast.success(t('proposal_sent'));
+      }
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -460,7 +482,9 @@ export default function SubmitProposalModal({
           >
             <DialogHeader>
               <DialogTitle className="text-white text-lg font-bold">
-                {packageRequestKind === 'package_booking'
+                {isAdminReview
+                  ? 'Review & Edit Proposal'
+                  : packageRequestKind === 'package_booking'
                   ? 'Confirm & Send Offer'
                   : packageRequestKind === 'package_private'
                     ? 'Send Custom Proposal'
@@ -725,7 +749,7 @@ export default function SubmitProposalModal({
               {submitting ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
               ) : (
-                packageRequestKind === 'package_booking' ? 'Confirm & Send Offer' : t('apply')
+                isAdminReview ? 'Save changes' : packageRequestKind === 'package_booking' ? 'Confirm & Send Offer' : t('apply')
               )}
             </button>
           </div>

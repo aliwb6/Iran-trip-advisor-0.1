@@ -11,6 +11,7 @@ import {
 import { toast } from 'sonner';
 import { avatarFor } from '@/lib/avatar';
 import TourForm from '@/components/dashboard/TourForm';
+import SubmitProposalModal from '@/components/dashboard/SubmitProposalModal';
 import { useAllArticlesAdmin } from '@/hooks/useSupabase';
 import ArticleEditor from '@/components/articles/ArticleEditor';
 import AdminChatMonitor from './AdminChatMonitor';
@@ -110,7 +111,7 @@ function EmptyState({ Icon, title, desc }) {
   );
 }
 
-function ProposalReviewView({ proposals, loading, busyId, onReview }) {
+function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
   if (loading) return <SectionLoader />;
   if (!proposals.length) return <EmptyState Icon={CheckCircle2} title="All caught up" desc="No proposals are waiting for review." />;
   return (
@@ -126,6 +127,7 @@ function ProposalReviewView({ proposals, loading, busyId, onReview }) {
               {proposal.message && <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/60">{proposal.message}</p>}
             </div>
             <div className="flex gap-2">
+              <button disabled={busyId === proposal.id} onClick={() => onEdit(proposal)} className="rounded-xl bg-white/[0.07] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-white/[0.12] disabled:opacity-50">Edit</button>
               <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50">Approve</button>
               <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/20 disabled:opacity-50">Reject</button>
             </div>
@@ -1429,6 +1431,7 @@ export default function AdminDashboard() {
   const [guides, setGuides]   = useState([]);
   const [reviews, setReviews] = useState([]);
   const [proposals, setProposals] = useState([]);
+  const [editingProposal, setEditingProposal] = useState(null);
 
   const [loadingTours,    setLoadingTours]    = useState(true);
   const [loadingGuides,   setLoadingGuides]   = useState(true);
@@ -1534,7 +1537,7 @@ export default function AdminDashboard() {
       const requestIds = [...new Set(rows.map(row => row.trip_request_id))];
       const providerIds = [...new Set(rows.map(row => row.guide_id))];
       const [{ data: requests, error: requestError }, { data: providers, error: providerError }] = await Promise.all([
-        requestIds.length ? supabase.from('trip_requests').select('id, destination').in('id', requestIds) : Promise.resolve({ data: [] }),
+        requestIds.length ? supabase.from('trip_requests').select('id, destination, start_date, end_date, arrival_time, departure_time, timings_flexible, adults, male_adults, female_adults, children, guide_languages, holiday_types, assistance, accommodation_stars, additional_services, tour_type, requirements').in('id', requestIds) : Promise.resolve({ data: [] }),
         providerIds.length ? supabase.from('profiles').select('id, full_name, role').in('id', providerIds) : Promise.resolve({ data: [] }),
       ]);
       if (requestError) throw requestError;
@@ -1577,6 +1580,21 @@ export default function AdminDashboard() {
       if (!data) throw new Error('This proposal is no longer awaiting review.');
       setProposals(current => current.filter(proposal => proposal.id !== id));
     } catch (err) { setError(err.message); } finally { setBusyId(null); }
+  };
+
+  const saveProposalEdits = async (id, proposal) => {
+    setBusyId(id);
+    setError('');
+    try {
+      const { data, error: err } = await supabase.rpc('edit_pending_trip_proposal', {
+        proposal_id: id,
+        proposal_data: proposal,
+      });
+      if (err) throw err;
+      if (!data) throw new Error('This proposal is no longer awaiting review.');
+      setProposals(current => current.map(item => item.id === id ? { ...item, ...proposal } : item));
+      setEditingProposal(null);
+    } catch (err) { setError(err.message); throw err; } finally { setBusyId(null); }
   };
 
   const handleTourEdit = (updated) => {
@@ -1705,7 +1723,7 @@ export default function AdminDashboard() {
           />
         );
       case 'proposals':
-        return <ProposalReviewView proposals={proposals} loading={loadingProposals} busyId={busyId} onReview={reviewProposal} />;
+        return <ProposalReviewView proposals={proposals} loading={loadingProposals} busyId={busyId} onReview={reviewProposal} onEdit={setEditingProposal} />;
       case 'tours':
         return (
           <AllToursView
@@ -1795,6 +1813,16 @@ export default function AdminDashboard() {
           busy={busyId === reviewingGuide.id}
           onClose={() => setReviewingGuide(null)}
           onSave={saveGuideReview}
+        />
+      )}
+      {editingProposal && (
+        <SubmitProposalModal
+          open
+          onClose={() => setEditingProposal(null)}
+          request={editingProposal.request}
+          guideId={editingProposal.guide_id}
+          proposalToEdit={editingProposal}
+          onAdminSave={saveProposalEdits}
         />
       )}
     </div>
