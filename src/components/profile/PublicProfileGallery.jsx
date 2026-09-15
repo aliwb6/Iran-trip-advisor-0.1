@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Image as ImageIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import SharedImageLightbox from '@/components/ui/SharedImageLightbox';
 
 export default function PublicProfileGallery({ images = [], lang = 'en' }) {
   const [expanded, setExpanded] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(null);
   const gallery = Array.isArray(images)
     ? images.filter(image => typeof image === 'string' && image.trim())
     : [];
@@ -45,24 +48,34 @@ export default function PublicProfileGallery({ images = [], lang = 'en' }) {
       ) : (
         <div className={`grid gap-2 ${galleryLayout}`}>
           {visibleImages.map((image, index) => (
-            <a
+            <motion.button
+              layoutId={`profile-gallery-${image}-${index}`}
               key={`${image}-${index}`}
-              href={image}
-              target="_blank"
-              rel="noreferrer"
+              type="button"
+              onClick={() => setSelectedIndex(index)}
               className="group block min-h-0 overflow-hidden rounded-xl border border-border/50 bg-muted"
               aria-label={`${labels.title} ${index + 1}`}
             >
-              <img
+              <motion.img
+                layoutId={`profile-gallery-image-${image}-${index}`}
                 decoding="async"
                 loading="lazy"
                 src={image}
                 alt={`${labels.title} ${index + 1}`}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-            </a>
+            </motion.button>
           ))}
         </div>
+      )}
+
+      {selectedIndex != null && visibleImages[selectedIndex] && (
+        <SharedImageLightbox
+          image={visibleImages[selectedIndex]}
+          layoutId={`profile-gallery-image-${visibleImages[selectedIndex]}-${selectedIndex}`}
+          alt={`${labels.title} ${selectedIndex + 1}`}
+          onClose={() => setSelectedIndex(null)}
+        />
       )}
 
       {gallery.length > 6 && (

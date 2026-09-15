@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Loader2, Star, MapPin, XCircle } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import SharedImageLightbox from '@/components/ui/SharedImageLightbox';
 
 const PROPOSAL_TONES = [
   {
@@ -127,6 +129,7 @@ function ProposalDetailModal({ slot, onClose }) {
   const submitted = hasSubmittedDetails(slot);
   const rejected = slot.status === 'rejected';
   const images = proposalImages(slot.images);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
@@ -236,13 +239,13 @@ function ProposalDetailModal({ slot, onClose }) {
                   </p>
                   <div className="grid grid-cols-3 gap-2">
                     {images.map((img, i) => (
-                      <a key={i} href={img} target="_blank" rel="noreferrer">
-                        <img decoding="async" loading="lazy"
+                      <motion.button key={i} type="button" onClick={() => setSelectedImageIndex(i)} className="overflow-hidden rounded-xl border border-border/30 text-start">
+                        <motion.img layoutId={`proposal-image-${slot.id}-${i}`} decoding="async" loading="lazy"
                           src={img}
                           alt=""
-                          className="w-full aspect-square object-cover rounded-xl border border-border/30 hover:opacity-90 transition-opacity"
+                          className="w-full aspect-square object-cover hover:opacity-90 transition-opacity"
                         />
-                      </a>
+                      </motion.button>
                     ))}
                   </div>
                 </div>
@@ -250,6 +253,14 @@ function ProposalDetailModal({ slot, onClose }) {
             </>
           )}
         </div>
+        {selectedImageIndex != null && images[selectedImageIndex] && (
+          <SharedImageLightbox
+            image={images[selectedImageIndex]}
+            layoutId={`proposal-image-${slot.id}-${selectedImageIndex}`}
+            alt={t('proposal_images')}
+            onClose={() => setSelectedImageIndex(null)}
+          />
+        )}
       </DialogContent>
     </Dialog>
   );
