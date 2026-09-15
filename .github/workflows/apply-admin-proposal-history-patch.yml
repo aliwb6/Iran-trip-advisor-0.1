@@ -128,30 +128,12 @@ jobs:
           new_query = "const { data, error: err } = await supabase.from('trip_slots').select('*').in('approval_status', ['pending_review', 'approved']).order('accepted_at', { ascending: true });"
           replacements.append((old_query, new_query, 'proposal query'))
 
-          old_review = '''const reviewProposal = async (id, decision) => {
-            setBusyId(id);
-            setError('');
-            try {
-              const { data, error: err } = await supabase.rpc('review_trip_proposal', { proposal_id: id, decision });
-              if (err) throw err;
-              if (!data) throw new Error('This proposal is no longer awaiting review.');
-              setProposals(current => current.filter(proposal => proposal.id !== id));
-            } catch (err) { setError(err.message); } finally { setBusyId(null); }
-          };'''
-          new_review = '''const reviewProposal = async (id, decision) => {
-            setBusyId(id);
-            setError('');
-            try {
-              const { data, error: err } = await supabase.rpc('review_trip_proposal', { proposal_id: id, decision });
-              if (err) throw err;
-              if (!data) throw new Error('This proposal is no longer awaiting review.');
-              setProposals(current => decision === 'approved'
+          old_review_state = "      setProposals(current => current.filter(proposal => proposal.id !== id));"
+          new_review_state = '''      setProposals(current => decision === 'approved'
                 ? current.map(proposal => proposal.id === id ? { ...proposal, approval_status: 'approved' } : proposal)
                 : current.filter(proposal => proposal.id !== id));
-              toast.success(decision === 'approved' ? 'Proposal approved and kept in review history.' : 'Proposal rejected.');
-            } catch (err) { setError(err.message); } finally { setBusyId(null); }
-          };'''
-          replacements.append((old_review, new_review, 'reviewProposal'))
+              toast.success(decision === 'approved' ? 'Proposal approved and kept in review history.' : 'Proposal rejected.');'''
+          replacements.append((old_review_state, new_review_state, 'reviewProposal state update'))
 
           old_count = 'proposals: proposals.length,'
           new_count = "proposals: proposals.filter(proposal => proposal.approval_status === 'pending_review').length,"
