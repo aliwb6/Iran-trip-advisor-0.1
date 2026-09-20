@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from 'react';
+import { lazy, Suspense, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { useAuth } from '@/lib/AuthContext';
@@ -19,6 +19,8 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openRequestCount, setOpenRequestCount] = useState(0);
+  const desktopTabsRef = useRef(null);
+  const desktopTabsPillRef = useRef(null);
 
   useEffect(() => {
     const handler = () => setScrolled(window.scrollY > 40);
@@ -80,8 +82,48 @@ export default function Navbar() {
   const navLinks = [...baseLinks];
 
   const isActive = (path) => location.pathname === path;
+  // Keep a welcoming default on the homepage while the moving indicator follows
+  // the route everywhere else.
+  const selectedNavPath = navLinks.find((link) => isActive(link.path))?.path || navLinks[0].path;
   const isHome = location.pathname === '/';
   const isLight = !scrolled && isHome;
+
+  useLayoutEffect(() => {
+    const tabs = desktopTabsRef.current;
+    const pill = desktopTabsPillRef.current;
+    if (!tabs || !pill) return undefined;
+
+    const syncPill = (animate = true) => {
+      const activeTab = tabs.querySelector('[data-nav-selected="true"]');
+      if (!activeTab) return;
+
+      if (!animate) {
+        pill.style.transition = 'none';
+      }
+
+      pill.style.transform = `translateX(${activeTab.offsetLeft}px)`;
+      pill.style.width = `${activeTab.offsetWidth}px`;
+      pill.dataset.ready = 'true';
+
+      if (!animate) {
+        // Force the browser to apply the initial position before restoring motion.
+        void pill.offsetWidth;
+        pill.style.transition = '';
+      }
+    };
+
+    syncPill(false);
+    const resizeObserver = new ResizeObserver(() => syncPill(false));
+    const handleWindowResize = () => syncPill(false);
+    resizeObserver.observe(tabs);
+    window.addEventListener('resize', handleWindowResize);
+    document.fonts?.ready?.then(() => syncPill(false));
+
+    return () => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleWindowResize);
+    };
+  }, [selectedNavPath, lang]);
 
   const fullName = profile?.full_name || user?.user_metadata?.full_name || '';
   const initials = fullName
@@ -121,27 +163,23 @@ export default function Navbar() {
             </Link>
 
             {/* Desktop Nav */}
-            <nav className="hidden lg:flex items-center gap-0.5">
+            <nav
+              ref={desktopTabsRef}
+              className={`desktop-nav-tabs hidden lg:flex ${isLight ? 'desktop-nav-tabs--light' : ''}`}
+              aria-label={t('nav_menu_aria')}
+            >
+              <span ref={desktopTabsPillRef} className="desktop-nav-tabs__pill" aria-hidden="true" />
               {navLinks.map((link) => (
                 <Link
                   key={link.path}
                   to={link.path}
                   onMouseEnter={() => preloadRoute(link.path)}
                   onFocus={() => preloadRoute(link.path)}
-                  className={`relative px-3.5 py-2 text-[13px] font-body font-medium rounded-full transition-all duration-300 ${
-                    link.path === '/tours'
-                      ? 'border border-border/70 bg-secondary/40 hover:bg-secondary/60 hover:border-border text-black hover:text-black'
-                      : isActive(link.path)
-                        ? 'text-accent'
-                        : isLight
-                          ? 'text-white/80 hover:text-white'
-                          : 'text-muted-foreground hover:text-foreground'
-                  }`}
+                  data-nav-selected={link.path === selectedNavPath ? 'true' : 'false'}
+                  aria-current={isActive(link.path) ? 'page' : undefined}
+                  className="desktop-nav-tabs__tab"
                 >
                   {link.label}
-                  {isActive(link.path) && (
-                    <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-accent rounded-full" />
-                  )}
                 </Link>
               ))}
 
