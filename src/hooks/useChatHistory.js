@@ -5,6 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 
 // ── Guest / localStorage fallback ────────────────────────────────────────────
 const LS_KEY = 'iran_tour_ai_conversations';
+const CARDS_CACHE_KEY = 'iran_tour_ai_recommendation_cards';
 const MAX_LS_CONVS = 50;
 
 function lsLoad() {
@@ -22,6 +23,47 @@ function lsSave(convs) {
   try {
     localStorage.setItem(LS_KEY, JSON.stringify(convs.slice(0, MAX_LS_CONVS)));
   } catch {}
+}
+
+// This browser cache keeps recommendations available during a rolling deploy:
+// the UI can safely run before the database migration that adds `messages.cards`
+// has reached every environment. Once the column exists, the database remains
+// the source of truth and this is simply a local fallback.
+function cardsCacheLoad() {
+  try {
+    return JSON.parse(localStorage.getItem(CARDS_CACHE_KEY) || '{}');
+  } catch {
+    return {};
+  }
+}
+
+function cardsCacheSave(messageId, cards) {
+  if (!cards || !messageId) return;
+  try {
+    const entries = cardsCacheLoad();
+    entries[messageId] = cards;
+    localStorage.setItem(CARDS_CACHE_KEY, JSON.stringify(entries));
+  } catch {}
+}
+
+function cardsCacheGet(messageId) {
+  return cardsCacheLoad()[messageId] ?? null;
+}
+
+function isMissingCardsColumn(error) {
+  return error?.code === 'PGRST204' || /\bcards\b/i.test(error?.message || '');
+}
+
+function messageRow(message, conversationId, includeCards = true) {
+  const row = {
+    id: message.id,
+    conversation_id: conversationId,
+    role: message.role,
+    content: message.content,
+    edited: false,
+  };
+  if (includeCards && message.cards) row.cards = message.cards;
+  return row;
 }
 
 function ensureIds(msgs) {
@@ -48,7 +90,7 @@ function dbRowToMsg(row) {
     edited: row.edited ?? false,
     editedAt: row.edited_at ?? null,
     timestamp: row.created_at,
-    cards: row.cards ?? null,
+    cards: row.cards ?? cardsCacheGet(row.id),
   };
 }
 
@@ -153,16 +195,16 @@ export function useChatHistory() {
 
     // Flush any pending local messages (e.g., the greeting) to Supabase
     if (messages.length > 0) {
-      await supabase.from('messages').insert(
-        messages.map((m) => ({
-          id: m.id,
-          conversation_id: newId,
-          role: m.role,
-          content: m.content,
-          edited: false,
-          cards: m.cards ?? null,
-        }))
-      );
+      const rows = messages.map((m) => messageRow(m, newId));
+      let { error: messageError } = await supabase.from('messages').insert(rows);
+      if (messageError && isMissingCardsColumn(messageError)) {
+        ({ error: messageError } = await supabase.from('messages').insert(
+          messages.map((m) => messageRow(m, newId, false))
+        ));
+      }
+      if (messageError) {
+        toast.error('Failed to save conversation messages');
+      }
     }
 
     setActiveId(newId);
@@ -176,19 +218,16 @@ export function useChatHistory() {
   // ── Append a message ──────────────────────────────────────────────────────
   async function appendMessage(convId, msgPartial) {
     const msg = makeMsg(msgPartial);
+    cardsCacheSave(msg.id, msg.cards);
 
     // Optimistic update
     setMessages((prev) => [...prev, msg]);
 
     if (isLoggedIn) {
-      const { error } = await supabase.from('messages').insert({
-        id: msg.id,
-        conversation_id: convId,
-        role: msg.role,
-        content: msg.content,
-        edited: false,
-        cards: msg.cards ?? null,
-      });
+      let { error } = await supabase.from('messages').insert(messageRow(msg, convId));
+      if (error && msg.cards && isMissingCardsColumn(error)) {
+        ({ error } = await supabase.from('messages').insert(messageRow(msg, convId, false)));
+      }
       if (error) {
         toast.error('Message failed to save');
         // Roll back optimistic update

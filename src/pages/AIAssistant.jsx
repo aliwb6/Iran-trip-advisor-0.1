@@ -1070,7 +1070,7 @@ export default function AIAssistant() {
           </div>
 
           {/* Composer */}
-          <div className="relative shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-8 sm:py-6" style={{ background: C.white, borderTop: `1px solid ${C.muted}14` }}>
+          <div className="relative shrink-0 overflow-hidden px-3 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 min-[390px]:px-4 sm:px-8 sm:py-6" style={{ background: C.white, borderTop: `1px solid ${C.muted}14` }}>
             <div className="space-y-2">
               {/* File/image preview */}
               {attachedFile && (
@@ -1093,7 +1093,7 @@ export default function AIAssistant() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 rounded-[22px] pl-2 pr-2 py-2" style={{ background: C.white, border: `1px solid ${C.turq}36`, boxShadow: `0 8px 28px ${C.teal}12` }}>
+              <div className="flex min-w-0 items-center gap-1.5 rounded-[22px] px-1.5 py-1.5 min-[390px]:gap-2 min-[390px]:px-2 min-[390px]:py-2" style={{ background: C.white, border: `1px solid ${C.turq}36`, boxShadow: `0 8px 28px ${C.teal}12` }}>
                 {/* Hidden file input */}
                 <input
                   ref={fileInputRef}
@@ -1121,7 +1121,7 @@ export default function AIAssistant() {
                   placeholder={t('ai_placeholder')}
                   disabled={loading}
                   autoFocus
-                  className="flex-1 bg-transparent text-[15px] outline-none placeholder:opacity-60 disabled:opacity-60"
+                  className="min-w-0 w-0 flex-1 bg-transparent text-[15px] outline-none placeholder:opacity-60 disabled:opacity-60"
                   style={{ color: C.teal }}
                 />
                 <button
