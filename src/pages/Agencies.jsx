@@ -65,7 +65,7 @@ function AgencyCard({ agency, lang, onNavigate }) {
       viewport={{ once: true }}
       whileHover={{ y: -4 }}
       onClick={() => onNavigate(`/agencies/${agency.id}`)}
-      className="bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden border border-border/40 hover:border-gold/30 group"
+      className="listing-profile-card bg-card rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden border border-border/40 hover:border-gold/30 group"
     >
       {/* Photo / Logo area */}
       <div className="relative aspect-[4/3] overflow-hidden bg-gold/5">
@@ -133,7 +133,7 @@ function AgencyCard({ agency, lang, onNavigate }) {
 
         {/* Tour type tags */}
         {tourTypes.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
+          <div className="listing-profile-tags flex flex-wrap gap-1.5">
             {tourTypes.slice(0, 3).map((s, i) => (
               <span
                 key={i}
@@ -292,7 +292,7 @@ export default function Agencies() {
 
         {/* Agency Grid */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="listing-mobile-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {[0, 1, 2, 3, 4, 5].map(i => (
               <div key={i} className="aspect-[4/3] rounded-2xl bg-muted animate-pulse" />
             ))}
@@ -313,7 +313,7 @@ export default function Agencies() {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+          <div className="listing-mobile-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {sorted.map((agency) => (
               <AgencyCard key={agency.id} agency={agency} lang={lang} onNavigate={navigate} />
             ))}

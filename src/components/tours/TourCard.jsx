@@ -57,7 +57,7 @@ export default function TourCard({ tour, image, index }) {
       viewport={{ once: true }}
       transition={{ delay: index * 0.07, duration: 0.5 }}
       onClick={handleClick}
-      className="group relative bg-card rounded-3xl overflow-hidden border border-border/50 hover:border-accent/30 hover:shadow-xl transition-all duration-500 cursor-pointer"
+      className="tour-listing-card group relative bg-card rounded-3xl overflow-hidden border border-border/50 hover:border-accent/30 hover:shadow-xl transition-all duration-500 cursor-pointer"
     >
       {/* Persian carpet border top accent */}
       <div className="absolute top-0 inset-x-0 h-[3px] bg-gradient-to-r from-transparent via-accent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 z-10" />
@@ -68,7 +68,7 @@ export default function TourCard({ tour, image, index }) {
       </div>
 
       {/* Image */}
-      <div className="relative aspect-[16/9] overflow-hidden">
+      <div className="tour-listing-image relative aspect-[16/9] overflow-hidden">
         <img decoding="async" loading="lazy"
           src={transformImage(image, imgPresets.card)}
           alt={title}
@@ -88,7 +88,7 @@ export default function TourCard({ tour, image, index }) {
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="tour-listing-content p-6">
         {/* Persian ornament line */}
         <div className="flex items-center gap-2 mb-3">
           <div className="flex-1 h-px bg-border/50" />

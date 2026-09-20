@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import TourFilters from '@/components/tours/TourFilters';
 import TourCard from '@/components/tours/TourCard';
 import { useTours, FALLBACK_IMAGE } from '@/hooks/useSupabase';
 import { matchesAnySelection, recommendedComparator } from '@/lib/listingFilters';
-import { destinationSelectionAliases } from '@/data/iranianCities';
+import { destinationSelectionAliases, iranianDestinations } from '@/data/iranianCities';
 
 const DEFAULT_FILTERS = {
   purpose: 'all',
@@ -88,10 +89,27 @@ const SORTERS = {
 
 export default function Tours() {
   const { dir, lang } = useI18n();
+  const [searchParams] = useSearchParams();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('recommended');
   const { tours: rawTours, loading, error } = useTours(filters);
   const selectedCities = destinationSelectionAliases(filters.city);
+
+  // The home-page Spotlight passes the selected city in the URL. Mirror it
+  // into the existing multi-select filter so the chosen destination remains
+  // visible and the tour list is filtered as soon as this page opens.
+  useEffect(() => {
+    const requestedCity = searchParams.get('city')?.trim();
+    const matchedCity = requestedCity && iranianDestinations.find((city) => (
+      [city.en, city.fa, city.ar].some((name) => name.toLocaleLowerCase() === requestedCity.toLocaleLowerCase())
+    ));
+    const city = matchedCity?.en || requestedCity || '';
+    setFilters((current) => {
+      const nextCities = city ? [city] : [];
+      if (current.city.length === nextCities.length && current.city.every((value, index) => value === nextCities[index])) return current;
+      return { ...current, city: nextCities };
+    });
+  }, [searchParams]);
 
   const tours = rawTours.filter((tour) => {
     if (!matchesAnySelection([tour.cities, tour.city, tour.location, tour.destinations], selectedCities)) return false;
@@ -151,7 +169,7 @@ export default function Tours() {
                 </button>
               </motion.div>
             ) : (
-              <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+              <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="tour-listing-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                 {sortedTours.map((tour, index) => (
                   <TourCard key={tour.id} tour={normalizeTour(tour)} image={pickImage(tour)} index={index} />
                 ))}

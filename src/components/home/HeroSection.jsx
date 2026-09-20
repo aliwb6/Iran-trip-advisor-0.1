@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
-import { ArrowRight, ArrowLeft, Sparkles, Star, MapPin, Search } from 'lucide-react';
-import { iranianCities as IRAN_CITIES } from '@/data/iranianCities';
+import { ArrowRight, ArrowLeft, Sparkles, Star } from 'lucide-react';
 import { preloadRoute } from '@/lib/route-loaders';
+import HeroSpotlightSearch from '@/components/home/HeroSpotlightSearch';
 
 const HERO_IMAGES = [
   "https://media.base44.com/images/public/69fddcfab0730c36bda3631e/7a7bd2ab5_generated_847e20ff.png",
@@ -29,18 +29,10 @@ function shouldRunHeroCarousel() {
 
 export default function HeroSection() {
   const { t, dir, lang } = useI18n();
-  const navigate = useNavigate();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const [activeImg, setActiveImg] = useState(0);
-  const [searchValue, setSearchValue] = useState('');
-  const [showSuggestions, setShowSuggestions] = useState(false);
   const [carouselEnabled] = useState(shouldRunHeroCarousel);
-  const searchRef = useRef(null);
   const prefetchedImages = useRef(new Set([HERO_IMAGES[0]]));
-
-  const filteredCities = searchValue.length >= 1
-    ? IRAN_CITIES.filter(c => c.toLowerCase().includes(searchValue.toLowerCase())).slice(0, 6)
-    : [];
 
   useEffect(() => {
     if (!carouselEnabled) return undefined;
@@ -66,16 +58,6 @@ export default function HeroSection() {
     return () => window.clearTimeout(timeoutId);
   }, [activeImg, carouselEnabled]);
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (searchRef.current && !searchRef.current.contains(e.target)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
-
   return (
     <section dir={dir} className="relative min-h-screen flex flex-col overflow-hidden">
       {/* Background image. Auto-rotation/preload is disabled on phones, reduced-motion and constrained networks. */}
@@ -88,7 +70,7 @@ export default function HeroSection() {
           alt=""
           className="w-full h-full object-cover"
           loading={activeImg === 0 ? 'eager' : 'lazy'}
-          fetchPriority={activeImg === 0 ? 'high' : 'auto'}
+          {...(activeImg === 0 ? { fetchpriority: 'high' } : {})}
           decoding="async"
         />
       </div>
@@ -126,64 +108,8 @@ export default function HeroSection() {
           {t('hero_subtitle')}
         </p>
 
-        {/* Search bar with autocomplete */}
-        <div className="mb-5 relative" ref={searchRef}>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (searchValue.trim()) {
-                navigate(`/tours?city=${encodeURIComponent(searchValue.trim())}`);
-              }
-              setShowSuggestions(false);
-            }}
-            className="flex items-center gap-3 bg-black/30 backdrop-blur-md border border-white/20 rounded-2xl px-4 py-3 max-w-lg focus-within:border-gold/50 transition-colors duration-300"
-          >
-            <MapPin className="w-4 h-4 text-gold flex-shrink-0" />
-            <input
-              type="text"
-              value={searchValue}
-              onChange={(e) => {
-                setSearchValue(e.target.value);
-                setShowSuggestions(true);
-              }}
-              onFocus={() => setShowSuggestions(true)}
-              onPointerEnter={() => preloadRoute('/tours')}
-              placeholder={
-                lang === 'fa' ? 'کدام شهر را رویا می‌بینید؟'
-                : lang === 'ar' ? 'أي مدينة تحلم بها؟'
-                : 'Which city are you dreaming of?'
-              }
-              className="flex-1 bg-transparent text-white placeholder-white/45 font-body text-sm outline-none min-w-0"
-            />
-            <button
-              type="submit"
-              className="flex-shrink-0 w-8 h-8 rounded-xl bg-white/10 hover:bg-accent/80 flex items-center justify-center transition-colors duration-200"
-            >
-              <Search className="w-3.5 h-3.5 text-white" />
-            </button>
-          </form>
-
-          {/* Suggestions dropdown */}
-          {showSuggestions && filteredCities.length > 0 && (
-            <div className="absolute top-full left-0 mt-2 w-full max-w-lg bg-black/80 backdrop-blur-xl border border-white/15 rounded-2xl overflow-hidden z-50 shadow-2xl">
-              {filteredCities.map((city) => (
-                <button
-                  key={city}
-                  type="button"
-                  onClick={() => {
-                    setSearchValue(city);
-                    setShowSuggestions(false);
-                    navigate(`/tours?city=${encodeURIComponent(city)}`);
-                  }}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-white/10 hover:text-white transition-colors text-sm font-body text-left"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-gold flex-shrink-0" />
-                  {city}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* Apple Spotlight-style destination search */}
+        <div className="mb-5"><HeroSpotlightSearch /></div>
 
         {/* CTA row */}
         <div className="flex flex-wrap items-center gap-4 mb-14 lg:mb-16">

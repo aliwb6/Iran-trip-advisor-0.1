@@ -11,6 +11,7 @@ import { preloadRoute, routeLoaders } from '@/lib/route-loaders';
 import './public-profile-layout.css';
 
 import Layout from '@/components/layout/Layout';
+import MobileBackButton from '@/components/layout/MobileBackButton';
 import ChatRelationshipRoute from '@/components/chat/ChatRelationshipRoute';
 import Home from '@/pages/Home';
 
@@ -176,6 +177,7 @@ const AuthenticatedApp = () => {
     <>
       <PostLoginReturn />
       <NavigationIntentPreloader />
+      <MobileBackButton />
       <Suspense fallback={<RouteFallback />}>
         <Routes>
           <Route element={<Layout />}>

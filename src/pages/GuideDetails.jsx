@@ -401,7 +401,7 @@ export default function GuideDetails() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
             onClick={() => backDestination ? navigate(backDestination) : navigate(-1)}
-            className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm transition"
+            className="profile-page-back-button flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm transition"
           >
             {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             {lang === 'fa' ? 'بازگشت' : lang === 'ar' ? 'عودة' : 'Back'}

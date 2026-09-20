@@ -171,6 +171,135 @@
     content-visibility: auto;
     contain-intrinsic-size: 1px 620px;
   }
+
+  /* Listing pages use compact two-column cards on phones. Two columns retain
+     useful tap targets and readable names, unlike a cramped three-column grid. */
+  .listing-mobile-grid,
+  .tour-listing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .listing-profile-card {
+    border-radius: 1rem;
+  }
+
+  .listing-profile-card > div:first-child {
+    aspect-ratio: 1 / 0.82;
+  }
+
+  .listing-profile-card > div:first-child > span {
+    top: 0.45rem;
+    padding: 0.2rem 0.4rem;
+    font-size: 0.6rem;
+    line-height: 1;
+  }
+
+  .listing-profile-card > div:first-child > span:first-of-type {
+    max-width: 62%;
+  }
+
+  .listing-profile-card > div:first-child > span svg {
+    width: 0.65rem;
+    height: 0.65rem;
+  }
+
+  .listing-profile-card > div:last-child {
+    padding: 0.65rem;
+  }
+
+  .listing-profile-card h3 {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    line-height: 1.25;
+  }
+
+  .listing-profile-card > div:last-child > div:nth-child(2) {
+    margin-bottom: 0;
+  }
+
+  .listing-profile-card > div:last-child > p,
+  .listing-profile-tags {
+    display: none;
+  }
+
+  .listing-profile-card .text-xs,
+  .listing-profile-card .text-sm {
+    font-size: 0.65rem;
+  }
+
+  .listing-profile-card .w-3\.5 {
+    width: 0.7rem;
+    height: 0.7rem;
+  }
+
+  .tour-listing-card {
+    border-radius: 1rem;
+  }
+
+  .tour-listing-content {
+    padding: 0.7rem;
+  }
+
+  .tour-listing-card h2 {
+    margin-bottom: 0.25rem;
+    font-size: 0.9rem;
+    line-height: 1.25;
+    -webkit-text-stroke: 0 !important;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  .tour-listing-content > p:nth-of-type(1) {
+    margin-bottom: 0;
+    font-size: 0.65rem;
+  }
+
+  .tour-listing-content > p:nth-of-type(2),
+  .tour-listing-content > div:last-child {
+    display: none;
+  }
+
+  .tour-listing-card .absolute.bottom-4 {
+    inset-inline-end: 0.55rem;
+    bottom: 0.45rem;
+  }
+
+  .tour-listing-card .absolute.bottom-4 .text-xl {
+    font-size: 0.85rem;
+  }
+
+  .mobile-back-button {
+    position: fixed;
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    inset-inline-start: 0.75rem;
+    z-index: 55;
+    display: inline-flex;
+    min-height: 2.5rem;
+    align-items: center;
+    gap: 0.25rem;
+    border: 1px solid hsl(var(--border) / 0.75);
+    border-radius: 9999px;
+    background: hsl(var(--background) / 0.94);
+    padding: 0.5rem 0.7rem;
+    color: hsl(var(--foreground));
+    box-shadow: 0 8px 20px hsl(222 45% 8% / 0.16);
+    font-family: var(--font-primary), var(--font-fallback-system);
+    font-size: 0.75rem;
+    font-weight: 600;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .mobile-back-button:active {
+    transform: scale(0.96);
+  }
+
+  .profile-page-back-button {
+    display: none;
+  }
 }
 
 @media (max-width: 479px) {
