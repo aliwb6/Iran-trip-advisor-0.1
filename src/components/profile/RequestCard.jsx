@@ -272,12 +272,12 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
       {hasVisibleProposals ? (
         <div
           dir="ltr"
-          className="lg:grid lg:grid-cols-[minmax(300px,38fr)_minmax(0,62fr)] lg:h-[min(72vh,760px)] lg:min-h-[560px]"
+          className="grid h-[min(78dvh,720px)] min-h-[560px] grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:h-[min(72vh,760px)] lg:grid-cols-[minmax(300px,38fr)_minmax(0,62fr)] lg:min-h-[560px]"
         >
           <section
             dir={dir}
             aria-label={lang === 'fa' ? 'جزئیات درخواست سفر' : lang === 'ar' ? 'تفاصيل طلب الرحلة' : 'Your request details'}
-            className="p-5 sm:p-6 min-w-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-gutter-stable lg:border-r lg:border-border/30"
+            className="proposal-review-request-pane order-2 min-w-0 overflow-y-auto overscroll-contain border-l border-border/30 p-3 scrollbar-gutter-stable sm:p-4 lg:order-1 lg:border-l-0 lg:border-r lg:p-6"
           >
             {requestDetails}
           </section>
@@ -285,7 +285,7 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
           <section
             dir={dir}
             aria-label={lang === 'fa' ? 'پیشنهادهای راهنماها و آژانس‌ها' : lang === 'ar' ? 'عروض المرشدين والوكالات' : 'Guide and agency proposals'}
-            className="min-w-0 border-t border-border/30 p-5 sm:p-6 lg:border-t-0 lg:overflow-y-auto lg:overscroll-contain lg:scrollbar-gutter-stable [&>div]:border-t-0 [&>div]:pt-0"
+            className="proposal-review-offers-pane order-1 min-w-0 overflow-y-auto overscroll-contain p-3 scrollbar-gutter-stable sm:p-4 lg:order-2 lg:p-6 [&>div]:border-t-0 [&>div]:pt-0"
           >
             <ProposalsPanel
               requestId={request.id}

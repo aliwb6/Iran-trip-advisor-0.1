@@ -90,7 +90,7 @@ function TripDetailsPanel({ request, t }) {
   })();
 
   return (
-    <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5 mb-6">
+    <div className="proposal-trip-pane rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5 mb-6">
       <h3 className="text-[11px] font-semibold text-white/60 uppercase tracking-wider mb-4">
         {t('traveler_request_details')}
       </h3>
@@ -458,7 +458,7 @@ export default function SubmitProposalModal({
     <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
       <DialogContent
         dir={dir}
-        className="max-w-2xl p-0 border-0 bg-transparent shadow-none overflow-hidden"
+        className="proposal-workspace-dialog max-w-2xl p-0 border-0 bg-transparent shadow-none overflow-hidden"
         style={{ maxHeight: '92vh' }}
         onInteractOutside={(event) => {
           if (filePickerOpenRef.current) event.preventDefault();
@@ -468,7 +468,7 @@ export default function SubmitProposalModal({
           initial={{ opacity: 0, scale: 0.97, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
-          className="flex flex-col rounded-2xl overflow-hidden"
+          className="proposal-workspace flex flex-col rounded-2xl overflow-hidden"
           style={{
             background: 'hsl(222,55%,8%)',
             border: '1px solid rgba(255,255,255,0.1)',
@@ -505,7 +505,7 @@ export default function SubmitProposalModal({
           </div>
 
           {/* ── Scrollable body ── */}
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          <div className="proposal-workspace__body flex-1 overflow-y-auto px-6 py-5 space-y-6">
 
             {/* TRIP DETAILS PANEL */}
             <TripDetailsPanel request={request} t={t} />
@@ -728,7 +728,7 @@ export default function SubmitProposalModal({
 
           {/* ── Footer ── */}
           <div
-            className="shrink-0 px-6 py-4 flex items-center gap-3"
+            className="proposal-workspace__footer shrink-0 px-6 py-4 flex items-center gap-3"
             style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
           >
             <button

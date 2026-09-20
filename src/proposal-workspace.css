@@ -123,23 +123,178 @@
   }
 
   /*
-   * Phones and narrow tablets retain the safe stacked modal. We still keep the
-   * request details vertical so the same information is easy to scan before the
-   * proposal fields. Side-by-side panes resume once there is enough width.
+   * Mobile keeps the same two-pane workspace instead of stacking the entire
+   * traveler request above the form. The proposal stays on the physical left
+   * and the request stays visible on the physical right. Each side scrolls
+   * independently, so controls remain readable without shrinking the UI.
    */
   @media (max-width: 959px) {
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) {
-      width: calc(100vw - 1rem) !important;
-      max-width: calc(100vw - 1rem) !important;
+    .proposal-workspace-dialog {
+      --proposal-request-pane: 42%;
+      --proposal-workspace-gap: 0.5rem;
+      width: calc(100vw - 0.5rem) !important;
+      max-width: calc(100vw - 0.5rem) !important;
       max-height: 94dvh !important;
     }
 
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child {
+    .proposal-workspace {
+      height: 94dvh;
       max-height: 94dvh !important;
+      border-radius: 1rem !important;
     }
+
+    .proposal-workspace > div:first-child {
+      padding: 1rem 0.875rem 0.875rem !important;
+    }
+
+    .proposal-workspace > div:first-child h2 {
+      font-size: 1rem;
+      line-height: 1.35rem;
+    }
+
+    .proposal-workspace > div:first-child > p {
+      font-size: 0.7rem;
+      line-height: 1rem;
+    }
+
+    .proposal-workspace__body {
+      display: flow-root !important;
+      min-height: 0;
+      overflow-x: hidden !important;
+      overflow-y: auto !important;
+      overscroll-behavior: contain;
+      padding: 0.75rem !important;
+      scrollbar-gutter: stable;
+    }
+
+    .proposal-trip-pane {
+      position: sticky;
+      top: 0;
+      float: right;
+      width: var(--proposal-request-pane);
+      height: calc(100% - 0.125rem);
+      max-height: calc(100% - 0.125rem);
+      margin: 0 !important;
+      padding: 0.75rem !important;
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-gutter: stable;
+      box-sizing: border-box;
+      border-radius: 0.875rem !important;
+    }
+
+    .proposal-workspace__body > div:not(:first-child) {
+      width: auto;
+      min-width: 0;
+      margin-top: 0 !important;
+      margin-right: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap)) !important;
+      margin-bottom: 1rem !important;
+      margin-left: 0 !important;
+    }
+
+    .proposal-workspace__body > div:last-child {
+      margin-bottom: 0 !important;
+    }
+
+    .proposal-trip-pane h3,
+    .proposal-workspace__body > div:not(:first-child) p.text-xs {
+      font-size: 0.625rem;
+      line-height: 0.875rem;
+    }
+
+    .proposal-trip-pane > div {
+      gap: 0.75rem !important;
+    }
+
+    .proposal-trip-pane .text-sm {
+      font-size: 0.6875rem !important;
+      line-height: 1rem !important;
+    }
+
+    .proposal-trip-pane .pl-5 {
+      padding-left: 0 !important;
+      padding-inline-start: 1rem !important;
+    }
+
+    .proposal-workspace__body input,
+    .proposal-workspace__body textarea,
+    .proposal-workspace__body button {
+      font-size: 0.6875rem;
+    }
+
+    .proposal-workspace__body > div:not(:first-child) {
+      padding-inline: 0.75rem;
+    }
+
+    .proposal-workspace__footer {
+      gap: 0.375rem !important;
+      padding: 0.625rem 0.75rem !important;
+      padding-right: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap) + 0.75rem) !important;
+    }
+
+    .proposal-workspace__footer button:first-child {
+      padding-inline: 0.5rem !important;
+    }
+
+    .proposal-workspace__footer button {
+      min-height: 2.5rem;
+      font-size: 0.6875rem !important;
+    }
+  }
+}
+
+/* Traveler proposal review uses the same physical mobile split: offers on the
+ * left and the original request on the right. Desktop retains its established
+ * request-left / proposals-right layout. */
+@media (max-width: 1023px) {
+  .proposal-review-request-pane > header {
+    display: block;
+  }
+
+  .proposal-review-request-pane > header > div:last-child {
+    margin-top: 0.5rem;
+    justify-content: flex-start;
+  }
+
+  .proposal-review-request-pane h3 {
+    font-size: 0.875rem;
+    line-height: 1.15rem;
+  }
+
+  .proposal-review-request-pane .text-sm {
+    font-size: 0.625rem;
+    line-height: 0.95rem;
+  }
+
+  .proposal-review-request-pane .my-5 {
+    margin-block: 0.75rem;
+  }
+
+  .proposal-review-request-pane .my-5 > .flex {
+    gap: 0.25rem;
+  }
+
+  .proposal-review-request-pane .my-5 .text-sm {
+    font-size: 0.55rem;
+    white-space: nowrap;
+  }
+
+  .proposal-review-request-pane footer {
+    align-items: flex-start;
+  }
+
+  .proposal-review-request-pane footer > div:last-child {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .proposal-review-offers-pane .rounded-2xl {
+    border-radius: 0.75rem;
+  }
+
+  .proposal-review-offers-pane .text-base {
+    font-size: 0.75rem;
+    line-height: 1rem;
   }
 }
