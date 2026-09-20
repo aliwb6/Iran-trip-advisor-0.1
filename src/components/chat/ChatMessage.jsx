@@ -110,7 +110,7 @@ export function ChatMessage({ msg, convId, onEdit, loading, lang, renderCards })
       >
         <div className="flex w-full items-end gap-3 justify-start">
           <AriaMark size={32} />
-          <div className="max-w-[78%] flex flex-col items-start">
+          <div className="max-w-[84%] sm:max-w-[78%] flex flex-col items-start">
             <span
               className="mb-1 px-1 text-[11px] font-medium tracking-wide"
               style={{ color: C.muted }}
@@ -118,7 +118,7 @@ export function ChatMessage({ msg, convId, onEdit, loading, lang, renderCards })
               Aria
             </span>
             <div
-              className="relative rounded-3xl rounded-bl-md px-5 py-3.5 shadow-sm"
+              className="relative rounded-3xl rounded-bl-md px-4 py-3 sm:px-5 sm:py-3.5 shadow-sm"
               style={{ background: C.white, color: C.ink, border: `1px solid ${C.muted}20` }}
             >
               <ReactMarkdown className="font-body text-sm prose prose-sm max-w-none [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 leading-relaxed">
@@ -228,7 +228,7 @@ export function ChatMessage({ msg, convId, onEdit, loading, lang, renderCards })
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="group flex w-full items-end gap-3 justify-end"
     >
-      <div className="max-w-[78%] flex flex-col items-end">
+      <div className="max-w-[84%] sm:max-w-[78%] flex flex-col items-end">
         {/*
           Edit button:
           – Mobile (< lg): always visible so touch users can tap it
@@ -257,7 +257,7 @@ export function ChatMessage({ msg, convId, onEdit, loading, lang, renderCards })
 
         {/* Bubble */}
         <div
-          className="relative rounded-3xl rounded-br-md px-5 py-3.5 shadow-sm"
+          className="relative rounded-3xl rounded-br-md px-4 py-3 sm:px-5 sm:py-3.5 shadow-sm"
           style={{
             background: `linear-gradient(135deg, ${C.turq} 0%, ${C.turqDeep} 100%)`,
             color: '#FFFFFF',

@@ -162,6 +162,52 @@ function SectionHeading({ eyebrow, title, trailing }) {
 }
 
 // ── Suggested replies ─────────────────────────────────────────────────────────
+function StarterPrompts({ lang, onSelect }) {
+  const prompts = lang === 'fa'
+    ? [
+        { icon: MapPin, title: 'کدام شهر برای من بهتر است؟', body: 'بر اساس علایق و زمان سفرم' },
+        { icon: Compass, title: 'یک مسیر رؤیایی بساز', body: 'تاریخ، غذا و فرهنگ ایران' },
+        { icon: Wallet, title: 'سفر با بودجه مشخص', body: 'واقع‌بینانه و شخصی‌سازی‌شده' },
+        { icon: Sparkles, title: 'یک تجربه متفاوت می‌خواهم', body: 'فراتر از جاهای توریستی' },
+      ]
+    : lang === 'ar'
+      ? [
+          { icon: MapPin, title: 'أي مدينة تناسبني؟', body: 'حسب اهتماماتي ووقت الرحلة' },
+          { icon: Compass, title: 'ابنِ لي مساراً مميزاً', body: 'تاريخ وطعام وثقافة إيران' },
+          { icon: Wallet, title: 'رحلة بميزانية واضحة', body: 'عملية ومصممة لي' },
+          { icon: Sparkles, title: 'أريد تجربة مختلفة', body: 'بعيداً عن الأماكن المعتادة' },
+        ]
+      : [
+          { icon: MapPin, title: 'Which city suits me?', body: 'Based on my interests and timing' },
+          { icon: Compass, title: 'Build my dream route', body: 'History, food, and Iranian culture' },
+          { icon: Wallet, title: 'Plan to my budget', body: 'Practical and personal' },
+          { icon: Sparkles, title: 'Show me something different', body: 'Beyond the usual places' },
+        ];
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.45, delay: 0.1 }} className="mt-1">
+      <div className="mb-2 flex items-center gap-2 px-1">
+        <span className="h-px flex-1" style={{ background: `${C.muted}20` }} />
+        <p className="text-[10px] font-semibold tracking-[0.08em]" style={{ color: C.muted }}>
+          {lang === 'fa' ? 'از اینجا شروع کن' : lang === 'ar' ? 'ابدأ من هنا' : 'START HERE'}
+        </p>
+        <span className="h-px flex-1" style={{ background: `${C.muted}20` }} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        {prompts.map(({ icon: Icon, title, body }) => (
+          <button key={title} type="button" onClick={() => onSelect(title)} className="group min-h-[82px] rounded-2xl p-3 text-start transition-all active:scale-[0.98]" style={{ background: `linear-gradient(135deg, ${C.white}, ${C.turq}08)`, border: `1px solid ${C.turq}1F`, boxShadow: `0 5px 16px ${C.teal}08` }}>
+            <span className="mb-2 grid h-7 w-7 place-items-center rounded-lg transition-transform group-hover:scale-110" style={{ color: C.turq, background: `${C.turq}12` }}>
+              <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+            </span>
+            <span className="block text-[12px] font-bold leading-tight" style={{ color: C.teal }}>{title}</span>
+            <span className="mt-1 block text-[10px] leading-snug" style={{ color: C.muted }}>{body}</span>
+          </button>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 // ── Conversation history sidebar ──────────────────────────────────────────────
 function ConversationSidebar({ conversations, activeId, onNew, onSwitch, onDelete, lang, dir, open, onClose, isLoadingConvs, isLoggedIn }) {
   const formatTime = (isoString) => {
@@ -833,7 +879,7 @@ export default function AIAssistant() {
           style={{ borderColor: `${C.muted}20` }}
         >
           {/* Header */}
-          <header className="relative overflow-visible px-4 pt-5 pb-4 sm:px-8 sm:pt-9 sm:pb-7 shrink-0 z-50">
+          <header className="relative overflow-visible px-4 pt-3 pb-3 sm:px-8 sm:pt-9 sm:pb-7 shrink-0 z-50">
             <PersianPattern opacity={0.055} color={C.turq} size={64} />
             <div
               className="absolute inset-x-0 top-0 h-px"
@@ -846,7 +892,7 @@ export default function AIAssistant() {
                 {/* Sidebar toggle — all screen sizes */}
                 <button
                   onClick={() => setSidebarOpen(true)}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors shrink-0"
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl transition-colors shrink-0"
                   style={{ background: `${C.muted}10`, color: C.teal }}
                   aria-label="Open conversation history"
                 >
@@ -878,14 +924,26 @@ export default function AIAssistant() {
                   >
                     {t('ai_title')}
                   </h1>
+                  <div className="mt-0.5 flex items-center gap-1.5 text-[10px] font-medium" style={{ color: C.muted }}>
+                    <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#36B37E', boxShadow: '0 0 0 3px #36B37E18' }} />
+                    {lang === 'fa' ? 'همراه سفرت آماده است' : lang === 'ar' ? 'رفيق سفرك جاهز' : 'Your travel companion is ready'}
+                  </div>
                 </div>
               </div>
-
+              <button
+                onClick={handleNewChat}
+                className="flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-95"
+                style={{ background: `${C.turq}10`, color: C.turq, border: `1px solid ${C.turq}20` }}
+                aria-label={lang === 'fa' ? 'گفتگوی جدید' : lang === 'ar' ? 'محادثة جديدة' : 'New chat'}
+                title={lang === 'fa' ? 'گفتگوی جدید' : lang === 'ar' ? 'محادثة جديدة' : 'New chat'}
+              >
+                <Plus className="h-4 w-4" />
+              </button>
             </div>
 
             {/* Carpet hairline */}
             <div
-              className="mt-4 sm:mt-5 h-[2px] w-full"
+              className="mt-3 sm:mt-5 h-[2px] w-full"
               style={{
                 background: `repeating-linear-gradient(90deg, ${C.turq} 0 6px, transparent 6px 12px, ${C.muted} 12px 14px, transparent 14px 20px)`,
                 opacity: 0.45,
@@ -896,7 +954,8 @@ export default function AIAssistant() {
           {/* Messages */}
           <div
             ref={scrollerRef}
-            className="flex-1 min-h-0 overflow-y-auto px-4 py-6 sm:px-8"
+            className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6"
+            style={{ background: `linear-gradient(180deg, ${C.mist}88 0%, ${C.white} 22%)` }}
           >
             {isLoadingMsgs ? (
               <div className="flex items-center justify-center h-40 gap-3" style={{ color: C.muted }}>
@@ -983,6 +1042,9 @@ export default function AIAssistant() {
                   );
                 })}
               </AnimatePresence>
+              {messages.length <= 1 && !isLoadingMsgs && (
+                <StarterPrompts lang={lang} onSelect={(prompt) => sendMessage(prompt)} />
+              )}
               {loading && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
@@ -1003,7 +1065,7 @@ export default function AIAssistant() {
           </div>
 
           {/* Composer */}
-          <div className="relative shrink-0 px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-4 sm:px-8 sm:py-6" style={{ background: C.white }}>
+          <div className="relative shrink-0 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 sm:px-8 sm:py-6" style={{ background: C.white, borderTop: `1px solid ${C.muted}14` }}>
             <div className="space-y-2">
               {/* File/image preview */}
               {attachedFile && (
@@ -1026,7 +1088,7 @@ export default function AIAssistant() {
                 </div>
               )}
 
-              <div className="flex items-center gap-2 rounded-2xl pl-2 pr-2 py-2" style={{ background: C.white, border: `1px solid ${C.muted}30`, boxShadow: `0 6px 24px ${C.teal}10` }}>
+              <div className="flex items-center gap-2 rounded-[22px] pl-2 pr-2 py-2" style={{ background: C.white, border: `1px solid ${C.turq}36`, boxShadow: `0 8px 28px ${C.teal}12` }}>
                 {/* Hidden file input */}
                 <input
                   ref={fileInputRef}
@@ -1038,7 +1100,7 @@ export default function AIAssistant() {
                 {/* Attach button */}
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-all"
+                  className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition-all active:scale-95"
                   style={{ background: `${C.muted}12`, color: C.muted }}
                   title="Attach image or file"
                 >
@@ -1054,13 +1116,13 @@ export default function AIAssistant() {
                   placeholder={t('ai_placeholder')}
                   disabled={loading}
                   autoFocus
-                  className="flex-1 bg-transparent text-[14.5px] outline-none placeholder:opacity-60 disabled:opacity-60"
+                  className="flex-1 bg-transparent text-[15px] outline-none placeholder:opacity-60 disabled:opacity-60"
                   style={{ color: C.teal }}
                 />
                 <button
                   onClick={() => sendMessage(input)}
                   disabled={(!input.trim() && !attachedFile) || loading}
-                  className="grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-all disabled:opacity-50"
+                  className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl transition-all active:scale-95 disabled:opacity-50"
                   style={{ background: `linear-gradient(135deg, ${C.turq}, ${C.turqDeep})`, color: '#FFFFFF', boxShadow: `0 6px 18px ${C.turq}40` }}
                   aria-label="Send"
                 >
@@ -1070,7 +1132,7 @@ export default function AIAssistant() {
                 </button>
               </div>
             </div>
-            <p className="mt-2.5 text-center text-[11px]" style={{ color: `${C.muted}AA` }}>
+            <p className="mt-2 text-center text-[10px]" style={{ color: `${C.muted}AA` }}>
               {lang === 'fa'
                 ? 'آریا می‌تواند با برنامه‌ریزی، ویزا، آداب محلی و راهنمایان کمک کند.'
                 : lang === 'ar'
@@ -1080,6 +1142,7 @@ export default function AIAssistant() {
           </div>
 
           {/* Mobile "Recommendations" floating button — hidden on lg+ */}
+          {messages.length > 1 && (
           <button
             onClick={() => setRecsSheetOpen(true)}
             className="lg:hidden fixed bottom-24 end-4 z-30 flex items-center gap-2 rounded-full px-4 py-3 text-[13px] font-semibold shadow-lg transition-all hover:opacity-90 active:scale-95"
@@ -1089,6 +1152,7 @@ export default function AIAssistant() {
             <Sparkles className="h-4 w-4 shrink-0" />
             <span>{lang === 'fa' ? 'پیشنهادات' : lang === 'ar' ? 'التوصيات' : 'Recommendations'}</span>
           </button>
+          )}
         </section>
 
         {/* ── Profile + Recommendations sidebar — desktop only ─────────── */}
