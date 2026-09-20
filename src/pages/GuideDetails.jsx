@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { transformImage, imgPresets } from '@/lib/imageTransform';
 import { motion } from 'framer-motion';
@@ -267,8 +267,13 @@ function RatingBreakdown({ reviewList = [] }) {
 export default function GuideDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { t, lang, dir } = useI18n();
+  const aiConversationId = location.state?.returnToAiChat ? location.state?.conversationId : null;
+  const backDestination = aiConversationId
+    ? `/ai-assistant?conversation=${encodeURIComponent(aiConversationId)}`
+    : null;
 
   const [guide, setGuide] = useState(null);
   const [tours, setTours] = useState([]);
@@ -395,7 +400,7 @@ export default function GuideDetails() {
       <div className="pt-20 pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => backDestination ? navigate(backDestination) : navigate(-1)}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm transition"
           >
             {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}

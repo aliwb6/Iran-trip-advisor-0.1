@@ -48,7 +48,7 @@ function dbRowToMsg(row) {
     edited: row.edited ?? false,
     editedAt: row.edited_at ?? null,
     timestamp: row.created_at,
-    cards: null, // cards are runtime-only, not persisted
+    cards: row.cards ?? null,
   };
 }
 
@@ -160,6 +160,7 @@ export function useChatHistory() {
           role: m.role,
           content: m.content,
           edited: false,
+          cards: m.cards ?? null,
         }))
       );
     }
@@ -186,6 +187,7 @@ export function useChatHistory() {
         role: msg.role,
         content: msg.content,
         edited: false,
+        cards: msg.cards ?? null,
       });
       if (error) {
         toast.error('Message failed to save');

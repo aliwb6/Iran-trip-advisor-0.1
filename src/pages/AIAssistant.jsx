@@ -466,7 +466,7 @@ function buildGreeting(cityHint, lang) {
 }
 
 // ── Shared recommendations panel content (desktop sidebar + mobile sheet) ─────
-function RecommendationsPanelContent({ lang, profile, sidebarTours, sidebarGuides, hasRecommendations }) {
+function RecommendationsPanelContent({ lang, profile, sidebarTours, sidebarGuides, hasRecommendations, conversationId }) {
   return (
     <div>
       {/* Profile chips */}
@@ -510,7 +510,7 @@ function RecommendationsPanelContent({ lang, profile, sidebarTours, sidebarGuide
             />
             {sidebarTours.length > 0 && (
               <div className="mt-5 grid grid-cols-1 gap-3">
-                {sidebarTours.map((tour) => <TourCard key={tour.id} tour={tour} />)}
+                {sidebarTours.map((tour) => <TourCard key={tour.id} tour={tour} conversationId={conversationId} />)}
               </div>
             )}
             {sidebarGuides.length > 0 && (
@@ -520,7 +520,7 @@ function RecommendationsPanelContent({ lang, profile, sidebarTours, sidebarGuide
                   title={lang === 'fa' ? 'راهنمایانی که منتظر دیدارتان هستند' : lang === 'ar' ? 'مرشدون يودّون مقابلتك' : "Guides who'd love to meet you"}
                 />
                 <div className="mt-4 flex flex-col gap-2.5">
-                  {sidebarGuides.map((guide) => <GuideCard key={guide.id} guide={guide} />)}
+                  {sidebarGuides.map((guide) => <GuideCard key={guide.id} guide={guide} conversationId={conversationId} />)}
                 </div>
               </div>
             )}
@@ -549,6 +549,7 @@ export default function AIAssistant() {
   const initDone = useRef(false);
   const [searchParams] = useSearchParams();
   const cityHint = searchParams.get('city') || '';
+  const conversationId = searchParams.get('conversation') || '';
   const initialMessage = location.state?.initialMessage || '';
 
   const {
@@ -609,6 +610,10 @@ export default function AIAssistant() {
   useEffect(() => {
     if (initDone.current) return;
     initDone.current = true;
+    if (conversationId) {
+      switchConversation(conversationId);
+      return;
+    }
     const greeting = buildGreeting(cityHint, lang);
     createConversation(greeting, lang);
     if (cityHint && !initialMessage) {
@@ -974,12 +979,12 @@ export default function AIAssistant() {
                       <div className="space-y-3">
                         {msg.cards.tours?.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {msg.cards.tours.map((tour) => <TourCard key={tour.id} tour={tour} />)}
+                            {msg.cards.tours.map((tour) => <TourCard key={tour.id} tour={tour} conversationId={activeId} />)}
                           </div>
                         )}
                         {msg.cards.guides?.length > 0 && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            {msg.cards.guides.map((guide) => <GuideCard key={guide.id} guide={guide} />)}
+                            {msg.cards.guides.map((guide) => <GuideCard key={guide.id} guide={guide} conversationId={activeId} />)}
                           </div>
                         )}
                       </div>
@@ -1170,6 +1175,7 @@ export default function AIAssistant() {
               sidebarTours={sidebarTours}
               sidebarGuides={sidebarGuides}
               hasRecommendations={hasRecommendations}
+              conversationId={activeId}
             />
           </div>
         </motion.aside>
@@ -1198,6 +1204,7 @@ export default function AIAssistant() {
                 sidebarTours={sidebarTours}
                 sidebarGuides={sidebarGuides}
                 hasRecommendations={hasRecommendations}
+                conversationId={activeId}
               />
             </div>
           </div>
@@ -1228,7 +1235,7 @@ export default function AIAssistant() {
 }
 
 // ── TourCard ──────────────────────────────────────────────────────────────────
-function TourCard({ tour }) {
+function TourCard({ tour, conversationId }) {
   const cities = Array.isArray(tour.cities) ? tour.cities.join(' · ') : (tour.cities || tour.location || '');
   const img = tour.image_url || (Array.isArray(tour.gallery) && tour.gallery[0]) ||
     'https://images.unsplash.com/photo-1564960723835-2898c9df9297?w=600&h=400&fit=crop';
@@ -1236,6 +1243,7 @@ function TourCard({ tour }) {
   return (
     <Link
       to={href}
+      state={{ returnToAiChat: true, conversationId }}
       className="group flex gap-3 p-3 rounded-2xl bg-card border border-border/50 hover:border-accent/40 hover:shadow-md transition-all"
     >
       <div className="w-20 h-20 rounded-xl overflow-hidden shrink-0 bg-secondary">
@@ -1272,12 +1280,13 @@ function TourCard({ tour }) {
 }
 
 // ── GuideCard ─────────────────────────────────────────────────────────────────
-function GuideCard({ guide }) {
+function GuideCard({ guide, conversationId }) {
   const specialties = Array.isArray(guide.specialties) ? guide.specialties.slice(0, 2).join(' · ') : '';
   const isAgency = guide.role === 'agency';
   return (
     <Link
       to={`/${isAgency ? 'agencies' : 'guides'}/${guide.id}`}
+      state={{ returnToAiChat: true, conversationId }}
       className="group flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/50 hover:border-accent/40 hover:shadow-md transition-all"
     >
       <img decoding="async" loading="lazy"

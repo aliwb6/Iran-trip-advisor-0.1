@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import {
@@ -108,7 +108,12 @@ export default function TourDetails() {
   const { slug } = useParams();
   const { t, lang, dir } = useI18n();
   const navigate = useNavigate();
+  const routerLocation = useLocation();
   const { isAuthenticated } = useAuth();
+  const aiConversationId = routerLocation.state?.returnToAiChat ? routerLocation.state?.conversationId : null;
+  const backDestination = aiConversationId
+    ? `/ai-assistant?conversation=${encodeURIComponent(aiConversationId)}`
+    : '/tours';
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const { tour, loading, error } = useTourBySlug(slug);
   const [providerDialogOpen, setProviderDialogOpen] = useState(false);
@@ -293,7 +298,7 @@ export default function TourDetails() {
 
         {/* Back button */}
         <Link
-          to="/tours"
+          to={backDestination}
           className="absolute top-24 start-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
         >
           <Arrow className={`w-4 h-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
