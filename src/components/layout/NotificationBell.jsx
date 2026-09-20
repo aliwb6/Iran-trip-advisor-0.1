@@ -34,7 +34,10 @@ export default function NotificationBell({ isLight }) {
   const { user } = useAuth();
   const { notifications, unreadCount, loading, markAllRead, markOneRead } = useNotificationsContext();
   const [open, setOpen] = useState(false);
+  const [badgeOpen, setBadgeOpen] = useState(false);
   const ref = useRef(null);
+  const previousUnreadCount = useRef(0);
+  const badgeAnimationFrame = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -44,6 +47,30 @@ export default function NotificationBell({ isLight }) {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const previousCount = previousUnreadCount.current;
+    previousUnreadCount.current = unreadCount;
+
+    if (unreadCount === 0) {
+      if (badgeAnimationFrame.current) cancelAnimationFrame(badgeAnimationFrame.current);
+      setBadgeOpen(false);
+      return undefined;
+    }
+
+    // Reset first so a new notification can replay the entry animation even
+    // while the badge is already visible for earlier unread notifications.
+    if (unreadCount > previousCount) {
+      setBadgeOpen(false);
+      badgeAnimationFrame.current = requestAnimationFrame(() => setBadgeOpen(true));
+    } else {
+      setBadgeOpen(true);
+    }
+
+    return () => {
+      if (badgeAnimationFrame.current) cancelAnimationFrame(badgeAnimationFrame.current);
+    };
+  }, [unreadCount]);
 
   if (!user) return null;
 
@@ -65,11 +92,11 @@ export default function NotificationBell({ isLight }) {
         aria-label="Notifications"
       >
         <Bell className="w-5 h-5" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-0.5 shadow-lg animate-pulse">
-            {unreadCount > 99 ? '99+' : unreadCount}
+        <span className="t-badge" data-open={badgeOpen} aria-hidden={unreadCount === 0}>
+          <span className="t-badge-dot min-w-[18px] h-[18px] rounded-full bg-accent text-white text-[10px] font-bold flex items-center justify-center px-0.5 shadow-lg">
+            {unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : null}
           </span>
-        )}
+        </span>
       </button>
 
       {open && (
