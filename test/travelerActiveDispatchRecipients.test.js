@@ -29,10 +29,9 @@ test('mobile navigation keeps notifications visible and request cards link live 
   assert.match(page, /refetchInterval: 10_000/);
 });
 
-test('dispatch begins with two providers and advances by one only after a first Pending or Reject', async () => {
+test('recipient visibility migration does not modify dispatch or proposal queue behavior', async () => {
   const migration = await source('../supabase/migrations/20260920130000_traveler_active_dispatch_recipients.sql');
-  assert.match(migration, /2 \+ count\(\*\)::integer/);
-  assert.match(migration, /v_capacity := GREATEST\(0, v_audience_limit - v_active\)/);
-  assert.match(migration, /OLD\.visibility_advanced_at IS NULL AND NEW\.visibility_advanced_at IS NOT NULL/);
-  assert.match(migration, /PERFORM public\.dispatch_trip_request\(NEW\.trip_request_id\)/);
+  assert.doesNotMatch(migration, /CREATE OR REPLACE FUNCTION public\.dispatch_trip_request/);
+  assert.doesNotMatch(migration, /CREATE TRIGGER/);
+  assert.doesNotMatch(migration, /visibility_advanced_at/);
 });
