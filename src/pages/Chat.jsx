@@ -4,11 +4,13 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
+  LockKeyhole,
   Loader2,
   MessageCircle,
   Send,
   ShieldAlert,
   ShieldCheck,
+  Siren,
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/supabaseClient';
@@ -18,6 +20,7 @@ import { avatarFor } from '@/lib/avatar';
 import { fetchParticipantProfile } from '@/api/participantProfiles';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { canShareContactWithUser } from '@/api/chatAccess';
+import { fetchChatModeration } from '@/api/chatModeration';
 import { detectContactSharing } from '@/lib/contactSharing';
 
 const C = {
@@ -30,6 +33,33 @@ const C = {
   muted: '#7A8C8C',
   ink: '#0F2A2A',
 };
+
+const EMPTY_MODERATION = {
+  isClosed: false,
+  closedAt: null,
+  closeReason: null,
+  warnings: [],
+};
+
+const isMissingModerationRpc = (error) => {
+  const message = String(error?.message || '');
+  return error?.code === '42P01'
+    || error?.code === 'PGRST205'
+    || /chat_moderation_(threads|warnings).*does not exist/i.test(message)
+    || /schema cache.*chat_moderation_/i.test(message);
+};
+
+async function fetchChatModerationSafely(counterpartyId, currentUserId) {
+  try {
+    return await fetchChatModeration(counterpartyId, currentUserId);
+  } catch (error) {
+    // Keeps existing chat usable during a staged deploy where the frontend is
+    // live a few seconds before the matching migration. Database enforcement
+    // becomes authoritative as soon as the migration exists.
+    if (isMissingModerationRpc(error)) return EMPTY_MODERATION;
+    throw error;
+  }
+}
 
 function MessageBubble({ message, mine, senderName }) {
   return (
@@ -48,11 +78,14 @@ function MessageBubble({ message, mine, senderName }) {
         >
           {message.content}
         </div>
-        {message.created_at && (
-          <span className="mt-1 px-1 text-[10px]" style={{ color: C.muted }}>
-            {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-          </span>
-        )}
+        <div className={`mt-1 flex flex-wrap items-center gap-1.5 px-1 text-[10px] ${mine ? 'justify-end' : 'justify-start'}`} style={{ color: C.muted }}>
+          {message.created_at && (
+            <span>{new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          )}
+          {message.edited && (
+            <span className="font-medium text-amber-600">· Edited by Iran Trip Advisor</span>
+          )}
+        </div>
       </div>
     </motion.div>
   );
@@ -72,7 +105,16 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [contactSharingAllowed, setContactSharingAllowed] = useState(false);
+  const [chatClosed, setChatClosed] = useState(false);
+  const [chatCloseReason, setChatCloseReason] = useState(null);
+  const [chatWarnings, setChatWarnings] = useState([]);
   const scrollerRef = useRef(null);
+
+  const applyModeration = (moderation) => {
+    setChatClosed(moderation?.isClosed === true);
+    setChatCloseReason(moderation?.closeReason || null);
+    setChatWarnings(moderation?.warnings || []);
+  };
 
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated) navigate('/login');
@@ -86,7 +128,7 @@ export default function Chat() {
       setLoading(true);
       setError('');
       try {
-        const [publicProfileRes, messagesRes, contactPermission] = await Promise.all([
+        const [publicProfileRes, messagesRes, contactPermission, moderation] = await Promise.all([
           selectPublicProfiles(supabase, 'id, full_name, avatar_url, gender, role, city, bio')
             .eq('id', guideId)
             .maybeSingle(),
@@ -96,6 +138,7 @@ export default function Chat() {
             .or(`and(sender_id.eq.${user.id},receiver_id.eq.${guideId}),and(sender_id.eq.${guideId},receiver_id.eq.${user.id})`)
             .order('created_at', { ascending: true }),
           canShareContactWithUser(guideId).catch(() => false),
+          fetchChatModerationSafely(guideId, user.id),
         ]);
 
         if (cancelled) return;
@@ -115,6 +158,7 @@ export default function Chat() {
         });
         setMessages(messagesRes.data || []);
         setContactSharingAllowed(contactPermission === true);
+        applyModeration(moderation);
 
         const unreadIds = (messagesRes.data || [])
           .filter(message => message.receiver_id === user.id && !message.is_read)
@@ -135,19 +179,36 @@ export default function Chat() {
 
   useEffect(() => {
     if (!guideId || !user?.id) return undefined;
-    const refreshPermission = async () => {
+
+    const refreshAccess = async () => {
       try {
-        setContactSharingAllowed(await canShareContactWithUser(guideId));
+        const [contactPermission, moderation] = await Promise.all([
+          canShareContactWithUser(guideId).catch(() => false),
+          fetchChatModerationSafely(guideId, user.id),
+        ]);
+        setContactSharingAllowed(contactPermission === true);
+        applyModeration(moderation);
       } catch {
-        // Keep the last safe value; database enforcement remains authoritative.
+        // Keep the last safe values; database rules remain authoritative.
       }
     };
-    window.addEventListener('focus', refreshPermission);
-    return () => window.removeEventListener('focus', refreshPermission);
+
+    window.addEventListener('focus', refreshAccess);
+    return () => window.removeEventListener('focus', refreshAccess);
   }, [guideId, user?.id]);
 
   useEffect(() => {
     if (!user?.id || !guideId) return undefined;
+
+    const mergeUpdatedMessage = (message) => {
+      const belongsToThread = (
+        (message.sender_id === user.id && message.receiver_id === guideId)
+        || (message.sender_id === guideId && message.receiver_id === user.id)
+      );
+      if (!belongsToThread) return;
+      setMessages(current => current.map(item => item.id === message.id ? { ...item, ...message } : item));
+    };
+
     const channel = supabase
       .channel(`direct-chat-${user.id}-${guideId}`)
       .on(
@@ -160,6 +221,61 @@ export default function Chat() {
           await supabase.from('messages').update({ is_read: true }).eq('id', message.id);
         },
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` },
+        payload => mergeUpdatedMessage(payload.new),
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `sender_id=eq.${user.id}` },
+        payload => mergeUpdatedMessage(payload.new),
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [guideId, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !guideId) return undefined;
+
+    const [participantA,participantB] = [user.id, guideId].sort();
+
+    const refreshModeration = async () => {
+      try {
+        applyModeration(await fetchChatModerationSafely(guideId, user.id));
+      } catch {
+        // Keep the last known state; server-side enforcement remains authoritative.
+      }
+    };
+
+    const channel = supabase
+      .channel(`direct-chat-moderation-${participantA}-${participantB}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'chat_moderation_threads',
+          filter: `participant_a=eq.${participantA}`,
+        },
+        payload => {
+          const row = payload.new || payload.old;
+          if (row?.participant_b === participantB) refreshModeration();
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_moderation_warnings',
+          filter: `participant_a=eq.${participantA}`,
+        },
+        payload => {
+          if (payload.new?.participant_b === participantB) refreshModeration();
+        },
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -170,15 +286,26 @@ export default function Chat() {
   }, [messages]);
 
   const blockedMessage = lang === 'fa'
-    ? 'تا قبل از تأیید پرداخت، ارسال شماره تلفن، ایمیل، لینک یا شناسه شبکه‌های اجتماعی مجاز نیست. گفتگو را داخل سایت ادامه دهید.'
+    ? 'تا قبل از تأیید پرداخت، ارسال شماره تلفن، ایمیل، لینک یا شناسه شبکه‌های اجتماعی حتی به شکل حروفی یا جداشده مجاز نیست. گفتگو را داخل سایت ادامه دهید.'
     : lang === 'ar'
-      ? 'قبل تأكيد الدفع لا يمكن مشاركة رقم الهاتف أو البريد الإلكتروني أو الروابط أو حسابات التواصل. تابع المحادثة داخل الموقع.'
-      : 'Phone numbers, direct contact addresses, links, and social-media IDs cannot be shared until payment is confirmed. Please keep the conversation on the platform.';
+      ? 'قبل تأكيد الدفع لا يمكن مشاركة رقم الهاتف أو البريد الإلكتروني أو الروابط أو حسابات التواصل، حتى بصيغة مكتوبة أو مفصولة. تابع المحادثة داخل الموقع.'
+      : 'Phone numbers, direct contact addresses, links, and social-media IDs — including spelled or spaced-out versions — cannot be shared until payment is confirmed. Please keep the conversation on the platform.';
+
+  const closedMessage = lang === 'fa'
+    ? 'این گفتگو توسط تیم Iran Trip Advisor بسته شده است. تاریخچه گفتگو قابل مشاهده است اما امکان ارسال پیام جدید وجود ندارد.'
+    : lang === 'ar'
+      ? 'تم إغلاق هذه المحادثة بواسطة فريق Iran Trip Advisor. يمكنك قراءة السجل ولكن لا يمكنك إرسال رسائل جديدة.'
+      : 'This conversation has been closed by the Iran Trip Advisor team. You can read the history, but new messages are disabled.';
 
   const handleSend = async event => {
     event.preventDefault();
     const text = input.trim();
     if (!text || !user?.id || !guideId || sending) return;
+
+    if (chatClosed) {
+      setError(closedMessage);
+      return;
+    }
 
     const violations = contactSharingAllowed ? [] : detectContactSharing(text);
     if (violations.length > 0) {
@@ -201,7 +328,19 @@ export default function Chat() {
       setInput('');
     } catch (sendError) {
       const message = String(sendError?.message || 'Could not send this message.');
-      setError(message.includes('Contact information can only be shared') ? blockedMessage : message);
+      if (message.includes('Contact information can only be shared')) {
+        setError(blockedMessage);
+      } else if (message.includes('closed by Iran Trip Advisor') || /row-level security/i.test(message)) {
+        try {
+          const moderation = await fetchChatModerationSafely(guideId, user.id);
+          applyModeration(moderation);
+          setError(moderation.isClosed ? closedMessage : message);
+        } catch {
+          setError(message);
+        }
+      } else {
+        setError(message);
+      }
     } finally {
       setSending(false);
     }
@@ -264,10 +403,39 @@ export default function Chat() {
               <p className={`text-xs leading-relaxed ${contactSharingAllowed ? 'text-emerald-800' : 'text-amber-900'}`}>
                 {contactSharingAllowed
                   ? (lang === 'fa' ? 'پرداخت تأیید شده است؛ اشتراک اطلاعات تماس برای هماهنگی رزرو مجاز است.' : lang === 'ar' ? 'تم تأكيد الدفع؛ يمكن الآن مشاركة معلومات الاتصال لتنسيق الحجز.' : 'Payment is confirmed. Contact information may now be shared for booking coordination.')
-                  : (lang === 'fa' ? 'برای امنیت شما، گفتگوها ممکن است توسط تیم Iran Trip Advisor بررسی شوند. تا قبل از پرداخت، شماره تلفن، ایمیل، لینک و شناسه شبکه‌های اجتماعی قابل اشتراک نیست.' : lang === 'ar' ? 'لأمانك قد تتم مراجعة المحادثات من فريق Iran Trip Advisor. قبل الدفع لا يمكن مشاركة الهاتف أو البريد أو الروابط أو حسابات التواصل.' : 'For your safety, conversations may be reviewed by the Iran Trip Advisor team. Before payment, phone numbers, direct contact addresses, links, and social-media IDs cannot be shared.')}
+                  : (lang === 'fa' ? 'برای امنیت شما، گفتگوها ممکن است توسط تیم Iran Trip Advisor بررسی شوند. تا قبل از پرداخت، شماره تلفن، ایمیل، لینک و شناسه شبکه‌های اجتماعی حتی به شکل حروفی یا جداشده قابل اشتراک نیست.' : lang === 'ar' ? 'لأمانك قد تتم مراجعة المحادثات من فريق Iran Trip Advisor. قبل الدفع لا يمكن مشاركة الهاتف أو البريد أو الروابط أو حسابات التواصل، حتى بصيغة مكتوبة أو مفصولة.' : 'For your safety, conversations may be reviewed by the Iran Trip Advisor team. Before payment, phone numbers, direct contact addresses, links, and social-media IDs — including spelled or spaced-out versions — cannot be shared.')}
               </p>
             </div>
           </div>
+
+          {chatWarnings.length > 0 && (
+            <div className="shrink-0 border-b border-orange-200 bg-orange-50 px-4 py-3 sm:px-8">
+              <div className="mx-auto max-w-[760px] space-y-2">
+                {chatWarnings.slice(0, 3).map(warning => (
+                  <div key={warning.id} className="flex items-start gap-2.5 rounded-xl border border-orange-200/80 bg-white/70 px-3 py-2.5">
+                    <Siren className="mt-0.5 h-4 w-4 shrink-0 text-orange-600" />
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-orange-700">Iran Trip Advisor warning</p>
+                      <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-orange-950">{warning.message}</p>
+                      {warning.created_at && <p className="mt-1 text-[10px] text-orange-700/60">{new Date(warning.created_at).toLocaleString()}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {chatClosed && (
+            <div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-3 sm:px-8">
+              <div className="mx-auto flex max-w-[760px] items-start gap-2.5">
+                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                <div>
+                  <p className="text-xs font-semibold text-red-800">{closedMessage}</p>
+                  {chatCloseReason && <p className="mt-1 text-[11px] leading-relaxed text-red-700/75">{chatCloseReason}</p>}
+                </div>
+              </div>
+            </div>
+          )}
 
           <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8">
             <div className="mx-auto flex max-w-[760px] flex-col gap-4">
@@ -301,20 +469,24 @@ export default function Chat() {
                   }}
                   rows={1}
                   maxLength={4000}
-                  placeholder={lang === 'fa' ? 'پیام خود را بنویسید…' : lang === 'ar' ? 'اكتب رسالتك…' : 'Type a message…'}
-                  className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2"
+                  placeholder={chatClosed
+                    ? (lang === 'fa' ? 'این گفتگو بسته شده است' : lang === 'ar' ? 'هذه المحادثة مغلقة' : 'This conversation is closed')
+                    : (lang === 'fa' ? 'پیام خود را بنویسید…' : lang === 'ar' ? 'اكتب رسالتك…' : 'Type a message…')}
+                  className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2 disabled:cursor-not-allowed disabled:opacity-60"
                   style={{ background: C.mist, borderColor: `${C.muted}25`, color: C.ink, '--tw-ring-color': `${C.turq}30` }}
                   dir="auto"
-                  disabled={sending}
+                  disabled={sending || chatClosed}
                 />
-                <button type="submit" disabled={sending || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label="Send message">
+                <button type="submit" disabled={sending || chatClosed || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label="Send message">
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </button>
               </div>
               {error && <p role="alert" className="mt-2 text-xs leading-relaxed text-red-500">{error}</p>}
-              {!contactSharingAllowed && (
+              {chatClosed ? (
+                <p className="mt-2 text-[10px] text-red-500/80">New messages are disabled by an administrator.</p>
+              ) : !contactSharingAllowed && (
                 <p className="mt-2 text-[10px]" style={{ color: C.muted }}>
-                  Contact details are automatically blocked until booking payment is confirmed.
+                  Contact details — including numbers or IDs written as words — are automatically blocked until booking payment is confirmed.
                 </p>
               )}
             </div>
