@@ -433,23 +433,6 @@ export default function GuideDetails() {
               {name}
             </h1>
 
-            {/* Username */}
-            {guide.username && (
-              <div className="flex items-center gap-1.5 mb-4">
-                <span className="font-body text-sm text-muted-foreground">@{guide.username}</span>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(guide.username);
-                    toast.success(t('username_copied'));
-                  }}
-                  className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-border/50 transition"
-                  aria-label={t('username_copied')}
-                >
-                  <Copy className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            )}
-
             {guide.provider_code && (
               <div className="flex w-fit items-center gap-1.5 rounded-full border border-accent/20 bg-accent/[0.06] px-3 py-1.5 mb-4 -mt-2">
                 <span className="font-body text-xs font-semibold text-accent">
