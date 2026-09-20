@@ -238,6 +238,13 @@ export default function Navbar() {
                 <NotificationBell isLight={isLight} />
               </div>
 
+              {/* Keep notifications in the primary mobile header rather than
+                  behind the menu. The unread badge is consequently visible
+                  on every mobile page, including a traveler's requests. */}
+              <div className="sm:hidden">
+                <NotificationBell isLight={isLight} />
+              </div>
+
               {/* Auth buttons — desktop */}
               {!isLoadingAuth && (
                 isAuthenticated ? (

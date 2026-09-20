@@ -9,6 +9,7 @@ import { supabase } from '@/supabaseClient';
 import RequestCard from '@/components/profile/RequestCard';
 import RequestPaymentGate from '@/components/profile/RequestPaymentGate';
 import TripRequestForm from '@/components/profile/TripRequestForm';
+import { getMyActiveDispatchRecipients } from '@/api/tripRequests';
 
 const HOLIDAY_TYPE_LABELS = {
   active:       'Active',
@@ -53,6 +54,23 @@ export default function RequestsPage() {
     },
     enabled: !!user?.id,
   });
+
+  const requestIds = useMemo(() => requests.map(request => request.id), [requests]);
+  const requestIdsKey = requestIds.join(',');
+  const { data: activeDispatches = [] } = useQuery({
+    queryKey: ['trip_request_active_dispatches', user?.id, requestIdsKey],
+    queryFn: () => getMyActiveDispatchRecipients(requestIds),
+    enabled: requestIds.length > 0,
+    // A proposal immediately changes the dispatch row to `responded`; this
+    // short refresh removes that provider from the traveler's waiting card.
+    refetchInterval: 10_000,
+  });
+
+  const activeDispatchesByRequest = useMemo(() => activeDispatches.reduce((grouped, dispatch) => {
+    if (!grouped[dispatch.trip_request_id]) grouped[dispatch.trip_request_id] = [];
+    grouped[dispatch.trip_request_id].push(dispatch);
+    return grouped;
+  }, {}), [activeDispatches]);
 
   const isOverdue = (r) => Boolean(
     r.expires_at &&
@@ -108,6 +126,7 @@ export default function RequestsPage() {
       canonicalStatus: effectiveStatus || 'active',
       proposalRound: Math.max(1, Number(r.proposal_round) || 1),
       maxProposals: Math.max(1, Number(r.max_proposals) || 5),
+      dispatchedProviders: activeDispatchesByRequest[r.id] || [],
     };
   };
 

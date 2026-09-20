@@ -86,10 +86,12 @@ export default function NotificationBell({ isLight }) {
     <div ref={ref} className="relative">
       <button
         onClick={() => setOpen(v => !v)}
-        className={`relative p-2 rounded-full transition-colors ${
+        className={`relative p-2.5 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
           isLight ? 'text-white hover:bg-white/10' : 'text-foreground hover:bg-muted'
-        }`}
+        } ${unreadCount > 0 ? 'border-accent/40 bg-accent/10 shadow-[0_0_0_4px_rgba(16,185,129,0.10)]' : 'border-transparent'}`}
         aria-label="Notifications"
+        aria-haspopup="dialog"
+        aria-expanded={open}
       >
         <Bell className="w-5 h-5" />
         <span className="t-badge" data-open={badgeOpen} aria-hidden={unreadCount === 0}>

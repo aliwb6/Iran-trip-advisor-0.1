@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   MapPin, Users, Baby, ArrowRight, ArrowLeft,
-  Car, Hotel, Sparkles, Clock, ChevronDown,
+  Car, Hotel, Sparkles, Clock, ChevronDown, Send,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import ProposalsPanel from './ProposalsPanel';
 
@@ -91,6 +92,12 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
     .replace('{n}', slotCount)
     .replace('{max}', request.maxProposals);
   const proposalsBtnLabel = proposalsOpen ? t('card_hide_proposals') : t('card_view_proposals');
+  const dispatchedProviders = request.dispatchedProviders || [];
+  const dispatchedLabel = lang === 'fa'
+    ? 'درخواست برای این راهنماها/آژانس‌ها ارسال شده'
+    : lang === 'ar'
+      ? 'أُرسل الطلب إلى هؤلاء المرشدين/الوكالات'
+      : 'Request sent to these guides & agencies';
 
   const requestDetails = (
     <>
@@ -177,6 +184,39 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
           </p>
           <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{request.requirements}</p>
         </div>
+      )}
+
+      {/* Only live invitations are passed here. Once a guide or agency sends a
+          proposal their dispatch becomes responded, so this compact profile
+          strip automatically disappears for that provider. */}
+      {dispatchedProviders.length > 0 && (
+        <section className="mb-5 rounded-2xl border border-amber-400/25 bg-amber-400/5 p-3.5" aria-label={dispatchedLabel}>
+          <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
+            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-amber-400/15">
+              <Send className="h-3.5 w-3.5" />
+            </span>
+            <p className="text-xs font-semibold">{dispatchedLabel}</p>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {dispatchedProviders.map(provider => {
+              const name = provider.full_name || (lang === 'fa' ? 'راهنمای محلی' : 'Local guide');
+              const initials = name.split(' ').filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase();
+              const href = provider.role === 'agency' ? `/agencies/${provider.provider_id}` : `/guides/${provider.provider_id}`;
+              return (
+                <Link
+                  key={provider.provider_id}
+                  to={href}
+                  className="group/provider inline-flex max-w-full items-center gap-2 rounded-full border border-border/50 bg-background/80 py-1.5 pl-1.5 pr-3 text-xs font-medium text-foreground transition hover:border-accent/50 hover:bg-accent/5"
+                >
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-accent/15 text-[10px] font-bold text-accent">
+                    {provider.avatar_url ? <img src={provider.avatar_url} alt="" className="h-full w-full object-cover" /> : initials}
+                  </span>
+                  <span className="truncate group-hover/provider:text-accent">{name}</span>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       )}
 
       {/* Footer: status pill + guides-accepted pill + actions */}

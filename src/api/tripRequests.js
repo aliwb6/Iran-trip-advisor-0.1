@@ -169,6 +169,19 @@ export async function getMyTripRequests(travelerId) {
   }));
 }
 
+// This deliberately uses a server-side, owner-scoped RPC rather than exposing
+// the private dispatch ledger to the browser. A recipient disappears as soon
+// as their invitation changes from `pending` to `responded`.
+export async function getMyActiveDispatchRecipients(requestIds) {
+  if (!requestIds?.length) return [];
+
+  const { data, error } = await supabase.rpc('get_my_active_trip_request_dispatches', {
+    p_request_ids: requestIds,
+  });
+  if (error) throw error;
+  return data || [];
+}
+
 export async function rejectTripSlot(_guideId, tripRequestId) {
   const { data, error } = await supabase.rpc('guide_reject_trip_slot', {
     request_id: tripRequestId,
