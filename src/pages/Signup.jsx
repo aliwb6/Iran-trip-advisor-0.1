@@ -4,10 +4,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import {
   User, Mail, Lock, Building2, MapPin,
   ArrowRight, ArrowLeft, Eye, EyeOff, Loader2,
-  Star, Bookmark, Compass,
+  Star, Bookmark, Compass, CircleCheck, CircleX,
 } from 'lucide-react';
 import { iranianDestinations as IRAN_CITIES, popularIranianDestinations as POPULAR_CITIES } from '@/data/iranianCities';
 
@@ -41,6 +42,7 @@ export default function Signup() {
   // ── OTP flow state ────────────────────────────────────────────────────────
   const [step, setStep] = useState('form'); // 'form' | 'verify'
   const [otpValue, setOtpValue] = useState('');
+  const [otpStatus, setOtpStatus] = useState('idle'); // 'idle' | 'error' | 'success'
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -156,14 +158,14 @@ export default function Signup() {
   };
 
   // ── Verify OTP and create profile ─────────────────────────────────────────
-  const handleVerifyOtp = async () => {
-    if (otpValue.length !== 6) return;
+  const handleVerifyOtp = async (code = otpValue) => {
+    if (code.length !== 6 || otpStatus === 'success') return;
     setLoading(true);
     setError('');
     try {
       const { data, error: verifyError } = await supabase.auth.verifyOtp({
         email: formData.email,
-        token: otpValue,
+        token: code,
         type: 'signup',
       });
       if (verifyError) throw verifyError;
@@ -179,12 +181,16 @@ export default function Signup() {
           other_cities: formData.cities.length ? formData.cities : null,
           bio: formData.bio || null,
         });
-        if (profileError) throw profileError;
+      if (profileError) throw profileError;
       }
 
-      navigate('/');
-      window.location.reload();
+      setOtpStatus('success');
+      window.setTimeout(() => {
+        navigate('/');
+        window.location.reload();
+      }, 900);
     } catch (err) {
+      setOtpStatus('error');
       setError(
         lang === 'fa'
           ? 'کد وارد شده اشتباه یا منقضی شده است'
@@ -204,6 +210,8 @@ export default function Signup() {
         type: 'signup',
         email: formData.email,
       });
+      setOtpValue('');
+      setOtpStatus('idle');
       setResendCooldown(60);
       const timer = setInterval(() => {
         setResendCooldown(prev => {
@@ -316,11 +324,29 @@ export default function Signup() {
           className="w-full max-w-sm"
         >
           {step === 'verify' ? (
-            <div className="bg-card rounded-3xl border border-border/50 p-8 shadow-warm text-center">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={otpStatus === 'error' ? { opacity: 1, x: [0, -8, 8, -5, 5, 0] } : { opacity: 1, scale: 1 }}
+              transition={otpStatus === 'error' ? { duration: 0.4 } : { duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+              className="bg-card rounded-3xl border border-border/50 p-8 shadow-warm text-center"
+            >
               {/* Icon */}
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 mb-4">
-                <Mail className="w-8 h-8 text-accent" />
-              </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={otpStatus}
+                  initial={{ opacity: 0, scale: 0.75, rotate: -10 }}
+                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                  exit={{ opacity: 0, scale: 0.75, rotate: 10 }}
+                  transition={{ type: 'spring', stiffness: 330, damping: 22 }}
+                  className={`inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 ${
+                    otpStatus === 'success' ? 'bg-emerald-500/10' : otpStatus === 'error' ? 'bg-red-500/10' : 'bg-accent/10'
+                  }`}
+                >
+                  {otpStatus === 'success' ? <CircleCheck className="w-8 h-8 text-emerald-500" />
+                    : otpStatus === 'error' ? <CircleX className="w-8 h-8 text-red-500" />
+                      : <Mail className="w-8 h-8 text-accent" />}
+                </motion.div>
+              </AnimatePresence>
 
               <h2 className="font-heading text-2xl font-bold text-foreground mb-2">
                 {lang === 'fa' ? 'کد تأیید ایمیل' : 'Verify Your Email'}
@@ -332,50 +358,67 @@ export default function Signup() {
               </p>
               <p className="font-body text-accent font-semibold mb-6 text-sm">{formData.email}</p>
 
-              {error && (
-                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 font-body text-sm">
-                  {error}
-                </div>
-              )}
+              <AnimatePresence>
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, y: -6 }}
+                    animate={{ opacity: 1, height: 'auto', y: 0 }}
+                    exit={{ opacity: 0, height: 0, y: -6 }}
+                    className="mb-4 overflow-hidden rounded-xl bg-red-500/10 text-red-600"
+                  >
+                    <div className="p-3 font-body text-sm">{error}</div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-              {/* OTP Input - 6 individual boxes */}
-              <div className="flex justify-center gap-2 mb-6 dir-ltr" dir="ltr">
-                {[0,1,2,3,4,5].map(i => (
-                  <input
-                    key={i}
-                    id={`otp-${i}`}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={otpValue[i] || ''}
-                    onChange={e => {
-                      const val = e.target.value.replace(/\D/g, '');
-                      const arr = otpValue.split('');
-                      arr[i] = val;
-                      const newOtp = arr.join('').slice(0, 6);
-                      setOtpValue(newOtp);
-                      if (val && i < 5) {
-                        document.getElementById(`otp-${i+1}`)?.focus();
-                      }
-                    }}
-                    onKeyDown={e => {
-                      if (e.key === 'Backspace' && !otpValue[i] && i > 0) {
-                        document.getElementById(`otp-${i-1}`)?.focus();
-                      }
-                    }}
-                    className="w-11 h-13 text-center text-xl font-bold border-2 border-border rounded-xl bg-background text-foreground focus:outline-none focus:border-accent transition-colors"
-                    style={{ height: '52px' }}
-                  />
-                ))}
+              {/* OTP Input — supports typing, pasting, and keyboard navigation. */}
+              <div className="mb-6 flex justify-center" dir="ltr">
+                <InputOTP
+                  maxLength={6}
+                  value={otpValue}
+                  onChange={(value) => {
+                    setOtpValue(value);
+                    setError('');
+                    if (otpStatus !== 'idle') setOtpStatus('idle');
+                  }}
+                  onComplete={handleVerifyOtp}
+                  disabled={loading || otpStatus === 'success'}
+                  aria-label={lang === 'fa' ? 'کد تأیید شش رقمی' : 'Six digit verification code'}
+                  containerClassName="gap-2"
+                >
+                  <InputOTPGroup className="gap-2">
+                    {[0, 1, 2, 3, 4, 5].map((index) => (
+                      <motion.div
+                        key={index}
+                        animate={otpStatus === 'success' ? { y: [0, -8, 0], scale: [1, 1.08, 1] } : { y: 0, scale: 1 }}
+                        transition={{ duration: 0.38, delay: otpStatus === 'success' ? index * 0.055 : 0 }}
+                      >
+                        <InputOTPSlot
+                          index={index}
+                          className={`h-13 w-11 rounded-xl border-2 text-xl font-bold shadow-none transition-all first:rounded-xl first:border-2 last:rounded-xl ${
+                            otpStatus === 'error'
+                              ? 'border-red-500/70 bg-red-500/5 text-red-600'
+                              : otpStatus === 'success'
+                                ? 'border-emerald-500/70 bg-emerald-500/5 text-emerald-600'
+                                : 'border-border bg-background text-foreground'
+                          }`}
+                          style={{ height: '52px' }}
+                        />
+                      </motion.div>
+                    ))}
+                  </InputOTPGroup>
+                </InputOTP>
               </div>
 
               {/* Verify Button */}
               <button
                 onClick={handleVerifyOtp}
-                disabled={loading || otpValue.length !== 6}
+                disabled={loading || otpStatus === 'success' || otpValue.length !== 6}
                 className="w-full py-3 rounded-xl bg-accent text-white font-heading font-semibold text-base hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
               >
-                {loading ? (
+                {otpStatus === 'success' ? (
+                  <><CircleCheck className="w-4 h-4" />{lang === 'fa' ? 'تأیید شد' : 'Verified'}</>
+                ) : loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   lang === 'fa' ? 'تأیید و ورود' : 'Verify & Sign In'
@@ -404,12 +447,12 @@ export default function Signup() {
 
               {/* Back button */}
               <button
-                onClick={() => { setStep('form'); setOtpValue(''); setError(''); }}
+                onClick={() => { setStep('form'); setOtpValue(''); setError(''); setOtpStatus('idle'); }}
                 className="mt-4 font-body text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
                 {lang === 'fa' ? '← بازگشت به فرم' : '← Back to form'}
               </button>
-            </div>
+            </motion.div>
           ) : (
             <>
               {/* Header */}
