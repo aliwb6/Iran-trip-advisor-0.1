@@ -8,8 +8,7 @@ import { selectPublicTours } from '@/lib/publicTours';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, Send, MapPin, Clock, Users, Wallet,
-  Building2, Mountain, UtensilsCrossed,
-  Leaf, Compass, Loader2, ArrowLeft, ArrowRight, DollarSign,
+  Building2, Compass, Loader2, ArrowLeft, ArrowRight, DollarSign,
   Trash2, Plus, MessageSquare, Menu, X,
   Copy, Check, Paperclip, FileText,
 } from 'lucide-react';
@@ -17,7 +16,6 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import { sendChatMessage } from '../services/api.js';
 import { toast } from 'sonner';
 import { avatarFor } from '@/lib/avatar';
-import TripBuilder from '@/components/ai/TripBuilder';
 import { useChatHistory } from '@/hooks/useChatHistory';
 import { ChatMessage } from '@/components/chat/ChatMessage';
 import TripRequestForm from '@/components/profile/TripRequestForm';
@@ -352,14 +350,14 @@ HOW TO TALK:
 - Do NOT recommend a tour or guide in your first reply to a new interest. First be useful, then ask one or two natural follow-up questions to understand what the traveller truly wants (interests, when, who is travelling, pace, budget). Let the conversation breathe.
 
 WHEN (AND ONLY WHEN) TO RECOMMEND:
-- Only after you have genuinely helped AND the conversation makes a specific tour or guide a natural, well-matched next step may you suggest ONE tour OR one guide — never both, never multiples, never as a reflex.
+- Only after you have genuinely helped AND the conversation makes a specific next step natural, you may suggest up to THREE well-matched options total from the catalogue: tours, local guides, or agencies. Never recommend in your first reply and never as a reflex.
 - If nothing is a strong match, do not force a recommendation — just keep being a helpful guide, and do NOT append any block.
-- IMPORTANT: The MOMENT you name a specific tour or guide from the lists below as a suggestion, you MUST end that message with the JSON block — EVEN IF you also ask a follow-up question in the same message. Naming a tour or guide in your text without attaching the block is not allowed, because the block is what renders the clickable card the traveller can open.
+- IMPORTANT: The MOMENT you name a specific tour, guide, or agency from the lists below as a suggestion, you MUST end that message with the JSON block — EVEN IF you also ask a follow-up question in the same message. Naming an option without attaching the block is not allowed, because the block is what renders the clickable card the traveller can open.
 - Append the block at the very END of the message, with no text after it, in exactly this format:
 \`\`\`json
 {"tour_slugs": ["exact-slug"], "guide_ids": []}
 \`\`\`
-Use the exact slug (for a tour) or id (for a guide) from the lists below — put it in the matching array and leave the other array empty. Never include more than one item in total.
+Use the exact slug (for a tour) or id (for a guide or agency) from the lists below. Never include more than three items in total.
 - Do NOT append the block on turns where you are only teaching, describing, or asking questions WITHOUT naming any specific tour or guide.
 
 AVAILABLE TOURS:
@@ -382,44 +380,8 @@ CUSTOM TRIP (when nothing in the catalogue fits):
   - holiday_types: subset of Active, Local Living, Nature, Offbeat, Relaxing.
   - additional_services: subset of Air Tickets, Train Tickets, Attraction Tickets, Visa, Airport Transfer.
   - tour_type: "private" or "group" (or "").
-  - requirements: one or two sentences summarising interests, goals, and special needs.
+- requirements: a useful summary of at least 80 characters covering interests, goals, budget and special needs.
 - Do NOT output the [[TRIP_DRAFT]] block in the same message as the tour_slugs/guide_ids recommendation block. The draft block is ONLY for the custom-trip path, after explicit confirmation. Fill every field as best you can; use the defaults shown for anything unknown.`;
-}
-
-// ── Trip planning questions ───────────────────────────────────────────────────
-const TRIP_QUESTIONS = [
-  { id: 'destinations',   text: "Which cities or regions in Iran interest you? 🗺️" },
-  { id: 'start_date',     text: "When would you like to start your trip? (e.g. June 15 or 2025-06-15)" },
-  { id: 'end_date',       text: "And when would you like to return?" },
-  { id: 'adults',         text: "How many adults will be traveling?" },
-  { id: 'children',       text: "Will any children be joining? If so, how many? (say 0 if none)" },
-  { id: 'tour_type',      text: "Do you prefer a private tour or a group tour?" },
-  { id: 'holiday_type',   text: "What kind of experience? (Active / Nature / Culture / Relaxing / Local Living)" },
-  { id: 'budget',         text: "What's your approximate budget per person in USD?" },
-  { id: 'accommodation',  text: "Will you need help with accommodation? (yes / no)" },
-  { id: 'transport',      text: "Will you need help with local transportation? (yes / no)" },
-];
-
-async function extractTripDataFromAnswers(tripAnswers) {
-  const answersText = TRIP_QUESTIONS.map(q => `${q.id}: ${tripAnswers[q.id] || ''}`).join('\n');
-  const prompt = `Extract trip planning data from these Q&A answers and return ONLY valid JSON with no markdown fences or explanation:
-${answersText}
-
-Return exactly this JSON structure (fill in values from the answers, use sensible defaults):
-{"destinations_array":["city1"],"start_date":"YYYY-MM-DD","end_date":"YYYY-MM-DD","adults":1,"children":0,"tour_type":"private","holiday_types":["nature"],"needs_accommodation":true,"needs_transport":false,"notes":""}`;
-
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-    }
-  );
-  const data = await res.json();
-  const raw = data?.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-  const cleaned = raw.replace(/```(?:json)?|```/g, '').trim();
-  return JSON.parse(cleaned);
 }
 
 // ── Recommendation parsing ────────────────────────────────────────────────────
@@ -589,15 +551,8 @@ export default function AIAssistant() {
   const [loading, setLoading] = useState(false);
   const [catalogue, setCatalogue] = useState({ tours: [], guides: [], ready: false });
   const [profile] = useState({ goal: '', duration: '', group: '', budget: '', vibes: [] });
-  const [showTripBuilder, setShowTripBuilder] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [recsSheetOpen, setRecsSheetOpen] = useState(false);
-  const [rejectionCount, setRejectionCount]     = useState(0);
-  const [tripPlanningMode, setTripPlanningMode] = useState(false);
-  const [currentQuestion, setCurrentQuestion]  = useState(0);
-  const [tripAnswers, setTripAnswers]           = useState({});
-  const [tripFormOpen, setTripFormOpen]         = useState(false);
-  const [tripFormData, setTripFormData]         = useState(null);
   const [draftForModal, setDraftForModal]       = useState(null);
   const [requestModalOpen, setRequestModalOpen] = useState(false);
   const [copiedId, setCopiedId]                 = useState(null);
@@ -640,19 +595,11 @@ export default function AIAssistant() {
     scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages, loading]);
 
-  const resetTripPlanning = () => {
-    setTripPlanningMode(false);
-    setCurrentQuestion(0);
-    setTripAnswers({});
-    setRejectionCount(0);
-  };
-
   const handleNewChat = () => {
     const greeting = buildGreeting(cityHint, lang);
     createConversation(greeting, lang);
     setInput('');
     setSidebarOpen(false);
-    resetTripPlanning();
   };
 
   // Called by ChatMessage when user saves an edit.
@@ -709,7 +656,6 @@ export default function AIAssistant() {
   const sendMessage = async (textArg) => {
     const text = (textArg !== undefined ? textArg : input).trim();
     if ((!text && !attachedFile) || loading) return;
-    const lc = text.toLowerCase();
     const responseLang = detectLanguage(text);
 
     // ── Helper: resolve conversation id ────────────────────────────────────────
@@ -721,75 +667,6 @@ export default function AIAssistant() {
       }
       return id;
     };
-
-    // ── Trip planning mode: collect answers one at a time ──────────────────────
-    if (tripPlanningMode) {
-      const qId = TRIP_QUESTIONS[currentQuestion]?.id;
-      const updatedAnswers = { ...tripAnswers, [qId]: text };
-      setTripAnswers(updatedAnswers);
-      setInput('');
-
-      const convId = await resolveConvId('Trip Planning');
-      if (!convId) return;
-      appendMessage(convId, { role: 'user', content: text });
-
-      const nextQ = currentQuestion + 1;
-      if (nextQ < TRIP_QUESTIONS.length) {
-        setCurrentQuestion(nextQ);
-        appendMessage(convId, { role: 'assistant', content: TRIP_QUESTIONS[nextQ].text });
-      } else {
-        // All questions answered — extract and open form
-        setLoading(true);
-        appendMessage(convId, { role: 'assistant', content: 'Perfect! Let me put that together for you... ✨' });
-        try {
-          const extracted = await extractTripDataFromAnswers(updatedAnswers);
-          setTripFormData(extracted);
-          setTripFormOpen(true);
-        } catch {
-          appendMessage(convId, { role: 'assistant', content: "Something went wrong building your trip details. Please try again." });
-        } finally {
-          setLoading(false);
-          resetTripPlanning();
-          inputRef.current?.focus();
-        }
-      }
-      return;
-    }
-
-    // ── Rejection keyword tracking ─────────────────────────────────────────────
-    const rejectionKeywords = ['no thank', 'not interested', "don't want", 'not for me', 'skip', 'never mind', 'pass', 'nope', 'not really'];
-    const farsiRejections   = ['نه', 'نمی‌خوام', 'علاقه ندارم', 'نه ممنون'];
-    const arabicRejections  = ['لا', 'لا أريد', 'لا شكرا'];
-    const isRejection = rejectionKeywords.some(k => lc.includes(k)) ||
-      (lang === 'fa' && farsiRejections.some(k => text.includes(k))) ||
-      (lang === 'ar' && arabicRejections.some(k => text.includes(k)));
-
-    if (isRejection) {
-      const newCount = rejectionCount + 1;
-      setRejectionCount(newCount);
-      if (newCount >= 2) {
-        setTripPlanningMode(true);
-        setCurrentQuestion(0);
-        setTripAnswers({});
-        setInput('');
-        const convId = await resolveConvId('Trip Planning');
-        if (!convId) return;
-        appendMessage(convId, { role: 'user', content: text });
-        appendMessage(convId, { role: 'assistant', content: `Let me build something just for you! 🎯 First question:\n\n${TRIP_QUESTIONS[0].text}` });
-        return;
-      }
-    }
-
-    // ── Trip builder shortcut ──────────────────────────────────────────────────
-    const tripKeywords  = ['custom trip', 'create trip', 'plan trip', 'custom itinerary', 'build trip'];
-    const farsiKeywords = ['سفر سفارشی', 'سفر شخصی', 'برنامه‌ریزی سفر', 'ایجاد برنامه'];
-    const arabicKeywords = ['رحلة مخصصة', 'خطة رحلة', 'خطة سفر'];
-    if (tripKeywords.some((kw) => lc.includes(kw)) ||
-        (lang === 'fa' && farsiKeywords.some((kw) => text.includes(kw))) ||
-        (lang === 'ar' && arabicKeywords.some((kw) => text.includes(kw)))) {
-      setShowTripBuilder(true);
-      return;
-    }
 
     if (!import.meta.env.VITE_OPENROUTER_API_KEY) {
       const missing = lang === 'fa'
@@ -1263,35 +1140,24 @@ export default function AIAssistant() {
         </SheetContent>
       </Sheet>
 
-      {/* Trip Builder Modal */}
-      <TripBuilder
-        isOpen={showTripBuilder}
-        onClose={() => setShowTripBuilder(false)}
-        lang={lang}
-        dir={dir}
-      />
-
-      {/* Trip Request Form — pre-filled from AI trip planning flow */}
-      <TripRequestForm
-        isOpen={tripFormOpen}
-        onClose={() => setTripFormOpen(false)}
-        initialData={tripFormData}
-        onSuccess={() => {
-          setTripFormOpen(false);
-          if (activeId) {
-            appendMessage(activeId, {
-              role: 'assistant',
-              content: "Done! 🎉 Guides will reach out soon, up to the request's proposal limit.",
-            });
-          }
-        }}
-      />
-
       {/* Trip Request Form — pre-filled from AI conversational draft */}
       <TripRequestForm
         isOpen={requestModalOpen}
         onClose={() => setRequestModalOpen(false)}
         prefillData={draftForModal}
+        onSuccess={() => {
+          setRequestModalOpen(false);
+          if (activeId) {
+            appendMessage(activeId, {
+              role: 'assistant',
+              content: lang === 'fa'
+                ? 'درخواست سفرت ثبت شد. راهنماها و آژانس‌های مناسب برایت پیشنهاد می‌فرستند.'
+                : lang === 'ar'
+                  ? 'تم إرسال طلب رحلتك. سيرسل لك المرشدون والوكالات المناسبة عروضهم.'
+                  : 'Your trip request is sent. Suitable local guides and agencies can now send you proposals.',
+            });
+          }
+        }}
       />
     </div>
   );
@@ -1344,9 +1210,10 @@ function TourCard({ tour }) {
 // ── GuideCard ─────────────────────────────────────────────────────────────────
 function GuideCard({ guide }) {
   const specialties = Array.isArray(guide.specialties) ? guide.specialties.slice(0, 2).join(' · ') : '';
+  const isAgency = guide.role === 'agency';
   return (
     <Link
-      to={`/guides/${guide.id}`}
+      to={`/${isAgency ? 'agencies' : 'guides'}/${guide.id}`}
       className="group flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/50 hover:border-accent/40 hover:shadow-md transition-all"
     >
       <img decoding="async" loading="lazy"
@@ -1356,7 +1223,7 @@ function GuideCard({ guide }) {
       />
       <div className="flex-1 min-w-0">
         <p className="font-heading text-sm font-semibold text-foreground truncate group-hover:text-accent transition-colors">
-          {guide.full_name || 'Local guide'}
+          {guide.full_name || (isAgency ? 'Local agency' : 'Local guide')}
         </p>
         {guide.city && (
           <p className="font-body text-[11px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">

@@ -223,7 +223,12 @@ export function mapDraftToForm(draft) {
     departure_minute: departureParsed.minute,
     departure_period: departureParsed.period,
     timings_flexible,
+    // TripRequestForm owns the gender split. In a conversational draft the
+    // model usually only knows the total, so make that total visible to the
+    // first step as maleAdults rather than silently falling back to one.
     adults,
+    maleAdults: adults,
+    femaleAdults: 0,
     children,
     guide_languages,
     assistance,

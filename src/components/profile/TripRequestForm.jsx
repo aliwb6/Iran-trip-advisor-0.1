@@ -1095,7 +1095,15 @@ export default function TripRequestForm({
   // Pre-populate from prefillData (AI conversational draft) — simple direct merge
   useEffect(() => {
     if (!isOpen || !prefillData) return;
-    setForm({ ...INITIAL_FORM, ...prefillData });
+    // AI drafts carry a total adult count while the request form displays a
+    // gender split. Preserve the total in a sensible editable default.
+    const totalAdults = Math.max(1, Number(prefillData.adults) || 1);
+    setForm({
+      ...INITIAL_FORM,
+      ...prefillData,
+      maleAdults: Number(prefillData.maleAdults) || totalAdults,
+      femaleAdults: Number(prefillData.femaleAdults) || 0,
+    });
     setStep(1);
     setDirection(1);
     setErrors({});
