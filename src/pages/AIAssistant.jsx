@@ -904,10 +904,10 @@ export default function AIAssistant() {
                   <Menu className="h-4 w-4" />
                 </button>
 
-                {/* Back button — desktop only */}
+                {/* Back button — available on mobile and desktop */}
                 <button
                   onClick={() => navigate(-1)}
-                  className="hidden lg:flex h-9 w-9 items-center justify-center rounded-xl transition-colors shrink-0"
+                  className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors shrink-0"
                   style={{ background: `${C.muted}10`, color: C.teal }}
                   aria-label="Go back"
                 >
