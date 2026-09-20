@@ -1,5 +1,6 @@
+import { useRef } from 'react';
 import { useI18n } from '@/lib/i18n.jsx';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { Star, Quote } from 'lucide-react';
 
 const testimonials = [
@@ -38,17 +39,67 @@ const testimonials = [
   },
 ];
 
+function StackedTestimonial({ review, lang, isLast }) {
+  const rowRef = useRef(null);
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: rowRef,
+    offset: ['start end', 'end start'],
+  });
+  const scale = useTransform(scrollYProgress, [0, 0.42], [1.075, 1]);
+  const opacity = useTransform(
+    scrollYProgress,
+    isLast ? [0, 0.42] : [0, 0.42, 0.72, 0.9],
+    isLast ? [1, 1] : [1, 1, 1, 0],
+  );
+
+  return (
+    <div
+      ref={rowRef}
+      className="relative min-h-[72vh] sm:min-h-[86vh] last:min-h-[72vh] motion-reduce:min-h-0 motion-reduce:pb-6"
+    >
+      <motion.article
+        style={reduceMotion ? undefined : { scale, opacity }}
+        className="sticky top-[14vh] sm:top-[18vh] mx-auto w-full max-w-3xl origin-center rounded-3xl border border-border/60 bg-card p-7 shadow-warm sm:p-9 motion-reduce:relative motion-reduce:top-0"
+        aria-label={`${review.name} testimonial`}
+      >
+        <Quote className="absolute end-6 top-6 h-8 w-8 text-accent/10" aria-hidden="true" />
+
+        <div className="mb-5 flex gap-0.5" aria-label={`${review.rating} out of 5 stars`}>
+          {[...Array(review.rating)].map((_, starIndex) => (
+            <Star key={starIndex} className="h-3.5 w-3.5 fill-gold text-gold" aria-hidden="true" />
+          ))}
+        </div>
+
+        <blockquote className="mb-7 font-body text-base leading-relaxed text-foreground/75 italic sm:text-lg">
+          “{review.text[lang] || review.text.en}”
+        </blockquote>
+
+        <footer className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="font-heading text-base font-semibold text-foreground">{review.name}</p>
+            <p className="font-body text-xs text-muted-foreground">{review.origin[lang] || review.origin.en}</p>
+          </div>
+          <span className="w-fit rounded-full border border-accent/15 bg-accent/8 px-3 py-1 text-end font-body text-xs text-accent/70">
+            {review.tour[lang] || review.tour.en}
+          </span>
+        </footer>
+      </motion.article>
+    </div>
+  );
+}
+
 export default function TestimonialsSection() {
   const { t, dir, lang } = useI18n();
 
   return (
-    <section dir={dir} className="section-gap bg-sand/30">
+    <section dir={dir} className="section-gap overflow-clip bg-sand/30">
       <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="text-center mb-14"
+          className="mb-10 text-center sm:mb-14"
         >
           <p className="font-body text-xs uppercase tracking-[0.2em] text-accent mb-3 flex items-center justify-center gap-2">
             <span className="block w-6 h-px bg-accent" />
@@ -59,42 +110,14 @@ export default function TestimonialsSection() {
           <p className="font-body text-muted-foreground mt-2">{t('testimonials_subtitle')}</p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {testimonials.map((review, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="relative bg-card border border-border/60 rounded-3xl p-7 shadow-warm hover:shadow-warm-lg transition-all duration-500 hover:-translate-y-1"
-            >
-              {/* Quote icon */}
-              <Quote className="absolute top-6 end-6 w-8 h-8 text-accent/10" />
-
-              {/* Stars */}
-              <div className="flex gap-0.5 mb-5">
-                {[...Array(review.rating)].map((_, j) => (
-                  <Star key={j} className="w-3.5 h-3.5 fill-gold text-gold" />
-                ))}
-              </div>
-
-              {/* Text */}
-              <p className="font-body text-sm text-foreground/75 leading-relaxed mb-6 italic">
-                "{review.text[lang] || review.text.en}"
-              </p>
-
-              {/* Attribution */}
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="font-heading text-base font-semibold text-foreground">{review.name}</p>
-                  <p className="font-body text-xs text-muted-foreground">{review.origin[lang] || review.origin.en}</p>
-                </div>
-                <span className="text-xs font-body text-accent/70 bg-accent/8 px-3 py-1 rounded-full border border-accent/15 text-end">
-                  {review.tour[lang] || review.tour.en}
-                </span>
-              </div>
-            </motion.div>
+        <div className="mx-auto max-w-5xl" aria-label={t('testimonials_title')}>
+          {testimonials.map((review, index) => (
+            <StackedTestimonial
+              key={review.name}
+              review={review}
+              lang={lang}
+              isLast={index === testimonials.length - 1}
+            />
           ))}
         </div>
       </div>
