@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { fetchNotifications, markNotificationRead } from '@/api/tourRequestFlow';
+import { notificationDestination } from '@/lib/notificationDestination';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -21,6 +22,7 @@ const TYPE_CONFIG = {
   new_request:     { dot: 'bg-blue-400',               label: 'New Request' },
   tour_request:    { dot: 'bg-blue-400',               label: 'New Request' },
   direct_trip_request: { dot: 'bg-blue-400',           label: 'Direct Request' },
+  message:         { dot: 'bg-violet-400',             label: 'New Message' },
   proposals_ready: { dot: 'bg-violet-400',             label: 'Guides Ready' },
   guide_selected:  { dot: 'bg-emerald-400',            label: 'Selected! 🎉' },
   request_filled:  { dot: 'bg-white/30',               label: 'Not selected' },
@@ -37,10 +39,8 @@ function NotifCard({ notif, onMarkRead, onNavigate }) {
       animate={{ opacity: 1, y: 0 }}
       onClick={() => {
         if (!notif.is_read) onMarkRead(notif.id);
-        if (notif.related_request_id) {
-          const isProviderRequest = ['new_request', 'tour_request', 'direct_trip_request'].includes(notif.type);
-          onNavigate(isProviderRequest ? `/dashboard/requests/${notif.related_request_id}` : '/dashboard');
-        }
+        const destination = notificationDestination(notif);
+        if (destination) onNavigate(destination);
       }}
       className={`w-full text-left rounded-2xl border p-4 transition-colors ${
         notif.is_read
@@ -62,10 +62,10 @@ function NotifCard({ notif, onMarkRead, onNavigate }) {
             <span className="font-body text-[10px] text-white/30 shrink-0">{timeAgo(notif.created_at)}</span>
           </div>
           <p className="font-body text-xs text-white/70 leading-relaxed">{notif.message}</p>
-          {notif.related_request_id && (
+          {notificationDestination(notif) && (
             <p className="font-body text-[10px] text-white/30 mt-1 flex items-center gap-1">
               <MapPin className="w-2.5 h-2.5" />
-              Tap to view request
+              {notif.type === 'message' ? 'Tap to open chat' : 'Tap to view request'}
             </p>
           )}
         </div>

@@ -3,6 +3,7 @@ import { Bell, X, Check, CheckCheck, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationsContext } from '@/lib/NotificationsContext';
 import { useAuth } from '@/lib/AuthContext';
+import { notificationDestination } from '@/lib/notificationDestination';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -28,26 +29,6 @@ const TYPE_CONFIG = {
   request_filled:    { label: 'Trip Update',      color: 'bg-muted text-muted-foreground' },
   message:           { label: 'Message',          color: 'bg-violet-500/10 text-violet-500' },
 };
-
-function notificationDestination(notification) {
-  const requestId = notification.related_request_id;
-  if (!requestId) return null;
-
-  if (notification.type === 'proposal_received' || notification.type === 'proposals_ready') {
-    return `/profile/requests/${requestId}`;
-  }
-
-  if (
-    notification.type === 'tour_request' ||
-    notification.type === 'new_request' ||
-    notification.type === 'direct_trip_request' ||
-    notification.type === 'proposal_pending'
-  ) {
-    return `/dashboard/requests/${requestId}`;
-  }
-
-  return null;
-}
 
 export default function NotificationBell({ isLight }) {
   const { user } = useAuth();

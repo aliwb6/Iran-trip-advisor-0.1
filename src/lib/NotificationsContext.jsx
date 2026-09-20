@@ -6,7 +6,7 @@ const NotificationsContext = createContext(null);
 
 // Keep this list aligned with the canonical public.notifications table.
 // The table stores one human-readable message plus the related trip request id.
-const NOTIFICATION_FIELDS = 'id,user_id,type,message,related_request_id,is_read,created_at';
+const NOTIFICATION_FIELDS = 'id,user_id,type,message,related_request_id,related_user_id,is_read,created_at';
 
 export function NotificationsProvider({ children }) {
   const { user } = useAuth();
