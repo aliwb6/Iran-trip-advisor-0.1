@@ -270,6 +270,8 @@ function ConversationSidebar({ conversations, activeId, onNew, onSwitch, onDelet
           </span>
           {/* Close button — mobile only */}
           <button
+            type="button"
+            onPointerDown={onClose}
             onClick={onClose}
             className="lg:hidden h-7 w-7 flex items-center justify-center rounded-lg transition-colors hover:bg-black/10"
             style={{ color: C.muted }}
