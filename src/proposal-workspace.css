@@ -1,283 +1,265 @@
-/*
- * Guide/agency proposal workspace
- *
- * SubmitProposalModal intentionally keeps its existing request/proposal markup and
- * business logic untouched. This stylesheet only changes the presentation of that
- * dialog into a two-pane workspace on larger screens.
- *
- * The selector is deliberately scoped to the proposal dialog's stable form
- * signature so other Radix dialogs are not affected.
- */
+/* Proposal workspaces: desktop keeps the established split view; mobile uses
+ * full-width tabs so neither the request nor the form is squeezed or layered. */
 
-@supports selector(:has(*)) {
-  :where(
-    [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-  ) {
+.proposal-workspace__mobile-tabs,
+.proposal-review-mobile-tabs {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .proposal-workspace-dialog {
     --proposal-request-pane: 36%;
     --proposal-workspace-gap: 1.5rem;
+    width: min(96vw, 1180px) !important;
+    max-width: 1180px !important;
+    max-height: 92dvh !important;
   }
 
-  /* Keep the tourist request vertically readable even when the viewport is wide. */
-  :where(
-    [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-  ) > div:first-child > div:nth-child(2) > div:first-child > div {
+  .proposal-workspace {
+    height: min(92dvh, 860px);
+    min-height: min(680px, 92dvh);
+    max-height: 92dvh !important;
+  }
+
+  .proposal-workspace__body {
+    display: flow-root !important;
+    min-height: 0;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    padding: 1.25rem 1.5rem !important;
+  }
+
+  .proposal-trip-pane {
+    position: sticky;
+    top: 0;
+    float: left;
+    width: var(--proposal-request-pane);
+    height: calc(100% - 0.25rem);
+    max-height: calc(100% - 0.25rem);
+    margin: 0 !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+    box-sizing: border-box;
+  }
+
+  .proposal-trip-pane > div {
     grid-template-columns: minmax(0, 1fr) !important;
   }
 
-  :where(
-    [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-  ) > div:first-child > div:nth-child(2) > div:first-child > div > * {
+  .proposal-trip-pane > div > * {
     grid-column: 1 !important;
   }
 
-  @media (min-width: 960px) {
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) {
-      width: min(96vw, 1180px) !important;
-      max-width: 1180px !important;
-      max-height: 92dvh !important;
-    }
-
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child {
-      height: min(92dvh, 860px);
-      min-height: min(680px, 92dvh);
-      max-height: 92dvh !important;
-    }
-
-    /*
-     * The existing modal body remains the proposal scroll container. The request
-     * card is a sticky, independently scrollable float on the physical left. This
-     * gives both sides separate scrolling without moving or duplicating form state.
-     */
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child > div:nth-child(2) {
-      display: flow-root !important;
-      min-height: 0;
-      overflow-x: hidden !important;
-      overflow-y: auto !important;
-      overscroll-behavior: contain;
-      scrollbar-gutter: stable;
-      padding: 1.25rem 1.5rem !important;
-    }
-
-    /* Tourist request: narrower pane, fixed in view, with its own scroll. */
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child > div:nth-child(2) > div:first-child {
-      position: sticky;
-      top: 0;
-      float: left;
-      width: var(--proposal-request-pane);
-      height: calc(100% - 0.25rem);
-      max-height: calc(100% - 0.25rem);
-      margin: 0 !important;
-      overflow-x: hidden;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-gutter: stable;
-      box-sizing: border-box;
-    }
-
-    /* Proposal fields: wider right side, preserving their existing structure. */
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child > div:nth-child(2) > div:not(:first-child) {
-      margin-left: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap)) !important;
-      margin-right: 0 !important;
-      margin-top: 0 !important;
-      margin-bottom: 1.5rem !important;
-    }
-
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child > div:nth-child(2) > div:last-child {
-      margin-bottom: 0 !important;
-    }
-
-    /* Footer actions visually belong to the proposal (right) pane. */
-    :where(
-      [role="dialog"].max-w-2xl:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child > div:nth-child(3) {
-      padding-left: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap) + 1.5rem) !important;
-    }
-
-    /*
-     * Force physical left/right placement while preserving the language direction
-     * inside each form. This prevents RTL locales from swapping the workspace.
-     */
-    :where(
-      [role="dialog"].max-w-2xl[dir="rtl"]:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child > div:nth-child(2) > div {
-      direction: rtl;
-    }
-
-    :where(
-      [role="dialog"].max-w-2xl[dir="ltr"]:has(input[type="number"][placeholder="0.00"]):has(input[type="file"][multiple])
-    ) > div:first-child > div:nth-child(2) > div {
-      direction: ltr;
-    }
+  .proposal-workspace__body > div:not(.proposal-trip-pane) {
+    margin-right: 0 !important;
+    margin-bottom: 1.5rem !important;
+    margin-left: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap)) !important;
   }
 
-  /*
-   * Mobile keeps the same two-pane workspace instead of stacking the entire
-   * traveler request above the form. The proposal stays on the physical left
-   * and the request stays visible on the physical right. Each side scrolls
-   * independently, so controls remain readable without shrinking the UI.
-   */
-  @media (max-width: 959px) {
-    .proposal-workspace-dialog {
-      --proposal-request-pane: 42%;
-      --proposal-workspace-gap: 0.5rem;
-      width: calc(100vw - 0.5rem) !important;
-      max-width: calc(100vw - 0.5rem) !important;
-      max-height: 94dvh !important;
-    }
+  .proposal-workspace__body > div:last-child {
+    margin-bottom: 0 !important;
+  }
 
-    .proposal-workspace {
-      height: 94dvh;
-      max-height: 94dvh !important;
-      border-radius: 1rem !important;
-    }
-
-    .proposal-workspace > div:first-child {
-      padding: 1rem 0.875rem 0.875rem !important;
-    }
-
-    .proposal-workspace > div:first-child h2 {
-      font-size: 1rem;
-      line-height: 1.35rem;
-    }
-
-    .proposal-workspace > div:first-child > p {
-      font-size: 0.7rem;
-      line-height: 1rem;
-    }
-
-    .proposal-workspace__body {
-      display: flow-root !important;
-      min-height: 0;
-      overflow-x: hidden !important;
-      overflow-y: auto !important;
-      overscroll-behavior: contain;
-      padding: 0.75rem !important;
-      scrollbar-gutter: stable;
-    }
-
-    .proposal-trip-pane {
-      position: sticky;
-      top: 0;
-      float: right;
-      width: var(--proposal-request-pane);
-      height: calc(100% - 0.125rem);
-      max-height: calc(100% - 0.125rem);
-      margin: 0 !important;
-      padding: 0.75rem !important;
-      overflow-x: hidden;
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      scrollbar-gutter: stable;
-      box-sizing: border-box;
-      border-radius: 0.875rem !important;
-    }
-
-    .proposal-workspace__body > div:not(:first-child) {
-      width: auto;
-      min-width: 0;
-      margin-top: 0 !important;
-      margin-right: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap)) !important;
-      margin-bottom: 1rem !important;
-      margin-left: 0 !important;
-    }
-
-    .proposal-workspace__body > div:last-child {
-      margin-bottom: 0 !important;
-    }
-
-    .proposal-trip-pane h3,
-    .proposal-workspace__body > div:not(:first-child) p.text-xs {
-      font-size: 0.625rem;
-      line-height: 0.875rem;
-    }
-
-    .proposal-trip-pane > div {
-      gap: 0.75rem !important;
-    }
-
-    .proposal-trip-pane .text-sm {
-      font-size: 0.6875rem !important;
-      line-height: 1rem !important;
-    }
-
-    .proposal-trip-pane .pl-5 {
-      padding-left: 0 !important;
-      padding-inline-start: 1rem !important;
-    }
-
-    .proposal-workspace__body input,
-    .proposal-workspace__body textarea,
-    .proposal-workspace__body button {
-      font-size: 0.6875rem;
-    }
-
-    .proposal-workspace__body > div:not(:first-child) {
-      padding-inline: 0.75rem;
-    }
-
-    .proposal-workspace__footer {
-      gap: 0.375rem !important;
-      padding: 0.625rem 0.75rem !important;
-      padding-right: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap) + 0.75rem) !important;
-    }
-
-    .proposal-workspace__footer button:first-child {
-      padding-inline: 0.5rem !important;
-    }
-
-    .proposal-workspace__footer button {
-      min-height: 2.5rem;
-      font-size: 0.6875rem !important;
-    }
+  .proposal-workspace__footer {
+    padding-left: calc(var(--proposal-request-pane) + var(--proposal-workspace-gap) + 1.5rem) !important;
   }
 }
 
-/* Traveler proposal review uses the same physical mobile split: offers on the
- * left and the original request on the right. Desktop retains its established
- * request-left / proposals-right layout. */
+@media (max-width: 959px) {
+  .proposal-workspace-dialog {
+    width: calc(100vw - 1rem) !important;
+    max-width: 32rem !important;
+    max-height: 92dvh !important;
+  }
+
+  .proposal-workspace {
+    height: 92dvh;
+    max-height: 92dvh !important;
+    border-radius: 1rem !important;
+  }
+
+  .proposal-workspace > div:first-child {
+    padding: 1rem 1rem 0.875rem !important;
+  }
+
+  .proposal-workspace > div:first-child h2 {
+    font-size: 1rem;
+    line-height: 1.35rem;
+  }
+
+  .proposal-workspace > div:first-child > p {
+    font-size: 0.75rem;
+    line-height: 1.1rem;
+  }
+
+  .proposal-workspace__mobile-tabs,
+  .proposal-review-mobile-tabs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.025);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .proposal-workspace__mobile-tabs button,
+  .proposal-review-mobile-tabs button {
+    display: inline-flex;
+    min-width: 0;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    color: rgba(255, 255, 255, 0.58);
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1rem;
+    transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+  }
+
+  .proposal-workspace__mobile-tabs button[aria-selected="true"],
+  .proposal-review-mobile-tabs button[aria-selected="true"] {
+    color: rgb(153 246 228);
+    background: rgba(20, 184, 166, 0.13);
+    border-color: rgba(45, 212, 191, 0.3);
+  }
+
+  .proposal-workspace__mobile-tabs svg {
+    width: 1rem;
+    height: 1rem;
+    flex: 0 0 auto;
+  }
+
+  .proposal-workspace__body {
+    display: block !important;
+    min-height: 0;
+    padding: 1rem !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
+  }
+
+  .proposal-trip-pane {
+    position: static;
+    float: none;
+    width: 100%;
+    height: auto;
+    max-height: none;
+    margin: 0 !important;
+    padding: 1rem !important;
+    overflow: visible;
+    border-radius: 0.875rem !important;
+  }
+
+  .proposal-trip-pane > div {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .proposal-trip-pane > div > * {
+    grid-column: 1 !important;
+  }
+
+  .proposal-workspace__body[data-mobile-pane="proposal"] > .proposal-trip-pane,
+  .proposal-workspace__body[data-mobile-pane="request"] > div:not(.proposal-trip-pane) {
+    display: none;
+  }
+
+  .proposal-workspace__body[data-mobile-pane="request"] {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .proposal-workspace__body > div:not(.proposal-trip-pane) {
+    width: 100%;
+    min-width: 0;
+    margin: 0 0 1rem !important;
+  }
+
+  .proposal-workspace__body > div:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .proposal-trip-pane .text-sm,
+  .proposal-workspace__body input,
+  .proposal-workspace__body textarea,
+  .proposal-workspace__body button {
+    font-size: 0.8125rem;
+  }
+
+  .proposal-workspace__footer {
+    gap: 0.5rem !important;
+    padding: 0.75rem 1rem max(0.75rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  .proposal-workspace__footer[data-mobile-pane="request"] {
+    display: none;
+  }
+
+  .proposal-workspace__footer button {
+    min-height: 2.75rem;
+  }
+}
+
+/* Tourist-side proposal review: one readable pane at a time on phones. */
 @media (max-width: 1023px) {
+  .proposal-review-mobile-tabs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: hsl(var(--background) / 0.45);
+    border-bottom: 1px solid hsl(var(--border) / 0.5);
+  }
+
+  .proposal-review-mobile-tabs button {
+    display: inline-flex;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid transparent;
+    border-radius: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .proposal-review-mobile-tabs button[aria-selected="true"] {
+    color: hsl(var(--accent));
+    background: hsl(var(--accent) / 0.1);
+    border-color: hsl(var(--accent) / 0.28);
+  }
+
+  .proposal-review-grid {
+    height: calc(min(78dvh, 720px) - 3.75rem) !important;
+    min-height: calc(560px - 3.75rem) !important;
+  }
+
+  .proposal-review-grid[data-mobile-pane="offers"] > .proposal-review-request-pane,
+  .proposal-review-grid[data-mobile-pane="request"] > .proposal-review-offers-pane {
+    display: none;
+  }
+
+  .proposal-review-request-pane,
+  .proposal-review-offers-pane {
+    width: 100%;
+    border: 0;
+  }
+
   .proposal-review-request-pane > header {
     display: block;
   }
 
   .proposal-review-request-pane > header > div:last-child {
-    margin-top: 0.5rem;
+    margin-top: 0.75rem;
     justify-content: flex-start;
-  }
-
-  .proposal-review-request-pane h3 {
-    font-size: 0.875rem;
-    line-height: 1.15rem;
-  }
-
-  .proposal-review-request-pane .text-sm {
-    font-size: 0.625rem;
-    line-height: 0.95rem;
-  }
-
-  .proposal-review-request-pane .my-5 {
-    margin-block: 0.75rem;
-  }
-
-  .proposal-review-request-pane .my-5 > .flex {
-    gap: 0.25rem;
-  }
-
-  .proposal-review-request-pane .my-5 .text-sm {
-    font-size: 0.55rem;
-    white-space: nowrap;
   }
 
   .proposal-review-request-pane footer {
@@ -287,14 +269,5 @@
   .proposal-review-request-pane footer > div:last-child {
     width: 100%;
     justify-content: flex-start;
-  }
-
-  .proposal-review-offers-pane .rounded-2xl {
-    border-radius: 0.75rem;
-  }
-
-  .proposal-review-offers-pane .text-base {
-    font-size: 0.75rem;
-    line-height: 1rem;
   }
 }

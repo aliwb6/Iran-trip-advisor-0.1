@@ -65,6 +65,7 @@ function PrefCell({ icon: Icon, label, value }) {
 export default function RequestCard({ request, onOpen, slotCount = 0 }) {
   const { t, lang, dir } = useI18n();
   const [proposalsOpen, setProposalsOpen] = useState(() => slotCount > 0);
+  const [mobileReviewPane, setMobileReviewPane] = useState('offers');
 
   useEffect(() => {
     if (slotCount > 0) setProposalsOpen(true);
@@ -270,29 +271,56 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
       }`}
     >
       {hasVisibleProposals ? (
-        <div
-          dir="ltr"
-          className="grid h-[min(78dvh,720px)] min-h-[560px] grid-cols-[minmax(0,58fr)_minmax(0,42fr)] lg:h-[min(72vh,760px)] lg:grid-cols-[minmax(300px,38fr)_minmax(0,62fr)] lg:min-h-[560px]"
-        >
-          <section
-            dir={dir}
-            aria-label={lang === 'fa' ? 'جزئیات درخواست سفر' : lang === 'ar' ? 'تفاصيل طلب الرحلة' : 'Your request details'}
-            className="proposal-review-request-pane order-2 min-w-0 overflow-y-auto overscroll-contain border-l border-border/30 p-3 scrollbar-gutter-stable sm:p-4 lg:order-1 lg:border-l-0 lg:border-r lg:p-6"
+        <div className="proposal-review-workspace">
+          <div
+            className="proposal-review-mobile-tabs"
+            dir="ltr"
+            role="tablist"
+            aria-label={lang === 'fa' ? 'بخش‌های بررسی پیشنهادها' : lang === 'ar' ? 'أقسام مراجعة العروض' : 'Proposal review sections'}
           >
-            {requestDetails}
-          </section>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobileReviewPane === 'offers'}
+              onClick={() => setMobileReviewPane('offers')}
+            >
+              {lang === 'fa' ? 'پروپوزال‌ها' : lang === 'ar' ? 'العروض' : 'Proposals'}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobileReviewPane === 'request'}
+              onClick={() => setMobileReviewPane('request')}
+            >
+              {lang === 'fa' ? 'درخواست سفر' : lang === 'ar' ? 'طلب الرحلة' : 'Trip request'}
+            </button>
+          </div>
 
-          <section
-            dir={dir}
-            aria-label={lang === 'fa' ? 'پیشنهادهای راهنماها و آژانس‌ها' : lang === 'ar' ? 'عروض المرشدين والوكالات' : 'Guide and agency proposals'}
-            className="proposal-review-offers-pane order-1 min-w-0 overflow-y-auto overscroll-contain p-3 scrollbar-gutter-stable sm:p-4 lg:order-2 lg:p-6 [&>div]:border-t-0 [&>div]:pt-0"
+          <div
+            dir="ltr"
+            data-mobile-pane={mobileReviewPane}
+            className="proposal-review-grid grid h-[min(78dvh,720px)] min-h-[560px] grid-cols-1 lg:h-[min(72vh,760px)] lg:grid-cols-[minmax(300px,38fr)_minmax(0,62fr)] lg:min-h-[560px]"
           >
-            <ProposalsPanel
-              requestId={request.id}
-              proposalRound={request.proposalRound}
-              requestStatus={request.canonicalStatus}
-            />
-          </section>
+            <section
+              dir={dir}
+              aria-label={lang === 'fa' ? 'جزئیات درخواست سفر' : lang === 'ar' ? 'تفاصيل طلب الرحلة' : 'Your request details'}
+              className="proposal-review-request-pane min-w-0 overflow-y-auto overscroll-contain p-4 scrollbar-gutter-stable lg:border-r lg:border-border/30 lg:p-6"
+            >
+              {requestDetails}
+            </section>
+
+            <section
+              dir={dir}
+              aria-label={lang === 'fa' ? 'پیشنهادهای راهنماها و آژانس‌ها' : lang === 'ar' ? 'عروض المرشدين والوكالات' : 'Guide and agency proposals'}
+              className="proposal-review-offers-pane min-w-0 overflow-y-auto overscroll-contain p-4 scrollbar-gutter-stable lg:p-6 [&>div]:border-t-0 [&>div]:pt-0"
+            >
+              <ProposalsPanel
+                requestId={request.id}
+                proposalRound={request.proposalRound}
+                requestStatus={request.canonicalStatus}
+              />
+            </section>
+          </div>
         </div>
       ) : (
         requestDetails

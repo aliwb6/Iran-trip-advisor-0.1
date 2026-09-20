@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   Loader2, DollarSign, AlertTriangle, Upload,
   MapPin, CalendarDays, Clock, Users, Globe, Sparkles,
-  Briefcase, Plus, User, MessageSquare,
+  Briefcase, Plus, User, MessageSquare, FileText, PenLine,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -278,6 +278,7 @@ export default function SubmitProposalModal({
   const [hasTransportation, setHasTransportation] = useState(false);
   const [transportationItems, setTransportationItems] = useState([]);
   const [customTransport, setCustomTransport] = useState('');
+  const [mobilePane, setMobilePane] = useState('proposal');
   const fileInputRef = useRef(null);
   const filePickerOpenRef = useRef(false);
   const isAdminReview = Boolean(proposalToEdit);
@@ -289,6 +290,7 @@ export default function SubmitProposalModal({
 
   useEffect(() => {
     if (!open) return;
+    setMobilePane('proposal');
     if (proposalToEdit) {
       setPrice(proposalToEdit.price == null ? '' : String(proposalToEdit.price));
       setPriceType(proposalToEdit.price_type || 'per_person');
@@ -504,8 +506,37 @@ export default function SubmitProposalModal({
             )}
           </div>
 
+          <div
+            className="proposal-workspace__mobile-tabs"
+            dir="ltr"
+            role="tablist"
+            aria-label={lang === 'fa' ? 'بخش‌های ارسال پروپوزال' : lang === 'ar' ? 'أقسام إرسال العرض' : 'Proposal workspace sections'}
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobilePane === 'proposal'}
+              onClick={() => setMobilePane('proposal')}
+            >
+              <PenLine aria-hidden="true" />
+              {lang === 'fa' ? 'نوشتن پروپوزال' : lang === 'ar' ? 'كتابة العرض' : 'Write proposal'}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={mobilePane === 'request'}
+              onClick={() => setMobilePane('request')}
+            >
+              <FileText aria-hidden="true" />
+              {lang === 'fa' ? 'درخواست سفر' : lang === 'ar' ? 'طلب الرحلة' : 'Trip request'}
+            </button>
+          </div>
+
           {/* ── Scrollable body ── */}
-          <div className="proposal-workspace__body flex-1 overflow-y-auto px-6 py-5 space-y-6">
+          <div
+            className="proposal-workspace__body flex-1 overflow-y-auto px-6 py-5 space-y-6"
+            data-mobile-pane={mobilePane}
+          >
 
             {/* TRIP DETAILS PANEL */}
             <TripDetailsPanel request={request} t={t} />
@@ -729,6 +760,7 @@ export default function SubmitProposalModal({
           {/* ── Footer ── */}
           <div
             className="proposal-workspace__footer shrink-0 px-6 py-4 flex items-center gap-3"
+            data-mobile-pane={mobilePane}
             style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
           >
             <button
