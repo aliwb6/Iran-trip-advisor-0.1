@@ -157,6 +157,10 @@ export default function ProfilePage() {
     reviews:        lang === 'fa' ? 'نظرات' : lang === 'ar' ? 'المراجعات' : 'Reviews Given',
     editProfile:    lang === 'fa' ? 'ویرایش پروفایل' : lang === 'ar' ? 'تعديل الملف الشخصي' : 'Edit Profile',
     myRequests:    lang === 'fa' ? 'درخواست‌های من' : lang === 'ar' ? 'طلباتي' : 'My Requests',
+    quickActions:  lang === 'fa' ? 'دسترسی سریع' : lang === 'ar' ? 'إجراءات سريعة' : 'Quick access',
+    quickActionsDesc: lang === 'fa' ? 'سفرها و اطلاعات پروفایل‌تان را مدیریت کنید.'
+      : lang === 'ar' ? 'أدر رحلاتك ومعلومات ملفك الشخصي.'
+      : 'Manage your journeys and profile details.',
     slogan:        lang === 'fa'
       ? 'زیبایی پنهان ایران اصیل را در سفرهای فرهنگی پرمعنا کشف کن.'
       : lang === 'ar'
@@ -253,6 +257,53 @@ export default function ProfilePage() {
           </div>
         </motion.div>
       </section>
+
+      {/* Tourist mobile quick actions: these need to be visible before the
+          editable profile content, rather than appearing after it at the end
+          of the mobile layout. */}
+      {isTourist && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, delay: 0.12 }}
+          className="lg:hidden max-w-6xl mx-auto px-5 sm:px-8 mt-5"
+          aria-label={tx.quickActions}
+        >
+          <div className="relative overflow-hidden rounded-3xl bg-card border border-accent/25 p-4 shadow-lg shadow-accent/10">
+            <div className="absolute -top-12 -end-10 w-32 h-32 rounded-full bg-accent/10 blur-3xl pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <p className="font-heading text-base font-semibold text-foreground">{tx.quickActions}</p>
+                  <p className="font-body text-xs text-muted-foreground mt-0.5">{tx.quickActionsDesc}</p>
+                </div>
+                {requestCount > 0 && (
+                  <span className="shrink-0 min-w-7 h-7 px-2 rounded-full bg-gold text-navy text-xs font-bold flex items-center justify-center">
+                    {requestCount}
+                  </span>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <Link
+                  to="/profile/requests"
+                  className="min-h-24 rounded-2xl bg-accent hover:bg-accent/90 active:scale-[0.98] text-white p-3.5 flex flex-col items-start justify-between transition-all shadow-md shadow-accent/20"
+                >
+                  <ClipboardList className="w-5 h-5" />
+                  <span className="font-body text-sm font-semibold text-start leading-tight">{tx.myRequests}</span>
+                </Link>
+                <Link
+                  to="/profile/settings"
+                  className="min-h-24 rounded-2xl border border-border/60 bg-background/50 hover:border-accent/50 hover:bg-accent/5 active:scale-[0.98] p-3.5 flex flex-col items-start justify-between text-foreground transition-all"
+                >
+                  <Settings className="w-5 h-5 text-accent" />
+                  <span className="font-body text-sm font-semibold text-start leading-tight">{tx.editProfile}</span>
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      )}
 
       {/* ── Pending approval / incomplete profile banner (guide / agency only) ── */}
       {(localProfile?.role === 'guide' || localProfile?.role === 'agency') && !localProfile?.is_approved && (
@@ -479,7 +530,7 @@ export default function ProfilePage() {
           <StatTile icon={Globe} value={localProfile?.countries_visited ?? 0} label={tx.countries} />
           <StatTile icon={Star}  value={reviewCount} label={tx.reviews} />
 
-          <div className="bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl p-4 mt-4 space-y-2">
+          <div className="hidden lg:block bg-card/60 backdrop-blur-xl border border-border/40 rounded-2xl p-4 mt-4 space-y-2">
             <Link
               to="/profile/settings"
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-accent/10 hover:text-accent transition"
