@@ -1,5 +1,10 @@
-import { useRef, useState } from 'react';
-import { ImagePlus, Loader2, X } from 'lucide-react';
+import {
+  useRef,
+  useState } from 'react';
+import { ImagePlus,
+  X,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n.jsx';
