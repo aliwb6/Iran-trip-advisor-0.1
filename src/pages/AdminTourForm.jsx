@@ -1,8 +1,13 @@
-  import { useState } from 'react';
+  import {
+  useState } from 'react';
   import { useNavigate } from 'react-router-dom';
   import { supabase } from '@/supabaseClient';
   import { useI18n } from '@/lib/i18n.jsx';
-  import { Plus, Trash2, Save, Loader2 } from 'lucide-react';
+  import { Plus,
+  Trash2,
+  Save,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 
   const DAYS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30];
 
