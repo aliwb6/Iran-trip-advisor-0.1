@@ -1,5 +1,10 @@
-import { useState } from 'react';
-import { Camera, Loader2, Check, X } from 'lucide-react';
+import {
+  useState } from 'react';
+import { Camera,
+  Check,
+  X,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { avatarFor } from '@/lib/avatar';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
