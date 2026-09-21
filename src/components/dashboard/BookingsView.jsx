@@ -1,6 +1,12 @@
-import { useNavigate } from 'react-router-dom';
+import {
+  useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Loader2, MessageCircle, Users, Wallet } from 'lucide-react';
+import { CalendarDays,
+  MessageCircle,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { fetchMyBookings } from '@/api/bookings';
 import BookingContactCard from '@/components/profile/BookingContactCard';
 

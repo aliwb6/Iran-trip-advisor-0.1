@@ -6,6 +6,7 @@ import {
   Sparkles, FileText, Globe, Clock,
   Tag, Layers, PackageOpen,
 } from 'lucide-react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -99,7 +100,7 @@ export default function RequestDetailPage() {
   if (isLoadingAuth || loading) {
     return (
       <div className="min-h-screen bg-background pt-24 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        <BreathingGlow className="w-8 h-8" />
       </div>
     );
   }

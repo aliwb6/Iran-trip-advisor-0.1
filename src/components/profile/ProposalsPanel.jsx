@@ -1,15 +1,16 @@
-import { useState } from 'react';
+import {
+  useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   CheckCircle2,
   ChevronDown,
   Clock3,
-  Loader2,
   MapPin,
   Star,
   XCircle,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';

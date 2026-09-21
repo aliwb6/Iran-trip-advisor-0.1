@@ -11,6 +11,7 @@ import { allLanguages } from '@/data/languages';
 import { useSubmitTripRequest } from '@/hooks/useSupabase';
 import { useAuth } from '@/lib/AuthContext';
 
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 const COUNTRIES = [
   'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria',
   'Azerbaijan', 'Bahrain', 'Bangladesh', 'Belgium', 'Brazil', 'Canada', 'China',
@@ -322,7 +323,7 @@ function Step1({ data, onChange, onNext, isLoggedIn, isSubmitting, lang }) {
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 active:scale-[0.98] transition-all shadow-md disabled:opacity-70"
         >
           {isSubmitting
-            ? <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+            ? <BreathingGlow className="w-4 h-4" label="Submitting request" />
             : null}
           {isLoggedIn
             ? (lang === 'fa' ? 'ارسال درخواست' : lang === 'ar' ? 'إرسال الطلب' : 'Submit Request')
@@ -473,7 +474,7 @@ function Step2({ data, onBack, onSubmit, isSubmitting, lang }) {
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 active:scale-[0.98] transition-all disabled:opacity-60"
           >
             {isSubmitting ? (
-              <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+              <BreathingGlow className="w-4 h-4" label="Submitting request" />
             ) : null}
             {lang === 'fa' ? 'ارسال درخواست سفارشی' : lang === 'ar' ? 'إرسال طلب التخصيص' : 'Send Customization Request'}
             {!isSubmitting && <ArrowRight className="w-4 h-4" />}

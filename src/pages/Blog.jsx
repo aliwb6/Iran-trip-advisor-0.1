@@ -1,6 +1,11 @@
-import { useI18n } from '@/lib/i18n.jsx';
+import {
+  useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
-import { Clock, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { Clock,
+  ArrowRight,
+  ArrowLeft,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useNavigate } from 'react-router-dom';
 import { useArticles } from '@/hooks/useSupabase';
 

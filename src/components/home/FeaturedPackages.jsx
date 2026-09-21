@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, ArrowRight, ArrowLeft, Star } from 'lucide-react';
@@ -42,17 +43,8 @@ export default function FeaturedPackages() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
-            {[0, 1, 2].map(i => (
-              <div key={i} className="bg-card rounded-3xl overflow-hidden border border-border/50">
-                <div className="aspect-[4/3] animate-pulse bg-muted" />
-                <div className="p-6 space-y-3">
-                  <div className="h-6 w-3/4 animate-pulse bg-muted rounded" />
-                  <div className="h-4 w-1/2 animate-pulse bg-muted rounded" />
-                  <div className="h-4 w-full animate-pulse bg-muted rounded" />
-                </div>
-              </div>
-            ))}
+          <div className="flex min-h-[18rem] items-center justify-center">
+            <BreathingGlow label="Loading featured tours" />
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">

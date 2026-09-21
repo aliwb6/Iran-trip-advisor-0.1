@@ -1,11 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  useState,
+  useEffect,
+  useCallback } from 'react';
+import { useNavigate,
+  useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Plus, MapPin, Calendar, Users, MessageCircle,
-  RefreshCw, CheckCircle2, Clock, Zap, AlertCircle, Loader2, XCircle,
-  CreditCard, Contact, Mail, Phone,
+  Plus,
+  MapPin,
+  Calendar,
+  Users,
+  MessageCircle,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  Zap,
+  AlertCircle,
+  XCircle,
+  CreditCard,
+  Contact,
+  Mail,
+  Phone,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 import {
@@ -25,7 +42,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const STATUS_CONFIG = {
   open: {
@@ -579,20 +595,8 @@ function TripCard({ trip, onChanged, paymentConfig }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-4">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="bg-card border border-border/50 rounded-2xl p-5 space-y-3">
-          <div className="flex justify-between">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-          </div>
-          <Skeleton className="h-4 w-36" />
-          <div className="flex gap-3">
-            <Skeleton className="h-1.5 w-24 rounded-full" />
-            <Skeleton className="h-4 w-16" />
-          </div>
-        </div>
-      ))}
+    <div className="flex min-h-[18rem] items-center justify-center">
+      <Loader2 label="Loading trip requests" />
     </div>
   );
 }
@@ -675,7 +679,7 @@ export default function MyTripRequests() {
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        <Loader2 className="w-8 h-8" />
       </div>
     );
   }

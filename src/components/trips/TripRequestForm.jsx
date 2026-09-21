@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 const INTERESTS = [
   'Architecture', 'History', 'Nature', 'Food', 'Photography',
   'Desert', 'Luxury', 'Culture', 'Research', 'Art',
@@ -478,7 +479,7 @@ export default function TripRequestForm({ onClose }) {
             className="inline-flex items-center gap-2 bg-gold hover:bg-gold/90 text-black font-body font-bold rounded-xl px-5 disabled:opacity-60"
           >
             {submitting ? (
-              <div className="w-4 h-4 rounded-full border-2 border-black/30 border-t-black animate-spin" />
+              <BreathingGlow className="w-4 h-4" label="Submitting request" />
             ) : null}
             {submitting ? 'Submitting…' : 'Send to Guides'}
           </Button>

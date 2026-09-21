@@ -1,9 +1,22 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  X, ChevronLeft, ChevronRight, Check, Plus,
-  MapPin, Car, Hotel, Loader2, Calendar, Users,
+  useState,
+  useEffect,
+  useRef } from 'react';
+import { motion,
+  AnimatePresence } from 'framer-motion';
+import {
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Check,
+  Plus,
+  MapPin,
+  Car,
+  Hotel,
+  Calendar,
+  Users,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n';
 import { supabase } from '@/supabaseClient';

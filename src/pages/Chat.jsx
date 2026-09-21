@@ -1,16 +1,21 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  useEffect,
+  useRef,
+  useState } from 'react';
+import { Link,
+  useNavigate,
+  useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
-  Loader2,
   LockKeyhole,
   MessageCircle,
   Send,
   ShieldAlert,
   ShieldCheck,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';

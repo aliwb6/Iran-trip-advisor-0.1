@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, ShieldCheck, MapPin, Globe, SlidersHorizontal, X, ArrowUpDown } from 'lucide-react';
@@ -286,10 +287,8 @@ export default function Guides() {
 
         {/* Guide Grid */}
         {loading ? (
-          <div className="listing-mobile-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
-            {[0, 1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="aspect-[4/3] rounded-2xl bg-muted animate-pulse" />
-            ))}
+          <div className="flex min-h-[18rem] items-center justify-center">
+            <BreathingGlow label={loadingText} />
           </div>
         ) : error ? (
           <div className="text-center py-16">

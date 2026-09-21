@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react';
-import { CheckCircle2, Contact, Loader2, LockKeyhole, Save } from 'lucide-react';
+import {
+  useEffect,
+  useState } from 'react';
+import { CheckCircle2,
+  Contact,
+  LockKeyhole,
+  Save,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import {
   PROVIDER_CONTACT_TYPES,

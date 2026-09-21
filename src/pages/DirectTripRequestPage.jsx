@@ -1,6 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import {
+  useEffect,
+  useRef,
+  useState } from 'react';
+import { useLocation,
+  useNavigate,
+  useParams } from 'react-router-dom';
+import { AlertCircle,
+  ArrowLeft,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/supabaseClient';

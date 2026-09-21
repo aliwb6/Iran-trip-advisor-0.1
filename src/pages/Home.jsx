@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import HeroSection from '@/components/home/HeroSection';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 
 const ExperiencePhilosophy = lazy(() => import('@/components/home/ExperiencePhilosophy'));
 const HowItWorks = lazy(() => import('@/components/HowItWorks'));
@@ -43,7 +44,7 @@ function DeferredSection({ children, minHeight = 560 }) {
       className="mobile-content-visibility"
       style={shouldRender ? undefined : { minHeight }}
     >
-      {shouldRender ? <Suspense fallback={<div style={{ minHeight }} />}>{children}</Suspense> : null}
+      {shouldRender ? <Suspense fallback={<div className="flex items-center justify-center" style={{ minHeight }}><BreathingGlow label="Loading section" /></div>}>{children}</Suspense> : null}
     </div>
   );
 }

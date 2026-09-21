@@ -1,5 +1,8 @@
-import { useQuery } from '@tanstack/react-query';
-import { CreditCard, Loader2 } from 'lucide-react';
+import {
+  useQuery } from '@tanstack/react-query';
+import { CreditCard,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { fetchMyPayments } from '@/api/bookings';
 
 const money = (value, currency = 'USD') => new Intl.NumberFormat('en-US', {

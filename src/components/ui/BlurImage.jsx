@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 
 /**
  * Image wrapper that shows a muted, pulsing placeholder (matching the app's
@@ -13,7 +14,9 @@ export default function BlurImage({ src, alt = '', className = '', imgClassName 
   return (
     <div className={`relative overflow-hidden bg-muted/40 ${className}`}>
       {!loaded && (
-        <div className="absolute inset-0 animate-pulse bg-muted/60" aria-hidden="true" />
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted/40" aria-hidden="true">
+          <BreathingGlow className="w-8 h-8" label="Loading image" />
+        </div>
       )}
       <img
         src={src}

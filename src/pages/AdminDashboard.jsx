@@ -1,14 +1,37 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  useState,
+  useEffect } from 'react';
+import { Link,
+  useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { motion } from 'framer-motion';
 import {
-  LayoutDashboard, Clock, Briefcase, Users, MessageSquare, Shield,
-  Loader2, LogOut, CheckCircle2, XCircle, Edit2, Trash2, X, MapPin,
-  DollarSign, Star, AlertTriangle, Send, Image as ImageIcon,
-  Sparkles, PlusCircle, BookOpen, FileText, ExternalLink,
+  LayoutDashboard,
+  Clock,
+  Briefcase,
+  Users,
+  MessageSquare,
+  Shield,
+  LogOut,
+  CheckCircle2,
+  XCircle,
+  Edit2,
+  Trash2,
+  X,
+  MapPin,
+  DollarSign,
+  Star,
+  AlertTriangle,
+  Send,
+  Image as ImageIcon,
+  Sparkles,
+  PlusCircle,
+  BookOpen,
+  FileText,
+  ExternalLink,
   Bell,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { avatarFor } from '@/lib/avatar';
 import TourForm from '@/components/dashboard/TourForm';

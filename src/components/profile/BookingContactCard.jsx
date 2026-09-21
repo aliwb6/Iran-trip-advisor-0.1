@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import {
+  useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Check,
@@ -7,11 +8,11 @@ import {
   ExternalLink,
   Globe2,
   Instagram,
-  Loader2,
   Mail,
   MessageCircle,
   Phone,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { fetchBookingContactMethods } from '@/api/providerContacts';
 
 const iconFor = type => {

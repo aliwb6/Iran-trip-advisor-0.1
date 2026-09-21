@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { useSearchParams } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -140,11 +141,8 @@ export default function Tours() {
         />
 
         {loading ? (
-          <div className="text-center py-24">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-full border-2 border-border flex items-center justify-center animate-pulse">
-              <span className="text-3xl text-accent/40">❋</span>
-            </div>
-            <p className="font-heading text-xl text-muted-foreground font-light">{loadingText}</p>
+          <div className="flex min-h-[24rem] items-center justify-center">
+            <BreathingGlow label={loadingText} />
           </div>
         ) : error ? (
           <div className="text-center py-24">

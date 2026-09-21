@@ -1,17 +1,43 @@
 // @ts-nocheck
-import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
-import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Fragment } from 'react';
+import { Link,
+  useSearchParams,
+  useNavigate,
+  useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { supabase } from '@/supabaseClient';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { selectPublicTours } from '@/lib/publicTours';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion,
+  AnimatePresence } from 'framer-motion';
 import {
-  Sparkles, Send, MapPin, Clock, Users, Wallet,
-  Building2, Compass, Loader2, ArrowLeft, ArrowRight, DollarSign,
-  Trash2, Plus, MessageSquare, Menu, X,
-  Copy, Check, Paperclip, FileText,
+  Sparkles,
+  Send,
+  MapPin,
+  Clock,
+  Users,
+  Wallet,
+  Building2,
+  Compass,
+  ArrowLeft,
+  ArrowRight,
+  DollarSign,
+  Trash2,
+  Plus,
+  MessageSquare,
+  Menu,
+  X,
+  Copy,
+  Check,
+  Paperclip,
+  FileText,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { sendChatMessage } from '../services/api.js';
 import { toast } from 'sonner';
@@ -314,13 +340,8 @@ function ConversationSidebar({ conversations, activeId, onNew, onSwitch, onDelet
         {/* Conversation list */}
         <div className="flex-1 overflow-y-auto px-2 pb-4 space-y-0.5">
           {isLoadingConvs ? (
-            <div className="space-y-1.5 px-1 pt-1">
-              {[1, 2, 3].map((n) => (
-                <div key={n} className="flex flex-col gap-1.5 px-3 py-2.5 rounded-xl" style={{ background: `${C.muted}08` }}>
-                  <div className="h-3 rounded-full animate-pulse" style={{ background: `${C.muted}25`, width: `${60 + n * 10}%` }} />
-                  <div className="h-2 rounded-full animate-pulse" style={{ background: `${C.muted}15`, width: '40%' }} />
-                </div>
-              ))}
+            <div className="flex min-h-28 items-center justify-center">
+              <Loader2 className="h-8 w-8" label="Loading conversations" />
             </div>
           ) : conversations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 px-4 text-center">

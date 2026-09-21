@@ -1,8 +1,12 @@
-import { Link } from 'react-router-dom';
+import {
+  Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
-import { MapPin, Clock, Loader2 } from 'lucide-react';
+import { MapPin,
+  Clock,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 import { selectPublicTours } from '@/lib/publicTours';
 
