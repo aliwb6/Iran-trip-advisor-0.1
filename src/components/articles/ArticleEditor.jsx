@@ -17,25 +17,32 @@ const CATEGORIES = [
 const EMPTY = { image_url: '', title: '', excerpt: '', content: '', category: 'general' };
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
+const ARTICLE_IMAGE_BUCKET = 'article-images';
+// Some deployed environments predate the article-images migration. tour-images
+// is an existing provider-only public bucket with the same file restrictions.
+const FALLBACK_IMAGE_BUCKET = 'tour-images';
 
 export default function ArticleEditor({ userId, authorType, onSuccess, onCancel }) {
   const { t, lang, dir } = useI18n();
   const [form, setForm] = useState(EMPTY);
   const [submitting, setSubmitting] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [uploadedImagePath, setUploadedImagePath] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState(null);
   const fileInputRef = useRef(null);
 
   const isAdmin = authorType === 'admin';
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
 
-  const removeUploadedImage = async (objectPath = uploadedImagePath) => {
-    if (!objectPath) return;
-    setUploadedImagePath(null);
-    const { error } = await supabase.storage.from('article-images').remove([objectPath]);
+  const removeUploadedImage = async (asset = uploadedImage) => {
+    if (!asset) return;
+    setUploadedImage(null);
+    const { error } = await supabase.storage.from(asset.bucket).remove([asset.objectPath]);
     if (error) console.warn('Could not remove unused article image:', error.message);
   };
+
+  const isMissingBucketError = (error) =>
+    error?.statusCode === '404' || /bucket not found/i.test(error?.message || '');
 
   const handleImageUpload = async (file) => {
     if (!file) return;
@@ -52,16 +59,24 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
     try {
       const extension = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/png' ? 'png' : 'webp';
       const objectPath = `${userId}/${crypto.randomUUID()}.${extension}`;
-      const { error: uploadError } = await supabase.storage
-        .from('article-images')
+      let bucket = ARTICLE_IMAGE_BUCKET;
+      let { error: uploadError } = await supabase.storage
+        .from(bucket)
         .upload(objectPath, file, { cacheControl: '3600', upsert: false });
+
+      if (uploadError && isMissingBucketError(uploadError)) {
+        bucket = FALLBACK_IMAGE_BUCKET;
+        ({ error: uploadError } = await supabase.storage
+          .from(bucket)
+          .upload(objectPath, file, { cacheControl: '3600', upsert: false }));
+      }
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage.from('article-images').getPublicUrl(objectPath);
+      const { data } = supabase.storage.from(bucket).getPublicUrl(objectPath);
       if (!data?.publicUrl) throw new Error('Image URL could not be created.');
 
       await removeUploadedImage();
-      setUploadedImagePath(objectPath);
+      setUploadedImage({ bucket, objectPath });
       setForm(current => ({ ...current, image_url: data.publicUrl }));
     } catch (error) {
       toast.error(error.message || (lang === 'fa' ? 'آپلود تصویر ناموفق بود.' : 'Image upload failed.'));
@@ -72,12 +87,12 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
   };
 
   const handleImageUrlChange = (event) => {
-    if (uploadedImagePath) void removeUploadedImage();
+    if (uploadedImage) void removeUploadedImage();
     set('image_url')(event);
   };
 
   const clearImage = () => {
-    if (uploadedImagePath) void removeUploadedImage();
+    if (uploadedImage) void removeUploadedImage();
     setForm(current => ({ ...current, image_url: '' }));
   };
 
@@ -109,7 +124,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
       if (error) throw error;
       toast.success(t(isAdmin ? 'article_published_toast' : 'article_submitted_toast'));
       setForm(EMPTY);
-      setUploadedImagePath(null);
+      setUploadedImage(null);
       onSuccess?.();
     } catch (err) {
       toast.error(err.message || t('article_save_error'));

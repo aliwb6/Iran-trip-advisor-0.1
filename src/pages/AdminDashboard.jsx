@@ -7,6 +7,7 @@ import {
   Loader2, LogOut, CheckCircle2, XCircle, Edit2, Trash2, X, MapPin,
   DollarSign, Star, AlertTriangle, Send, Image as ImageIcon,
   Sparkles, PlusCircle, BookOpen, FileText, ExternalLink,
+  Bell,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { avatarFor } from '@/lib/avatar';
@@ -24,11 +25,14 @@ import {
 } from '@/lib/profileCompletion';
 import HomeDestinationsEditor from '@/components/admin/HomeDestinationsEditor';
 import { buildReviewModerationUpdates, persistReviewModeration } from '@/lib/reviews';
+import { useNotificationsContext } from '@/lib/NotificationsContext';
+import AdminNotificationsView from '@/components/admin/AdminNotificationsView';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const NAV = [
   { id: 'overview', label: 'Overview',       Icon: LayoutDashboard },
+  { id: 'notifications', label: 'Notifications', Icon: Bell },
   { id: 'pending',  label: 'Pending Tours',  Icon: Clock },
   { id: 'proposals', label: 'Proposal Review', Icon: FileText },
   { id: 'tours',    label: 'All Tours',      Icon: Briefcase },
@@ -185,6 +189,7 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
 
   const badgeFor = (id) => {
     if (id === 'pending')  return counts.pending;
+    if (id === 'notifications') return counts.notifications;
     if (id === 'proposals') return counts.proposals;
     if (id === 'tours')    return counts.tours;
     if (id === 'platform') return counts.platform;
@@ -1583,6 +1588,7 @@ function ArticlesView({ profile }) {
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
+  const { unreadCount } = useNotificationsContext();
 
   const [section, setSection] = useState('overview');
   const [profile, setProfile] = useState(null);
@@ -1820,6 +1826,7 @@ export default function AdminDashboard() {
   const platformTours = tours.filter(t => t.is_platform_tour);
 
   const counts = {
+    notifications: unreadCount,
     pending:  tours.filter(t => t.status === 'pending_review' || t.status === 'draft').length,
     proposals: proposals.filter(proposal => proposal.approval_status === 'pending_review').length,
     tours:    tours.length,
@@ -1875,6 +1882,8 @@ export default function AdminDashboard() {
             loading={loadingTours || loadingGuides || loadingReviews}
           />
         );
+      case 'notifications':
+        return <AdminNotificationsView onNavigate={setSection} />;
       case 'pending':
         return (
           <PendingToursView

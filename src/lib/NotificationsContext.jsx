@@ -24,7 +24,7 @@ export function NotificationsProvider({ children }) {
         .select(NOTIFICATION_FIELDS)
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .limit(100);
 
       if (error) {
         console.error('Failed to load notifications', error);
@@ -102,7 +102,7 @@ export function NotificationsProvider({ children }) {
           const notification = payload.new;
           setNotifications(prev => {
             if (prev.some(item => item.id === notification.id)) return prev;
-            return [notification, ...prev].slice(0, 20);
+            return [notification, ...prev].slice(0, 100);
           });
           if (!notification.is_read) setUnreadCount(prev => prev + 1);
         })
@@ -128,7 +128,7 @@ export function NotificationsProvider({ children }) {
   }, [userId, fetchNotifications]);
 
   return (
-    <NotificationsContext.Provider value={{ notifications, unreadCount, loading, markAllRead, markOneRead }}>
+    <NotificationsContext.Provider value={{ notifications, unreadCount, loading, refresh: fetchNotifications, markAllRead, markOneRead }}>
       {children}
     </NotificationsContext.Provider>
   );

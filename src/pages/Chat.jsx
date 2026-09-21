@@ -31,6 +31,7 @@ const C = {
   muted: '#7A8C8C',
   ink: '#0F2A2A',
 };
+const isMissingModerationSchema = error => error?.code === 'PGRST205' || /direct_chat_moderation/i.test(error?.message || '');
 
 function MessageBubble({ message, mine, senderName, lang }) {
   return (
@@ -109,7 +110,9 @@ export default function Chat() {
         ]);
 
         if (cancelled) return;
-        if (messagesRes.error || moderationRes.error) throw messagesRes.error || moderationRes.error;
+        if (messagesRes.error || (moderationRes.error && !isMissingModerationSchema(moderationRes.error))) {
+          throw messagesRes.error || moderationRes.error;
+        }
 
         let profile = publicProfileRes.data;
         if (!profile) profile = await fetchParticipantProfile(guideId);
@@ -125,7 +128,7 @@ export default function Chat() {
         });
         setMessages(messagesRes.data || []);
         setContactSharingAllowed(contactPermission === true);
-        setModeration(moderationRes.data || null);
+        setModeration(moderationRes.error ? null : moderationRes.data || null);
 
         const unreadIds = (messagesRes.data || [])
           .filter(message => message.receiver_id === user.id && !message.is_read)
