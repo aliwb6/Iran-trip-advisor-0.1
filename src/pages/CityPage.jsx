@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -396,17 +397,10 @@ export default function CityPage() {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function GridSkeleton({ shape = 'card' }) {
-  // Three placeholder tiles so the page doesn't flash an empty state before
-  // the Supabase call resolves.
+function GridSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className={`bg-card/50 border border-border/40 rounded-3xl ${shape === 'card' ? 'aspect-[4/3]' : 'h-44'} animate-pulse`}
-        />
-      ))}
+    <div className="flex min-h-[18rem] items-center justify-center">
+      <BreathingGlow label="Loading city results" />
     </div>
   );
 }
