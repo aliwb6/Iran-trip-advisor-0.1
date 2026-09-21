@@ -3,12 +3,12 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import {
-import { BreathingGlow } from '@/components/ui/BreathingGlow';
   Star, MapPin, Globe, Calendar, BadgeCheck, ChevronLeft, ChevronRight,
   ArrowRight, Map, PenLine, Plus, Minus, ChevronDown, Building2,
   Lock, MessageCircle, Copy,
   Car,
 } from 'lucide-react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { supabase } from '@/supabaseClient';
 import { canChatWithUser } from '@/api/chatAccess';
