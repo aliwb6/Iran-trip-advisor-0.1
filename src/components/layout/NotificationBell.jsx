@@ -1,5 +1,13 @@
-import { useState, useRef, useEffect } from 'react';
-import { Bell, X, Check, CheckCheck, Loader2 } from 'lucide-react';
+import {
+  useState,
+  useRef,
+  useEffect } from 'react';
+import { Bell,
+  X,
+  Check,
+  CheckCheck,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useNavigate } from 'react-router-dom';
 import { useNotificationsContext } from '@/lib/NotificationsContext';
 import { useAuth } from '@/lib/AuthContext';
