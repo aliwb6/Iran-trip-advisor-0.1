@@ -1,5 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Image as ImageIcon, Loader2, Plus, Save, Trash2, Upload } from 'lucide-react';
+import {
+  useEffect,
+  useState } from 'react';
+import { Image as ImageIcon,
+  Plus,
+  Save,
+  Trash2,
+  Upload,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { supabase } from '@/supabaseClient';
 import { SPOTLIGHT_CITIES } from '@/components/SpotlightDestinations';
