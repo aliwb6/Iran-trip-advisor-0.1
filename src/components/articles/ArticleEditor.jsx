@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { ImagePlus, Loader2, X } from 'lucide-react';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'sonner';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -14,15 +15,71 @@ const CATEGORIES = [
 ];
 
 const EMPTY = { image_url: '', title: '', excerpt: '', content: '', category: 'general' };
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const MAX_IMAGE_SIZE_BYTES = 5 * 1024 * 1024;
 
 export default function ArticleEditor({ userId, authorType, onSuccess, onCancel }) {
   const { t, lang, dir } = useI18n();
   const [form, setForm] = useState(EMPTY);
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadedImagePath, setUploadedImagePath] = useState(null);
+  const fileInputRef = useRef(null);
 
   const isAdmin = authorType === 'admin';
 
   const set = (field) => (e) => setForm(f => ({ ...f, [field]: e.target.value }));
+
+  const removeUploadedImage = async (objectPath = uploadedImagePath) => {
+    if (!objectPath) return;
+    setUploadedImagePath(null);
+    const { error } = await supabase.storage.from('article-images').remove([objectPath]);
+    if (error) console.warn('Could not remove unused article image:', error.message);
+  };
+
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+      toast.error(lang === 'fa' ? 'فقط فایل‌های JPG، PNG یا WebP مجاز هستند.' : lang === 'ar' ? 'يُسمح فقط بملفات JPG وPNG وWebP.' : 'Please choose a JPG, PNG, or WebP image.');
+      return;
+    }
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      toast.error(lang === 'fa' ? 'حجم تصویر باید حداکثر ۵ مگابایت باشد.' : lang === 'ar' ? 'يجب ألا يتجاوز حجم الصورة 5 ميغابايت.' : 'Image size must be 5 MB or smaller.');
+      return;
+    }
+
+    setUploadingImage(true);
+    try {
+      const extension = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/png' ? 'png' : 'webp';
+      const objectPath = `${userId}/${crypto.randomUUID()}.${extension}`;
+      const { error: uploadError } = await supabase.storage
+        .from('article-images')
+        .upload(objectPath, file, { cacheControl: '3600', upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('article-images').getPublicUrl(objectPath);
+      if (!data?.publicUrl) throw new Error('Image URL could not be created.');
+
+      await removeUploadedImage();
+      setUploadedImagePath(objectPath);
+      setForm(current => ({ ...current, image_url: data.publicUrl }));
+    } catch (error) {
+      toast.error(error.message || (lang === 'fa' ? 'آپلود تصویر ناموفق بود.' : 'Image upload failed.'));
+    } finally {
+      setUploadingImage(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleImageUrlChange = (event) => {
+    if (uploadedImagePath) void removeUploadedImage();
+    set('image_url')(event);
+  };
+
+  const clearImage = () => {
+    if (uploadedImagePath) void removeUploadedImage();
+    setForm(current => ({ ...current, image_url: '' }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -52,6 +109,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
       if (error) throw error;
       toast.success(t(isAdmin ? 'article_published_toast' : 'article_submitted_toast'));
       setForm(EMPTY);
+      setUploadedImagePath(null);
       onSuccess?.();
     } catch (err) {
       toast.error(err.message || t('article_save_error'));
@@ -75,23 +133,57 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
         </div>
       )}
 
-      {/* Image URL + preview */}
+      {/* Image URL or local upload + preview */}
       <div className="space-y-2">
-        <label className="block text-xs text-white/60 font-medium">{t('article_field_image')}</label>
-        <input
-          type="url"
-          value={form.image_url}
-          onChange={set('image_url')}
-          placeholder="https://..."
-          className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-teal-500/50"
-        />
-        {form.image_url && (
-          <img decoding="async" loading="lazy"
-            src={form.image_url}
-            alt={t('article_img_preview_alt')}
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-            className="mt-2 h-40 w-full object-cover rounded-xl border border-white/10"
+        <div className="flex items-center justify-between gap-3">
+          <label className="block text-xs text-white/60 font-medium">{t('article_field_image')}</label>
+          <span className="text-[11px] text-white/35">JPG, PNG, WebP · 5 MB</span>
+        </div>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            type="url"
+            value={form.image_url}
+            onChange={handleImageUrlChange}
+            placeholder="https://..."
+            dir="ltr"
+            className="min-w-0 flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-teal-500/50"
           />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            onChange={(event) => handleImageUpload(event.target.files?.[0])}
+            className="sr-only"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingImage || submitting}
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-teal-400/40 bg-teal-400/10 px-4 py-2.5 text-sm font-medium text-teal-300 transition hover:border-teal-300 hover:bg-teal-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            {uploadingImage
+              ? (lang === 'fa' ? 'در حال آپلود...' : lang === 'ar' ? 'جارٍ الرفع...' : 'Uploading...')
+              : (lang === 'fa' ? 'انتخاب از دستگاه' : lang === 'ar' ? 'اختيار من الجهاز' : 'Upload from device')}
+          </button>
+        </div>
+        {form.image_url && (
+          <div className="relative mt-2 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+            <img decoding="async" loading="lazy"
+              src={form.image_url}
+              alt={t('article_img_preview_alt')}
+              onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              className="h-44 w-full object-cover"
+            />
+            <button
+              type="button"
+              onClick={clearImage}
+              className="absolute end-2 top-2 inline-flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white transition hover:bg-red-500"
+              aria-label={lang === 'fa' ? 'حذف تصویر' : lang === 'ar' ? 'إزالة الصورة' : 'Remove image'}
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         )}
       </div>
 
