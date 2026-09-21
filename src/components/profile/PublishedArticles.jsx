@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { ArrowLeft, ArrowRight, BookOpen, Calendar } from 'lucide-react';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
@@ -43,13 +44,8 @@ export default function PublishedArticles({ articles, loading, authorName }) {
       </div>
 
       {loading ? (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2" aria-label={lang === 'fa' ? 'در حال بارگذاری مقاله‌ها' : 'Loading articles'}>
-          {[0, 1].map((item) => (
-            <div key={item} className="overflow-hidden rounded-2xl border border-border/50 bg-card">
-              <div className="aspect-[16/9] animate-pulse bg-muted" />
-              <div className="space-y-3 p-4"><div className="h-3 w-20 animate-pulse rounded bg-muted" /><div className="h-5 w-4/5 animate-pulse rounded bg-muted" /><div className="h-3 w-full animate-pulse rounded bg-muted" /></div>
-            </div>
-          ))}
+        <div className="flex min-h-[14rem] items-center justify-center">
+          <BreathingGlow label={lang === 'fa' ? 'در حال بارگذاری مقاله‌ها' : 'Loading articles'} />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
