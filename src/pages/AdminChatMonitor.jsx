@@ -1,7 +1,19 @@
-import { useState, useEffect, useMemo } from 'react';
+import {
+  useState,
+  useEffect,
+  useMemo } from 'react';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'sonner';
-import { AlertTriangle, Check, Loader2, LockKeyhole, MessageSquare, Pencil, ShieldAlert, Unlock, X } from 'lucide-react';
+import { AlertTriangle,
+  Check,
+  LockKeyhole,
+  MessageSquare,
+  Pencil,
+  ShieldAlert,
+  Unlock,
+  X,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 
 const CARD = 'bg-white/[0.03] border border-white/[0.07] rounded-2xl';
 const RULES = [
