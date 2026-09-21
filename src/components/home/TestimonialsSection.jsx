@@ -1,7 +1,8 @@
-import { useRef } from 'react';
+import { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Quote, Star } from 'lucide-react';
 import { useI18n } from '@/lib/i18n.jsx';
-import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { Star, Quote } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile.jsx';
 
 const testimonials = [
   {
@@ -39,52 +40,116 @@ const testimonials = [
   },
 ];
 
-function StackedTestimonial({ review, lang, isLast }) {
-  const rowRef = useRef(null);
-  const reduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll({
-    target: rowRef,
-    offset: ['start end', 'end start'],
-  });
-  const scale = useTransform(scrollYProgress, [0, 0.42], [1.075, 1]);
-  const opacity = useTransform(
-    scrollYProgress,
-    isLast ? [0, 0.42] : [0, 0.42, 0.72, 0.9],
-    isLast ? [1, 1] : [1, 1, 1, 0],
+const springTransition = {
+  type: 'spring',
+  stiffness: 180,
+  damping: 20,
+  mass: 0.8,
+};
+
+function ReviewCard({ review, lang, index, isExpanded, isMobile, reduceMotion }) {
+  const distance = index - (testimonials.length - 1) / 2;
+  const spread = isMobile ? 34 : 240;
+  const arc = isMobile ? 7 : 14;
+  const isCenter = distance === 0;
+
+  const expandedTransform = {
+    rotate: distance * arc,
+    x: distance * spread,
+    y: isCenter ? -18 : Math.abs(distance) * (isMobile ? 18 : 36),
+    scale: isCenter ? 1.035 : 1,
+  };
+  const stackedTransform = {
+    rotate: distance * (isMobile ? 1.5 : 2.25),
+    x: 0,
+    y: Math.abs(distance) * 7,
+    scale: 1,
+  };
+
+  return (
+    <motion.article
+      initial={false}
+      animate={isExpanded ? expandedTransform : stackedTransform}
+      transition={reduceMotion ? { duration: 0 } : springTransition}
+      style={{
+        zIndex: isCenter ? 3 : 2,
+        originX: 0.5,
+        originY: 1,
+      }}
+      tabIndex={0}
+      className="absolute inset-0 flex min-h-[21rem] w-[min(19rem,calc(100vw-3rem))] cursor-pointer flex-col rounded-3xl border border-border/70 bg-card p-6 shadow-warm outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 focus-visible:ring-offset-background sm:p-7"
+      aria-label={`${review.name} testimonial`}
+    >
+      <Quote className="absolute end-5 top-5 h-8 w-8 text-accent/10" aria-hidden="true" />
+
+      <div className="mb-5 flex gap-0.5" aria-label={`${review.rating} out of 5 stars`}>
+        {[...Array(review.rating)].map((_, starIndex) => (
+          <Star key={starIndex} className="h-3.5 w-3.5 fill-gold text-gold" aria-hidden="true" />
+        ))}
+      </div>
+
+      <blockquote className="mb-6 flex-1 font-body text-sm leading-relaxed text-foreground/75 italic sm:text-base">
+        “{review.text[lang] || review.text.en}”
+      </blockquote>
+
+      <footer className="space-y-3">
+        <div>
+          <p className="font-heading text-base font-semibold text-foreground">{review.name}</p>
+          <p className="font-body text-xs text-muted-foreground">{review.origin[lang] || review.origin.en}</p>
+        </div>
+        <span className="block w-fit max-w-full rounded-full border border-accent/15 bg-accent/8 px-3 py-1 font-body text-xs text-accent/70">
+          {review.tour[lang] || review.tour.en}
+        </span>
+      </footer>
+    </motion.article>
   );
+}
+
+function TestimonialStampArc({ lang }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const isMobile = useIsMobile();
+  const reduceMotion = useReducedMotion();
+
+  const closeWhenFocusLeaves = (event) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setIsExpanded(false);
+  };
 
   return (
     <div
-      ref={rowRef}
-      className="relative min-h-[72vh] sm:min-h-[86vh] last:min-h-[72vh] motion-reduce:min-h-0 motion-reduce:pb-6"
+      className="relative mx-auto flex h-[23rem] w-full max-w-5xl items-start justify-center pt-4 sm:h-[28rem] sm:pt-8"
+      onPointerEnter={(event) => {
+        if (event.pointerType === 'mouse') setIsExpanded(true);
+      }}
+      onPointerLeave={(event) => {
+        if (event.pointerType === 'mouse') setIsExpanded(false);
+      }}
+      onPointerUp={(event) => {
+        if (event.pointerType !== 'mouse') setIsExpanded((current) => !current);
+      }}
+      onFocusCapture={() => setIsExpanded(true)}
+      onBlurCapture={closeWhenFocusLeaves}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') setIsExpanded(false);
+      }}
+      aria-label="Tourist review cards"
+      data-expanded={isExpanded}
     >
-      <motion.article
-        style={reduceMotion ? undefined : { scale, opacity }}
-        className="sticky top-[14vh] sm:top-[18vh] mx-auto w-full max-w-3xl origin-center rounded-3xl border border-border/60 bg-card p-7 shadow-warm sm:p-9 motion-reduce:relative motion-reduce:top-0"
-        aria-label={`${review.name} testimonial`}
-      >
-        <Quote className="absolute end-6 top-6 h-8 w-8 text-accent/10" aria-hidden="true" />
-
-        <div className="mb-5 flex gap-0.5" aria-label={`${review.rating} out of 5 stars`}>
-          {[...Array(review.rating)].map((_, starIndex) => (
-            <Star key={starIndex} className="h-3.5 w-3.5 fill-gold text-gold" aria-hidden="true" />
-          ))}
-        </div>
-
-        <blockquote className="mb-7 font-body text-base leading-relaxed text-foreground/75 italic sm:text-lg">
-          “{review.text[lang] || review.text.en}”
-        </blockquote>
-
-        <footer className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="font-heading text-base font-semibold text-foreground">{review.name}</p>
-            <p className="font-body text-xs text-muted-foreground">{review.origin[lang] || review.origin.en}</p>
-          </div>
-          <span className="w-fit rounded-full border border-accent/15 bg-accent/8 px-3 py-1 text-end font-body text-xs text-accent/70">
-            {review.tour[lang] || review.tour.en}
-          </span>
-        </footer>
-      </motion.article>
+      <span className="sr-only">
+        Focus, hover, or tap the review stack to fan out all traveler stories.
+      </span>
+      <div className="relative h-[21rem] w-[min(19rem,calc(100vw-3rem))]">
+        {testimonials.map((review, index) => (
+          <ReviewCard
+            key={review.name}
+            review={review}
+            lang={lang}
+            index={index}
+            isExpanded={isExpanded}
+            isMobile={isMobile}
+            reduceMotion={reduceMotion}
+          />
+        ))}
+      </div>
     </div>
   );
 }
@@ -94,32 +159,23 @@ export default function TestimonialsSection() {
 
   return (
     <section dir={dir} className="section-gap overflow-clip bg-sand/30">
-      <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-10 text-center sm:mb-14"
+          className="mb-7 text-center sm:mb-10"
         >
-          <p className="font-body text-xs uppercase tracking-[0.2em] text-accent mb-3 flex items-center justify-center gap-2">
-            <span className="block w-6 h-px bg-accent" />
+          <p className="mb-3 flex items-center justify-center gap-2 font-body text-xs uppercase tracking-[0.2em] text-accent">
+            <span className="block h-px w-6 bg-accent" />
             {t('testimonials_eyebrow')}
-            <span className="block w-6 h-px bg-accent" />
+            <span className="block h-px w-6 bg-accent" />
           </p>
           <h2 className="font-heading text-display-sm text-foreground">{t('testimonials_title')}</h2>
-          <p className="font-body text-muted-foreground mt-2">{t('testimonials_subtitle')}</p>
+          <p className="mt-2 font-body text-muted-foreground">{t('testimonials_subtitle')}</p>
         </motion.div>
 
-        <div className="mx-auto max-w-5xl" aria-label={t('testimonials_title')}>
-          {testimonials.map((review, index) => (
-            <StackedTestimonial
-              key={review.name}
-              review={review}
-              lang={lang}
-              isLast={index === testimonials.length - 1}
-            />
-          ))}
-        </div>
+        <TestimonialStampArc lang={lang} />
       </div>
     </section>
   );
