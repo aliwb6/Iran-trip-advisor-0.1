@@ -6,9 +6,10 @@ import { supabase } from '@/supabaseClient';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
-import { Menu, X, Compass, ArrowRight, LogOut, LayoutDashboard, Shield, User } from 'lucide-react';
+import { Menu, X, Compass, LogOut, LayoutDashboard, Shield } from 'lucide-react';
 import { preloadRoute } from '@/lib/route-loaders';
 import { getAvailableTripRequests } from '@/api/tripRequests';
+import MobileCircleMenu from './MobileCircleMenu';
 
 const UserDropdown = lazy(() => import('@/components/navbar/UserDropdown'));
 
@@ -124,15 +125,6 @@ export default function Navbar() {
       window.removeEventListener('resize', handleWindowResize);
     };
   }, [selectedNavPath, lang]);
-
-  const fullName = profile?.full_name || user?.user_metadata?.full_name || '';
-  const initials = fullName
-    .split(' ')
-    .filter(Boolean)
-    .map(n => n[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase() || '?';
 
   return (
     <>
@@ -355,154 +347,18 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile Menu */}
-      {mobileOpen && (
-          <div
-            dir={dir}
-            className="fixed inset-0 z-40 bg-background/97 backdrop-blur-2xl lg:hidden overflow-y-auto"
-          >
-            <div className="pt-20 pb-10 px-6">
-              {/* Nav links */}
-              <div className="space-y-1 mb-8">
-                {[{ path: '/', label: t('nav_home') }, ...navLinks].map((link) => (
-                  <div
-                    key={link.path}
-                  >
-                    <Link
-                      to={link.path}
-                      className={`flex items-center justify-between py-4 border-b border-border/20 group ${
-                        isActive(link.path) ? 'text-accent' : 'text-foreground'
-                      }`}
-                    >
-                      <span className="font-heading text-2xl font-light">{link.label}</span>
-                      <ArrowRight className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-all ${
-                        dir === 'rtl' ? 'rotate-180' : ''
-                      } ${isActive(link.path) ? 'opacity-100 text-accent' : ''}`} />
-                    </Link>
-                  </div>
-                ))}
-
-                {/* Find Jobs — mobile, guides/agencies only */}
-                {isGuideOrAgency && (
-                  <div
-                    className="relative"
-                  >
-                    <Link
-                      to="/dashboard/requests"
-                      className="flex items-center justify-between py-4 border-b border-border/20 group text-accent"
-                    >
-                      <span className="font-heading text-2xl font-semibold">Find Jobs</span>
-                      <ArrowRight className={`w-4 h-4 opacity-100 text-accent ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-                    </Link>
-                    {openRequestCount > 0 && (
-                      <span
-                        style={{
-                          position: 'absolute',
-                          top: '-10px',
-                          right: '-10px',
-                          minWidth: '22px',
-                          height: '22px',
-                          borderRadius: '999px',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          fontSize: '11px',
-                          fontWeight: '700',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: '0 4px',
-                          zIndex: 50,
-                          pointerEvents: 'none',
-                          boxShadow: '0 0 0 2px var(--background)',
-                          lineHeight: 1,
-                        }}
-                      >
-                        {openRequestCount > 99 ? '99+' : openRequestCount}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Notification Bell — mobile */}
-              <div className="flex justify-center mb-4">
-                <NotificationBell isLight={false} />
-              </div>
-
-              {/* Mobile auth section */}
-              {!isLoadingAuth && (
-                isAuthenticated ? (
-                  <div className="flex items-center gap-3 mb-6 p-4 rounded-2xl bg-muted/50 border border-border/30">
-                    <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                      <span className="font-body text-sm font-bold text-white">{initials}</span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-body text-sm font-medium text-foreground truncate">{fullName || t('common_user')}</p>
-                      <p className="font-body text-xs text-muted-foreground capitalize">{role || t('role_traveler')}</p>
-                    </div>
-                    {isAdmin && (
-                      <Link
-                        to="/admin"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-border/50 font-body text-xs font-medium text-foreground hover:bg-muted/50 transition"
-                      >
-                        <Shield className="w-3.5 h-3.5" />
-                        {t('nav_admin_panel')}
-                      </Link>
-                    )}
-                    {isGuideOrAgency && (
-                      <Link
-                        to="/dashboard"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent text-white font-body text-xs font-medium"
-                      >
-                        <LayoutDashboard className="w-3.5 h-3.5" />
-                        {t('nav_dashboard')}
-                      </Link>
-                    )}
-                    {isTourist && (
-                      <Link
-                        to="/profile"
-                        className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-accent text-white font-body text-xs font-medium"
-                      >
-                        <User className="w-3.5 h-3.5" />
-                        {t('nav_profile')}
-                      </Link>
-                    )}
-                    <button
-                      onClick={() => logout()}
-                      className="w-8 h-8 rounded-lg border border-border/50 flex items-center justify-center text-muted-foreground hover:text-destructive transition"
-                      title={t('auth_signout')}
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex gap-3 mb-6">
-                    <Link
-                      to="/login"
-                      className="flex-1 text-center py-3 rounded-xl border border-border/60 font-body text-sm font-medium text-foreground hover:bg-muted/50 transition"
-                    >
-                      {t('auth_signin')}
-                    </Link>
-                    <Link
-                      to="/signup"
-                      className="flex-1 text-center py-3 rounded-xl bg-accent font-body text-sm font-semibold text-white hover:bg-accent/90 transition"
-                    >
-                      {t('auth_signup')}
-                    </Link>
-                  </div>
-                )
-              )}
-
-              {/* Mobile controls */}
-              <div className="flex items-center gap-3 pt-2">
-                <ThemeToggle />
-                <LanguageSwitcher />
-              </div>
-            </div>
-          </div>
-      )}
+      <MobileCircleMenu
+        open={mobileOpen}
+        onClose={() => setMobileOpen(false)}
+        dir={dir}
+        isActive={isActive}
+        t={t}
+        isAdmin={isAdmin}
+        isGuideOrAgency={isGuideOrAgency}
+        isTourist={isTourist}
+        isAuthenticated={isAuthenticated}
+        logout={logout}
+      />
     </>
   );
 }
