@@ -72,20 +72,8 @@ function ProposalCountPill({ count, max }) {
 
 function LoadingState() {
   return (
-    <div className="space-y-3">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl p-5 animate-pulse space-y-3">
-          <div className="flex justify-between">
-            <div className="h-4 w-40 bg-white/10 rounded-lg" />
-            <div className="h-5 w-24 bg-white/10 rounded-full" />
-          </div>
-          <div className="flex gap-2">
-            <div className="h-5 w-28 bg-white/10 rounded-md" />
-            <div className="h-5 w-20 bg-white/10 rounded-md" />
-          </div>
-          <div className="h-8 w-full bg-white/10 rounded-xl" />
-        </div>
-      ))}
+    <div className="flex min-h-[18rem] items-center justify-center">
+      <Loader2 className="w-12 h-12" label="Loading requests" />
     </div>
   );
 }
@@ -457,7 +445,7 @@ export default function GuideRequestsView({ userId }) {
           disabled={loading}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 text-xs transition disabled:opacity-40"
         >
-          <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? <Loader2 className="w-3 h-3" label="Refreshing requests" /> : <RefreshCw className="w-3 h-3" />}
           Refresh
         </button>
       </div>
