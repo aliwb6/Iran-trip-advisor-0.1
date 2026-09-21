@@ -1,15 +1,34 @@
 // @ts-nocheck
-import { useState, useRef, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  useState,
+  useRef,
+  useEffect } from 'react';
+import { Link,
+  useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
-import { motion, AnimatePresence } from 'framer-motion';
-import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { motion,
+  AnimatePresence } from 'framer-motion';
+import { InputOTP,
+  InputOTPGroup,
+  InputOTPSlot } from '@/components/ui/input-otp';
 import {
-  User, Mail, Lock, Building2, MapPin,
-  ArrowRight, ArrowLeft, Eye, EyeOff, Loader2,
-  Star, Bookmark, Compass, CircleCheck, CircleX,
+  User,
+  Mail,
+  Lock,
+  Building2,
+  MapPin,
+  ArrowRight,
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  Star,
+  Bookmark,
+  Compass,
+  CircleCheck,
+  CircleX,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { iranianDestinations as IRAN_CITIES, popularIranianDestinations as POPULAR_CITIES } from '@/data/iranianCities';
 
 const BENEFITS = [
