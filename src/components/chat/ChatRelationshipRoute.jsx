@@ -3,10 +3,7 @@ import {
   useLocation,
   useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2,
-  MessageCircle,
-  ShieldCheck,
-} from 'lucide-react';
+import { MessageCircle, ShieldCheck } from 'lucide-react';
 import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
