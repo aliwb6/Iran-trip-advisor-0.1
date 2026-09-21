@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { Bell, CheckCheck, RefreshCw, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -149,7 +150,7 @@ export default function NotificationsView({ userId }) {
             disabled={loading}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 text-xs transition disabled:opacity-40"
           >
-            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? <BreathingGlow className="w-3 h-3" label="Refreshing notifications" /> : <RefreshCw className="w-3 h-3" />}
             Refresh
           </button>
         </div>
@@ -184,14 +185,8 @@ export default function NotificationsView({ userId }) {
 
       {/* Content */}
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-[hsl(222,45%,14%)] border border-white/[0.06] rounded-2xl p-4 animate-pulse space-y-2">
-              <div className="h-3 w-20 bg-white/10 rounded" />
-              <div className="h-4 w-full bg-white/10 rounded" />
-              <div className="h-3 w-32 bg-white/10 rounded" />
-            </div>
-          ))}
+        <div className="flex min-h-[16rem] items-center justify-center">
+          <BreathingGlow label="Loading notifications" />
         </div>
       ) : displayed.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
