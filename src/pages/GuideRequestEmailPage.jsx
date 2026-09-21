@@ -1,18 +1,24 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  useEffect,
+  useMemo,
+  useState } from 'react';
+import { Link,
+  useNavigate,
+  useParams,
+  useSearchParams } from 'react-router-dom';
 import {
   ArrowLeft,
   CalendarDays,
   CheckCircle2,
   Clock,
   Globe,
-  Loader2,
   MapPin,
   PackageOpen,
   Send,
   ShieldCheck,
   Users,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
