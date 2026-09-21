@@ -1,7 +1,13 @@
-import { useRef, useState } from 'react';
+import {
+  useRef,
+  useState } from 'react';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
-import { CheckCircle2, Loader2, Upload, X } from 'lucide-react';
+import { CheckCircle2,
+  Upload,
+  X,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
