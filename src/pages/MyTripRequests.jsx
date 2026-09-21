@@ -596,7 +596,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
 function LoadingSkeleton() {
   return (
     <div className="flex min-h-[18rem] items-center justify-center">
-      <BreathingGlow label="Loading trip requests" />
+      <Loader2 label="Loading trip requests" />
     </div>
   );
 }
@@ -679,7 +679,7 @@ export default function MyTripRequests() {
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
-        <BreathingGlow className="w-8 h-8" />
+        <Loader2 className="w-8 h-8" />
       </div>
     );
   }
