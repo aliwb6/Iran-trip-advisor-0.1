@@ -1,11 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import {
+  useState,
+  useEffect,
+  useCallback } from 'react';
+import { useNavigate,
+  useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Plus, MapPin, Calendar, Users, MessageCircle,
-  RefreshCw, CheckCircle2, Clock, Zap, AlertCircle, Loader2, XCircle,
-  CreditCard, Contact, Mail, Phone,
+  Plus,
+  MapPin,
+  Calendar,
+  Users,
+  MessageCircle,
+  RefreshCw,
+  CheckCircle2,
+  Clock,
+  Zap,
+  AlertCircle,
+  XCircle,
+  CreditCard,
+  Contact,
+  Mail,
+  Phone,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { useAuth } from '../lib/AuthContext';
 import {
