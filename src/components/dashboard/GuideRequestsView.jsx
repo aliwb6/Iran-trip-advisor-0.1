@@ -1,10 +1,21 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Bell, Calendar, Users, Globe, FileText,
-  Clock, RefreshCw, AlertCircle, CheckCircle2,
-  Loader2,
+  useState,
+  useEffect,
+  useCallback } from 'react';
+import { motion,
+  AnimatePresence } from 'framer-motion';
+import {
+  Bell,
+  Calendar,
+  Users,
+  Globe,
+  FileText,
+  Clock,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/supabaseClient';
