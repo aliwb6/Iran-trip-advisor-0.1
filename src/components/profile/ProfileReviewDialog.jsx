@@ -1,8 +1,6 @@
 import {
   useState } from 'react';
-import { Loader2,
-  Star,
-} from 'lucide-react';
+import { Star } from 'lucide-react';
 import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import {
