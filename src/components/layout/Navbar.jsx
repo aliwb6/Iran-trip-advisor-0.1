@@ -4,7 +4,6 @@ import { useI18n } from '@/lib/i18n.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/supabaseClient';
 import LanguageSwitcher from './LanguageSwitcher';
-import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
 import { Menu, X, Compass, LogOut, LayoutDashboard, Shield } from 'lucide-react';
 import { preloadRoute } from '@/lib/route-loaders';
@@ -225,7 +224,6 @@ export default function Navbar() {
             {/* Right controls */}
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-2">
-                <ThemeToggle />
                 <LanguageSwitcher />
                 <NotificationBell isLight={isLight} />
               </div>
