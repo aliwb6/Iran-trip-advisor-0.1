@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 import { toast } from 'sonner';
 import { Star, Trash2, PenLine, ChevronRight } from 'lucide-react';
@@ -77,10 +78,8 @@ export default function MyArticlesSection({ user }) {
 
       {/* Article list */}
       {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="h-24 rounded-xl bg-white/[0.04] animate-pulse" />
-          ))}
+        <div className="flex min-h-[14rem] items-center justify-center">
+          <BreathingGlow label="Loading articles" />
         </div>
       ) : articles.length === 0 ? (
         <div className="text-center py-16 text-white/40">
