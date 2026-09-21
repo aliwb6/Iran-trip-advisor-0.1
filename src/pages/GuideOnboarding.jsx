@@ -1,9 +1,14 @@
-import { useState } from 'react';
+import {
+  useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
-import { MapPin, Star, Loader2, Check } from 'lucide-react';
+import { MapPin,
+  Star,
+  Check,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 
 const SPECIALTY_OPTIONS = [
   { en: 'History & Archaeology', fa: 'تاریخ و باستان‌شناسی', ar: 'التاريخ والآثار' },
