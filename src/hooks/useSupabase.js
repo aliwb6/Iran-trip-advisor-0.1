@@ -618,15 +618,27 @@ export function useArticles({ featured = false } = {}) {
 }
 
 /** Fetch one public article for the public article-detail route. */
-export function useArticleBySlug(slug) {
+export function useArticleBySlug(slug, initialArticle = null) {
   const [article, setArticle] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const hasInitialArticle = initialArticle?.slug === slug;
+  const [loading, setLoading] = useState(!hasInitialArticle);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     let isMounted = true;
 
     const fetchArticle = async () => {
+      // The article card already contains the complete public row. Reuse it
+      // after a click so opening an article does not depend on a second API
+      // request. Direct links and page refreshes still fetch the article.
+      if (hasInitialArticle) {
+        if (isMounted) {
+          setArticle(initialArticle);
+          setLoading(false);
+        }
+        return;
+      }
+
       if (!slug) {
         if (isMounted) {
           setArticle(null);
@@ -639,7 +651,7 @@ export function useArticleBySlug(slug) {
       try {
         const { data, error: err } = await supabase
           .from('articles')
-          .select('*, author_profile:profiles!author_id(full_name)')
+          .select('*')
           .eq('slug', slug)
           .eq('status', 'approved')
           .eq('is_published', true)
@@ -662,9 +674,13 @@ export function useArticleBySlug(slug) {
 
     fetchArticle();
     return () => { isMounted = false; };
-  }, [slug]);
+  }, [slug, hasInitialArticle, initialArticle]);
 
-  return { article, loading, error };
+  return {
+    article: hasInitialArticle ? initialArticle : article,
+    loading: hasInitialArticle ? false : loading,
+    error,
+  };
 }
 
 export function useGuideArticles(authorId) {

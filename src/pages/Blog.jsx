@@ -69,7 +69,7 @@ export default function Blog() {
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            onClick={() => navigate(`/blog/${hero.slug}`)}
+            onClick={() => navigate(`/blog/${hero.slug}`, { state: { article: hero } })}
             className="group grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16 cursor-pointer"
           >
             <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
@@ -123,7 +123,7 @@ export default function Blog() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                onClick={() => navigate(`/blog/${article.slug}`)}
+                onClick={() => navigate(`/blog/${article.slug}`, { state: { article } })}
                 className="group cursor-pointer"
               >
                 <div className="aspect-[4/3] rounded-2xl overflow-hidden mb-4 bg-muted">

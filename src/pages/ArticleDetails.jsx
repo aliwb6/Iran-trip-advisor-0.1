@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import { 
@@ -8,9 +8,11 @@ import { useArticleBySlug } from '@/hooks/useSupabase';
 
 export default function ArticleDetails() {
   const { slug } = useParams();
+  const { state } = useLocation();
   const { t, lang, dir } = useI18n();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
-  const { article, loading } = useArticleBySlug(slug);
+  const routeArticle = state?.article?.slug === slug ? state.article : null;
+  const { article, loading } = useArticleBySlug(slug, routeArticle);
 
   if (loading) {
     return (
@@ -37,7 +39,7 @@ export default function ArticleDetails() {
   const excerpt = localized('excerpt');
   const content = localized('content');
   const category = article.category || '';
-  const author = article.author_profile?.full_name || 'Iran Trip Advisor';
+  const author = 'Iran Trip Advisor';
   const date = article.created_at
     ? new Date(article.created_at).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US')
     : '';
