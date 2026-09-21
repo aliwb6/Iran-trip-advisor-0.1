@@ -1,5 +1,11 @@
-import { useState, useEffect } from 'react';
-import { Pencil, Check, X, Loader2 } from 'lucide-react';
+import {
+  useState,
+  useEffect } from 'react';
+import { Pencil,
+  Check,
+  X,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useI18n } from '@/lib/i18n.jsx';
 
 // Inline editable row. View mode shows label + value + pencil icon.
