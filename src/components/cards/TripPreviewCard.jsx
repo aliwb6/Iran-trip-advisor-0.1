@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { ChevronLeft, CheckCircle } from 'lucide-react';
 
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 function InfoBox({ icon, label, value, lang }) {
   return (
     <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
@@ -123,7 +124,7 @@ export default function TripPreviewCard({
         >
           {loading ? (
             <>
-              <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent" />
+              <BreathingGlow className="h-5 w-5" label="Loading trip" />
               {lang === 'fa' ? 'در حال ذخیره...' : lang === 'ar' ? 'جاري الحفظ...' : 'Saving...'}
             </>
           ) : (
