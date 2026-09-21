@@ -1,7 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Bot, Compass, FileText, LogIn, Menu, UserRound, UserPlus, X } from 'lucide-react';
+import {
+  Bot,
+  Compass,
+  FileText,
+  LayoutDashboard,
+  LogIn,
+  Menu,
+  Shield,
+  UserRound,
+  UserPlus,
+  X,
+} from 'lucide-react';
 import { useI18n } from '@/lib/i18n.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import { preloadRoute } from '@/lib/route-loaders';
@@ -15,7 +26,7 @@ const itemMotion = {
 export default function MobileHomePrimaryNav() {
   const { pathname } = useLocation();
   const { t, dir } = useI18n();
-  const { isAuthenticated, profile, user } = useAuth();
+  const { isAuthenticated, isLoadingAuth, profile, user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const isHome = pathname === '/';
 
@@ -46,9 +57,10 @@ export default function MobileHomePrimaryNav() {
   if (!isHome) return null;
 
   const role = profile?.role || user?.user_metadata?.role;
+  const isAdmin = profile?.role === 'admin' || profile?.is_admin === true;
   const isProvider = role === 'guide' || role === 'agency';
-  const accountPath = role === 'admin' ? '/admin' : isProvider ? '/dashboard' : '/profile';
-  const accountLabel = role === 'admin' ? t('nav_admin_panel') : isProvider ? t('nav_dashboard') : t('nav_profile');
+  const accountPath = isAdmin ? '/admin' : isProvider ? '/dashboard' : '/profile';
+  const accountLabel = isAdmin ? t('nav_admin_panel') : isProvider ? t('nav_dashboard') : t('nav_profile');
 
   // The buttons fan downward from the trigger so every target remains reachable on a phone.
   const items = [
@@ -61,11 +73,21 @@ export default function MobileHomePrimaryNav() {
     !isAuthenticated && { path: '/signup', label: t('auth_signup'), icon: UserPlus, position: { x: -20, y: 341, delay: 0.14 }, accent: true },
   ].filter(Boolean);
 
+  const roleShortcut = !isLoadingAuth && isAuthenticated && (isAdmin || isProvider)
+    ? {
+        path: isAdmin ? '/admin' : '/dashboard',
+        label: isAdmin ? t('nav_admin_panel') : t('nav_dashboard'),
+        icon: isAdmin ? Shield : LayoutDashboard,
+        roleShortcut: true,
+      }
+    : null;
+
   const primaryLinks = [
+    roleShortcut,
     { path: '/tours', label: t('nav_tours') },
     { path: '/guides', label: t('nav_guides') },
     { path: '/agencies', label: t('nav_agencies') },
-  ];
+  ].filter(Boolean);
 
   return (
     <>
@@ -127,18 +149,29 @@ export default function MobileHomePrimaryNav() {
           dir={dir}
           className="fixed top-[72px] inset-x-0 z-[45] lg:hidden px-4"
         >
-          <div className="mx-auto max-w-md grid grid-cols-3 gap-1 rounded-2xl border border-white/15 bg-[hsl(222,55%,11%)] p-1.5 shadow-xl shadow-black/25">
-            {primaryLinks.map((link) => (
-              <Link
-                key={link.path}
-                to={link.path}
-                onPointerDown={() => preloadRoute(link.path)}
-                onFocus={() => preloadRoute(link.path)}
-                className="min-w-0 rounded-xl px-2 py-2.5 text-center font-body text-[11px] font-semibold text-white/90 hover:text-white hover:bg-white/10 active:bg-white/15 transition-colors"
-              >
-                <span className="block truncate">{link.label}</span>
-              </Link>
-            ))}
+          <div
+            className={`mx-auto grid max-w-md gap-1 rounded-2xl border border-white/15 bg-[hsl(222,55%,11%)] p-1.5 shadow-xl shadow-black/25 backdrop-blur-lg ${roleShortcut ? 'grid-cols-2' : 'grid-cols-3'}`}
+          >
+            {primaryLinks.map((link) => {
+              const Icon = link.icon;
+              return (
+                <Link
+                  key={link.path}
+                  to={link.path}
+                  onPointerDown={() => preloadRoute(link.path)}
+                  onFocus={() => preloadRoute(link.path)}
+                  data-testid={link.roleShortcut ? 'mobile-role-shortcut' : undefined}
+                  className={`flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl px-2 py-2.5 text-center font-body text-[11px] font-semibold transition-colors ${
+                    link.roleShortcut
+                      ? 'border border-gold/35 bg-gold/15 text-gold hover:bg-gold/25 active:bg-gold/30'
+                      : 'text-white/90 hover:bg-white/10 hover:text-white active:bg-white/15'
+                  }`}
+                >
+                  {Icon && <Icon className="h-4 w-4 shrink-0" aria-hidden="true" />}
+                  <span className="min-w-0 leading-tight">{link.label}</span>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
