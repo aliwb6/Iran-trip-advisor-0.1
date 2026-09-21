@@ -3,24 +3,7 @@ import {
   useRef,
   useState } from 'react';
 import { motion } from 'framer-motion';
-import {
-  Loader2,
-  DollarSign,
-  AlertTriangle,
-  Upload,
-  MapPin,
-  CalendarDays,
-  Clock,
-  Users,
-  Globe,
-  Sparkles,
-  Briefcase,
-  Plus,
-  User,
-  MessageSquare,
-  FileText,
-  PenLine,
-} from 'lucide-react';
+import { DollarSign, AlertTriangle, Upload, MapPin, CalendarDays, Clock, Users, Globe, Sparkles, Briefcase, Plus, User, MessageSquare, FileText, PenLine } from 'lucide-react';
 import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import {
