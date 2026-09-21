@@ -10,6 +10,7 @@ import RequestCard from '@/components/profile/RequestCard';
 import RequestPaymentGate from '@/components/profile/RequestPaymentGate';
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { getMyActiveDispatchRecipients } from '@/api/tripRequests';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 
 const HOLIDAY_TYPE_LABELS = {
   active:       'Active',
@@ -213,7 +214,7 @@ export default function RequestsPage() {
         {/* Content */}
         {isLoading ? (
           <div className="bg-card/60 border border-border/40 rounded-3xl p-16 text-center">
-            <div className="w-3 h-3 rounded-full bg-accent animate-pulse mx-auto" />
+            <BreathingGlow className="w-8 h-8 mx-auto" />
           </div>
         ) : filtered.length === 0 ? (
           <motion.div
