@@ -1,16 +1,49 @@
-import { useState, useEffect, useRef } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import {
+  useState,
+  useEffect,
+  useRef } from 'react';
+import { useNavigate,
+  useParams,
+  Link } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion,
+  AnimatePresence } from 'framer-motion';
 import {
-  LayoutDashboard, Briefcase, PlusCircle, Bell, MessageCircle,
-  User, Image as ImageIcon, CalendarDays, CreditCard, Star, Settings,
-  ChevronDown, ChevronRight, LogOut, Edit2, Trash2, ExternalLink,
-  Loader2, Clock, MapPin, DollarSign, Upload, Shield, TrendingUp,
-  MessageSquare, Package, CheckCircle2, X, Plus, Globe, AlertTriangle,
-  BookOpen, Send,
+  LayoutDashboard,
+  Briefcase,
+  PlusCircle,
+  Bell,
+  MessageCircle,
+  User,
+  Image as ImageIcon,
+  CalendarDays,
+  CreditCard,
+  Star,
+  Settings,
+  ChevronDown,
+  ChevronRight,
+  LogOut,
+  Edit2,
+  Trash2,
+  ExternalLink,
+  Clock,
+  MapPin,
+  DollarSign,
+  Upload,
+  Shield,
+  TrendingUp,
+  MessageSquare,
+  Package,
+  CheckCircle2,
+  X,
+  Plus,
+  Globe,
+  AlertTriangle,
+  BookOpen,
+  Send,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
