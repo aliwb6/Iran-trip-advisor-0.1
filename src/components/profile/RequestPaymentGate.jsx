@@ -1,7 +1,14 @@
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { CreditCard, Loader2, LockKeyhole, MessageCircle, ShieldCheck } from 'lucide-react';
+import { CreditCard,
+  LockKeyhole,
+  MessageCircle,
+  ShieldCheck,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { supabase } from '@/supabaseClient';
 import { fetchPaymentProviderConfig, redirectToDepositCheckout } from '@/api/payments';
