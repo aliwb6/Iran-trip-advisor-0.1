@@ -1,9 +1,16 @@
-import { useParams, Link, useLocation } from 'react-router-dom';
+import {
+  useParams,
+  Link,
+  useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import { 
-  ArrowRight, ArrowLeft, Calendar, User, Loader2
+  ArrowRight,
+  ArrowLeft,
+  Calendar,
+  User,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useArticleBySlug } from '@/hooks/useSupabase';
 
 export default function ArticleDetails() {
