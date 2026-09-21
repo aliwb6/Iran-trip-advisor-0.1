@@ -906,12 +906,14 @@ export default function AIAssistant() {
                   <Menu className="h-4 w-4" />
                 </button>
 
-                {/* Back button — available on mobile and desktop */}
+                {/* Back button — a consistent, easy-to-reach header action */}
                 <button
+                  type="button"
                   onClick={() => navigate(-1)}
-                  className="flex h-9 w-9 items-center justify-center rounded-xl transition-colors shrink-0"
-                  style={{ background: `${C.muted}10`, color: C.teal }}
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-95 shrink-0"
+                  style={{ background: `${C.muted}10`, color: C.teal, border: `1px solid ${C.muted}12` }}
                   aria-label="Go back"
+                  title={lang === 'fa' ? 'بازگشت' : lang === 'ar' ? 'رجوع' : 'Go back'}
                 >
                   <ArrowLeft className="h-4 w-4" />
                 </button>
@@ -937,15 +939,31 @@ export default function AIAssistant() {
                   </div>
                 </div>
               </div>
-              <button
-                onClick={handleNewChat}
-                className="flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-95"
-                style={{ background: `${C.turq}10`, color: C.turq, border: `1px solid ${C.turq}20` }}
-                aria-label={lang === 'fa' ? 'گفتگوی جدید' : lang === 'ar' ? 'محادثة جديدة' : 'New chat'}
-                title={lang === 'fa' ? 'گفتگوی جدید' : lang === 'ar' ? 'محادثة جديدة' : 'New chat'}
-              >
-                <Plus className="h-4 w-4" />
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Mobile recommendations live in the header, never over the composer. */}
+                {messages.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setRecsSheetOpen(true)}
+                    className="lg:hidden flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-95"
+                    style={{ background: `${C.teal}0D`, color: C.teal, border: `1px solid ${C.teal}20` }}
+                    aria-label="Open recommendations"
+                    title={lang === 'fa' ? 'پیشنهادات سفر' : lang === 'ar' ? 'توصيات السفر' : 'Travel recommendations'}
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={handleNewChat}
+                  className="flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-95"
+                  style={{ background: `${C.turq}10`, color: C.turq, border: `1px solid ${C.turq}20` }}
+                  aria-label={lang === 'fa' ? 'گفتگوی جدید' : lang === 'ar' ? 'محادثة جديدة' : 'New chat'}
+                  title={lang === 'fa' ? 'گفتگوی جدید' : lang === 'ar' ? 'محادثة جديدة' : 'New chat'}
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             {/* Carpet hairline */}
@@ -1148,18 +1166,6 @@ export default function AIAssistant() {
             </p>
           </div>
 
-          {/* Mobile "Recommendations" floating button — hidden on lg+ */}
-          {messages.length > 1 && (
-          <button
-            onClick={() => setRecsSheetOpen(true)}
-            className="lg:hidden fixed bottom-24 end-4 z-30 flex items-center gap-2 rounded-full px-4 py-3 text-[13px] font-semibold shadow-lg transition-all hover:opacity-90 active:scale-95"
-            style={{ background: C.teal, color: C.white, boxShadow: `0 8px 24px ${C.teal}40` }}
-            aria-label="Open recommendations"
-          >
-            <Sparkles className="h-4 w-4 shrink-0" />
-            <span>{lang === 'fa' ? 'پیشنهادات' : lang === 'ar' ? 'التوصيات' : 'Recommendations'}</span>
-          </button>
-          )}
         </section>
 
         {/* ── Profile + Recommendations sidebar — desktop only ─────────── */}
