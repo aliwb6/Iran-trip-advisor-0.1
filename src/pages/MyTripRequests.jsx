@@ -42,7 +42,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const STATUS_CONFIG = {
   open: {
@@ -596,20 +595,8 @@ function TripCard({ trip, onChanged, paymentConfig }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="space-y-4">
-      {[1, 2, 3].map(i => (
-        <div key={i} className="bg-card border border-border/50 rounded-2xl p-5 space-y-3">
-          <div className="flex justify-between">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-6 w-20 rounded-full" />
-          </div>
-          <Skeleton className="h-4 w-36" />
-          <div className="flex gap-3">
-            <Skeleton className="h-1.5 w-24 rounded-full" />
-            <Skeleton className="h-4 w-16" />
-          </div>
-        </div>
-      ))}
+    <div className="flex min-h-[18rem] items-center justify-center">
+      <BreathingGlow label="Loading trip requests" />
     </div>
   );
 }
