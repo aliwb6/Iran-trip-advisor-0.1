@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
   MapPin, Calendar, Users, Wallet, ChevronDown, ChevronUp,
   Briefcase, RefreshCw, Search, X,
 } from 'lucide-react';
@@ -318,7 +319,7 @@ export default function FindJobs() {
   if (isLoadingAuth || (isAuthenticated && !role)) {
     return (
       <div className="min-h-screen bg-background pt-20 flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-accent border-t-transparent animate-spin" />
+        <BreathingGlow className="w-8 h-8" />
       </div>
     );
   }
