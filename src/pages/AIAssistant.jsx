@@ -1,17 +1,43 @@
 // @ts-nocheck
-import { useEffect, useMemo, useRef, useState, Fragment } from 'react';
-import { Link, useSearchParams, useNavigate, useLocation } from 'react-router-dom';
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  Fragment } from 'react';
+import { Link,
+  useSearchParams,
+  useNavigate,
+  useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { supabase } from '@/supabaseClient';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { selectPublicTours } from '@/lib/publicTours';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion,
+  AnimatePresence } from 'framer-motion';
 import {
-  Sparkles, Send, MapPin, Clock, Users, Wallet,
-  Building2, Compass, Loader2, ArrowLeft, ArrowRight, DollarSign,
-  Trash2, Plus, MessageSquare, Menu, X,
-  Copy, Check, Paperclip, FileText,
+  Sparkles,
+  Send,
+  MapPin,
+  Clock,
+  Users,
+  Wallet,
+  Building2,
+  Compass,
+  ArrowLeft,
+  ArrowRight,
+  DollarSign,
+  Trash2,
+  Plus,
+  MessageSquare,
+  Menu,
+  X,
+  Copy,
+  Check,
+  Paperclip,
+  FileText,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { sendChatMessage } from '../services/api.js';
 import { toast } from 'sonner';
