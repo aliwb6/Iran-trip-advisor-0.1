@@ -4,11 +4,11 @@ import { useI18n } from '@/lib/i18n.jsx';
 import { transformImage, imgPresets } from '@/lib/imageTransform';
 import { motion } from 'framer-motion';
 import {
-import { BreathingGlow } from '@/components/ui/BreathingGlow';
   Star, MapPin, Globe, Calendar, BadgeCheck, ChevronLeft, ChevronRight,
   ArrowRight, Map, PenLine, Plus, Minus, ChevronDown, Copy, Lock, MessageCircle,
   Car,
 } from 'lucide-react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { supabase } from '@/supabaseClient';
 import { canChatWithUser } from '@/api/chatAccess';
