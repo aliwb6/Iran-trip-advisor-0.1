@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-import { BreathingGlow } from '@/components/ui/BreathingGlow';
   ArrowLeft, MapPin, Calendar, Users, Baby, Car, Hotel,
   Sparkles, FileText, Globe, Clock,
   Tag, Layers, PackageOpen,
 } from 'lucide-react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
