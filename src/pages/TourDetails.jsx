@@ -421,9 +421,8 @@ export default function TourDetails() {
               {(provider || providerLoading) && <div className="hidden h-12 w-px bg-border/70 sm:block" />}
 
               {providerLoading ? (
-                <div className="flex items-center gap-3 animate-pulse">
-                  <div className="h-11 w-11 rounded-full bg-muted" />
-                  <div className="space-y-2"><div className="h-3.5 w-24 rounded bg-muted" /><div className="h-3 w-16 rounded bg-muted" /></div>
+                <div className="flex items-center justify-center min-w-[8rem]">
+                  <Loader2 className="h-11 w-11" label="Loading provider" />
                 </div>
               ) : provider ? (
                 <button
