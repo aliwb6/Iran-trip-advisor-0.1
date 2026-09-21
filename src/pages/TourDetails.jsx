@@ -1,12 +1,28 @@
-import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import {
+  useState,
+  useEffect } from 'react';
+import { useParams,
+  Link,
+  useNavigate,
+  useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import {
-  CheckCircle, XCircle,
-  ArrowRight, ArrowLeft, Star, Lock, Loader2, ChevronLeft, ChevronRight,
-  Send, UserRoundSearch, Hash, Building2, UserRound,
+  CheckCircle,
+  XCircle,
+  ArrowRight,
+  ArrowLeft,
+  Star,
+  Lock,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  UserRoundSearch,
+  Hash,
+  Building2,
+  UserRound,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useTourBySlug, FALLBACK_IMAGE } from '@/hooks/useSupabase';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/supabaseClient';
