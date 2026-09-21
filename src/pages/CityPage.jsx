@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Map as MapIcon, User, Landmark, BookOpen, Sparkles,
-  Search, ArrowRight, ArrowLeft, ArrowUpRight,
+  Map as MapIcon, User, Landmark, BookOpen,
+  ArrowRight, ArrowLeft,
   Clock, DollarSign, Star, Languages, MessageCircle, Compass,
   Calendar, Plane, Info,
 } from 'lucide-react';
@@ -181,7 +181,6 @@ export default function CityPage() {
   const city = cityData[slug];
 
   const [tab, setTab] = useState('tours');
-  const [query, setQuery] = useState('');
   const [tours, setTours] = useState([]);
   const [guides, setGuides] = useState([]);
   const [toursLoading, setToursLoading] = useState(true);
@@ -231,36 +230,24 @@ export default function CityPage() {
   const tx = useMemo(() => ({
     notFound:    lang === 'fa' ? 'مقصد یافت نشد' : lang === 'ar' ? 'الوجهة غير موجودة' : 'Destination not found',
     backToHome:  lang === 'fa' ? 'بازگشت به خانه' : lang === 'ar' ? 'العودة إلى الرئيسية' : 'Back to home',
-    searchIn:    lang === 'fa' ? `جستجو در ${city?.nameI18n?.fa || city?.name || ''}` : lang === 'ar' ? `ابحث في ${city?.nameI18n?.ar || city?.name || ''}` : `Search in ${city?.name || ''}`,
     tabTours:    lang === 'fa' ? 'تورها' : lang === 'ar' ? 'الجولات' : 'Tours',
     tabGuides:   lang === 'fa' ? 'راهنماها' : lang === 'ar' ? 'المرشدون' : 'Guides',
     tabAttract:  lang === 'fa' ? 'دیدنی‌ها' : lang === 'ar' ? 'الأماكن' : 'Attractions',
     tabAbout:    lang === 'fa' ? 'درباره' : lang === 'ar' ? 'حول' : 'About',
-    tabAi:       lang === 'fa' ? 'برنامه‌ریزی با هوش' : lang === 'ar' ? 'خطط مع AI' : 'Plan with AI',
     viewPackage: lang === 'fa' ? 'مشاهده پکیج' : lang === 'ar' ? 'عرض الباقة' : 'View Package',
     contactGuide:lang === 'fa' ? 'تماس با راهنما' : lang === 'ar' ? 'تواصل مع المرشد' : 'Contact Guide',
     fromPrice:   lang === 'fa' ? 'از' : lang === 'ar' ? 'من' : 'from',
     days:        lang === 'fa' ? 'روز' : lang === 'ar' ? 'أيام' : 'days',
     mockBanner:  lang === 'fa' ? 'نمونه — به‌زودی محتوای واقعی برای این شهر اضافه می‌شود' : lang === 'ar' ? 'عينة — سيُضاف محتوى حقيقي لهذه المدينة قريباً' : 'Sample — real content for this city is coming soon',
-    aiTitle:     lang === 'fa'
-      ? `با هوش مصنوعی، تجربه‌ای کامل از ${city?.nameI18n?.fa || ''} بساز`
-      : lang === 'ar'
-      ? `خطّط تجربتك المثالية في ${city?.nameI18n?.ar || ''} مع الذكاء الاصطناعي`
-      : `Chat with our AI to plan your perfect ${city?.name || ''} experience`,
-    aiSub:       lang === 'fa' ? 'بگو چه می‌خواهی — مساعد ما همه‌چیز را برایت آماده می‌کند.' : lang === 'ar' ? 'أخبرنا بما تريد — سيتولى مساعدنا الباقي.' : 'Tell us what you love — our assistant handles the rest.',
-    openAi:      lang === 'fa' ? 'باز کردن دستیار هوش مصنوعی' : lang === 'ar' ? 'افتح مساعد الذكاء الاصطناعي' : 'Open AI Assistant',
     travelTips:  lang === 'fa' ? 'نکات سفر' : lang === 'ar' ? 'نصائح السفر' : 'Travel Tips',
     bestTime:    lang === 'fa' ? 'بهترین زمان سفر' : lang === 'ar' ? 'أفضل وقت للزيارة' : 'Best time to visit',
     gettingThere:lang === 'fa' ? 'دسترسی' : lang === 'ar' ? 'الوصول' : 'Getting there',
     gettingThereVal: lang === 'fa' ? 'پرواز داخلی، اتوبوس بین‌شهری یا قطار از تهران' : lang === 'ar' ? 'رحلة داخلية أو حافلة أو قطار من طهران' : 'Domestic flight, intercity bus, or train from Tehran',
     knowBefore:  lang === 'fa' ? 'پیش از سفر' : lang === 'ar' ? 'قبل السفر' : 'Good to know',
     knowBeforeVal: lang === 'fa' ? 'احترام به پوشش محلی، با راهنمای مجاز سفر کن، اینترنت محدود است.' : lang === 'ar' ? 'احترم اللباس المحلي، سافر مع مرشد مرخص، الإنترنت محدود.' : 'Respect local dress codes, travel with a licensed guide, internet access can be limited.',
-    noResults:   lang === 'fa' ? 'نتیجه‌ای یافت نشد' : lang === 'ar' ? 'لا توجد نتائج' : 'No results',
-
     // Empty-state copy
     noTours:     lang === 'fa' ? 'هنوز پکیج توری برای این شهر ثبت نشده است.' : lang === 'ar' ? 'لا توجد باقات سياحية لهذه المدينة بعد.' : 'No tour packages available for this city yet.',
     noToursSub:  lang === 'fa' ? 'به‌زودی دوباره سر بزن — در حال افزودن پکیج‌های جدید هستیم.' : lang === 'ar' ? 'تحقق لاحقاً — نضيف باقات جديدة قريباً.' : "Check back soon — we're adding new packages.",
-    planWithAi:  lang === 'fa' ? 'برنامه‌ریزی با هوش مصنوعی' : lang === 'ar' ? 'خطّط مع الذكاء الاصطناعي' : 'Plan with AI',
     noGuides:    lang === 'fa' ? 'هنوز راهنمای محلی برای این شهر ثبت نشده است.' : lang === 'ar' ? 'لا يوجد مرشدون محليون مسجلون لهذه المدينة بعد.' : 'No local guides registered for this city yet.',
     noGuidesSub: lang === 'fa' ? 'می‌خواهی به‌عنوان راهنما ثبت‌نام کنی؟' : lang === 'ar' ? 'هل تريد الانضمام كمرشد؟' : 'Want to become a guide?',
     joinGuide:   lang === 'fa' ? 'ثبت‌نام به‌عنوان راهنما' : lang === 'ar' ? 'انضم كمرشد' : 'Join as a Guide',
@@ -284,18 +271,11 @@ export default function CityPage() {
 
   const localName = city.nameI18n?.[lang] || city.name;
 
-  // Search filtering — applied per tab.
-  const q = query.trim().toLowerCase();
-  const filteredTours      = !q ? tours      : tours.filter((t) => String(t.title || '').toLowerCase().includes(q));
-  const filteredGuides     = !q ? guides     : guides.filter((g) => String(g.full_name || '').toLowerCase().includes(q));
-  const filteredHighlights = !q ? city.highlights : city.highlights.filter((h) => h.toLowerCase().includes(q));
-
   const TABS = [
     { id: 'tours',       label: tx.tabTours,    icon: MapIcon },
     { id: 'guides',      label: tx.tabGuides,   icon: User },
     { id: 'attractions', label: tx.tabAttract,  icon: Landmark },
     { id: 'about',       label: tx.tabAbout,    icon: BookOpen },
-    { id: 'ai',          label: tx.tabAi,       icon: Sparkles },
   ];
 
   return (
@@ -334,43 +314,11 @@ export default function CityPage() {
             </p>
           </motion.div>
 
-          {/* Search bar (lg:right side of hero, sits below on smaller screens) */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="hidden lg:block w-[320px] ms-6"
-          >
-            <div className="relative">
-              <Search className="absolute top-1/2 -translate-y-1/2 start-4 w-4 h-4 text-white/60" />
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={tx.searchIn}
-                className="w-full bg-white/15 backdrop-blur-xl border border-white/25 rounded-full ps-11 pe-4 py-3 text-white placeholder:text-white/55 text-sm focus:outline-none focus:bg-white/20 focus:border-gold/50 transition"
-              />
-            </div>
-          </motion.div>
         </div>
       </section>
 
-      {/* Mobile/tablet search bar (under hero) */}
-      <div className="lg:hidden max-w-7xl mx-auto px-5 sm:px-8 -mt-8 relative z-20">
-        <div className="relative">
-          <Search className="absolute top-1/2 -translate-y-1/2 start-4 w-4 h-4 text-muted-foreground" />
-          <input
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={tx.searchIn}
-            className="w-full bg-card border border-border/60 rounded-full ps-11 pe-4 py-3 text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:border-accent transition shadow-md"
-          />
-        </div>
-      </div>
-
       {/* ── Sticky tabs ─────────────────────────────────────────────────────── */}
-      <div className="sticky top-[64px] z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 mt-8 lg:mt-0">
+      <div className="sticky top-[64px] z-30 bg-background/85 backdrop-blur-xl border-b border-border/40">
         <div className="max-w-7xl mx-auto px-5 sm:px-8 lg:px-10">
           <nav className="flex gap-1 overflow-x-auto no-scrollbar" role="tablist">
             {TABS.map((t) => {
@@ -380,13 +328,7 @@ export default function CityPage() {
                   key={t.id}
                   role="tab"
                   aria-selected={active}
-                  onClick={() => {
-                    if (t.id === 'ai') {
-                      navigate(`/ai-assistant?city=${encodeURIComponent(city.name)}`);
-                      return;
-                    }
-                    setTab(t.id);
-                  }}
+                  onClick={() => setTab(t.id)}
                   className={`relative flex items-center gap-2 px-4 py-4 text-sm font-medium whitespace-nowrap transition-colors ${
                     active
                       ? 'text-accent'
@@ -420,23 +362,20 @@ export default function CityPage() {
           >
             {tab === 'tours' && (
               <TourGrid
-                tours={filteredTours}
+                tours={tours}
                 cityName={city.name}
                 tx={tx}
                 Arrow={Arrow}
                 loading={toursLoading}
-                searchActive={Boolean(q)}
-                navigate={navigate}
               />
             )}
 
             {tab === 'guides' && (
               <GuideGrid
-                guides={filteredGuides}
+                guides={guides}
                 cityName={city.name}
                 tx={tx}
                 loading={guidesLoading}
-                searchActive={Boolean(q)}
                 navigate={navigate}
               />
             )}
@@ -450,13 +389,6 @@ export default function CityPage() {
             )}
           </motion.div>
         </AnimatePresence>
-
-        {/* "Plan with AI" banner — shown only on cities that actually have
-            published tours, so cities with no packages aren't over-pushed
-            toward the AI assistant. */}
-        {tab !== 'ai' && !toursLoading && tours.length > 0 && (
-          <PlanWithAiCard cityName={city.name} navigate={navigate} tx={tx} />
-        )}
       </main>
     </div>
   );
@@ -479,20 +411,9 @@ function GridSkeleton({ shape = 'card' }) {
   );
 }
 
-function NoResults({ tx }) {
-  return (
-    <div className="text-center py-16 text-muted-foreground">
-      <p className="font-body text-sm">{tx.noResults}</p>
-    </div>
-  );
-}
-
-function TourGrid({ tours, cityName, tx, Arrow, loading, searchActive, navigate }) {
+function TourGrid({ tours, cityName, tx, Arrow, loading }) {
   if (loading) return <GridSkeleton shape="card" />;
   if (tours.length === 0) {
-    // A search miss against a populated catalog reads "No results";
-    // an empty catalog gets the "no packages yet" CTA from the spec.
-    if (searchActive) return <NoResults tx={tx} />;
     return (
       <div className="text-center py-16">
         <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-gold/10 border border-gold/30 flex items-center justify-center">
@@ -549,10 +470,9 @@ function TourGrid({ tours, cityName, tx, Arrow, loading, searchActive, navigate 
   );
 }
 
-function GuideGrid({ guides, cityName, tx, loading, searchActive, navigate }) {
+function GuideGrid({ guides, cityName, tx, loading, navigate }) {
   if (loading) return <GridSkeleton shape="card" />;
   if (guides.length === 0) {
-    if (searchActive) return <NoResults tx={tx} />;
     return (
       <div className="text-center py-16">
         <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center">
@@ -675,33 +595,6 @@ function Tip({ icon: Icon, label, value }) {
       <div className="min-w-0">
         <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">{label}</p>
         <p className="text-sm text-foreground/85 leading-relaxed">{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function PlanWithAiCard({ cityName, navigate, tx }) {
-  return (
-    <div className="mt-12 relative overflow-hidden rounded-3xl border border-gold/30 bg-gradient-to-br from-navy/60 via-card to-card p-8 sm:p-10 text-center">
-      <div className="absolute -top-20 -end-20 w-60 h-60 rounded-full bg-gold/15 blur-3xl pointer-events-none" />
-      <div className="relative">
-        <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gold/15 border border-gold/30 mb-4">
-          <Sparkles className="w-5 h-5 text-gold" />
-        </div>
-        <h2 className="font-heading text-2xl sm:text-3xl font-semibold text-foreground mb-2.5">
-          {tx.aiTitle}
-        </h2>
-        <p className="font-body text-sm text-muted-foreground mb-6 max-w-md mx-auto">
-          {tx.aiSub}
-        </p>
-        <button
-          onClick={() => navigate(`/ai-assistant?city=${encodeURIComponent(cityName)}`)}
-          className="group inline-flex items-center gap-2.5 px-8 py-3.5 rounded-full bg-gold hover:bg-gold-light text-navy font-body font-semibold text-sm transition-all duration-300 hover:shadow-lg hover:shadow-gold/30"
-        >
-          <Sparkles className="w-4 h-4" />
-          {tx.openAi}
-          <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
-        </button>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { avatarFor } from '@/lib/avatar';
 import TourForm from '@/components/dashboard/TourForm';
 import MyArticlesSection from '../components/dashboard/MyArticlesSection';
+import LanguageSwitcher from '@/components/layout/LanguageSwitcher';
 import GuideRequestsView from '@/components/dashboard/GuideRequestsView';
 import NotificationsView from '@/components/dashboard/NotificationsView';
 import BookingsView from '@/components/dashboard/BookingsView';
@@ -328,6 +329,13 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
           );
         })}
       </nav>
+
+      {/* Always keep the site-language control reachable in the dashboard.
+          On phones the dashboard sidebar becomes the header, so this remains
+          available without relying on the public site's hamburger menu. */}
+      <div className="px-3 pb-3">
+        <LanguageSwitcher />
+      </div>
 
       {/* Logout */}
       <div className="px-2 pb-4 border-t border-white/[0.07] pt-3">

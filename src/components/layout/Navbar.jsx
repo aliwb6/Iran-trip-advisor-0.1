@@ -238,6 +238,12 @@ export default function Navbar() {
                 <NotificationBell isLight={isLight} />
               </div>
 
+              {/* Keep the language picker visible at phone sizes as well.
+                  It used to be available only after opening the menu. */}
+              <div className="min-[360px]:block sm:hidden">
+                <LanguageSwitcher />
+              </div>
+
               {/* Keep notifications in the primary mobile header rather than
                   behind the menu. The unread badge is consequently visible
                   on every mobile page, including a traveler's requests. */}

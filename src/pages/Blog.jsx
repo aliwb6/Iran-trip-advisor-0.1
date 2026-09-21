@@ -19,9 +19,12 @@ export default function Blog() {
   // grid: all approved articles except the one shown in hero
   const gridArticles = hero ? allArticles.filter(a => a.id !== hero.id) : allArticles;
 
+  const localized = (article, field) =>
+    article[`${field}_${lang}`] || article[`${field}_en`] || article[`${field}_fa`] || '';
+
   const dateOf = (article) =>
     article.created_at
-      ? new Date(article.created_at).toLocaleDateString('fa-IR')
+      ? new Date(article.created_at).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar-SA' : 'en-US')
       : '';
 
   return (
@@ -73,7 +76,7 @@ export default function Blog() {
               {hero.image_url ? (
                 <img decoding="async" loading="lazy"
                   src={hero.image_url}
-                  alt={hero.title_fa}
+                  alt={localized(hero, 'title')}
                   className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
               ) : (
@@ -89,11 +92,11 @@ export default function Blog() {
                 </span>
               )}
               <h2 className="font-heading text-3xl lg:text-4xl font-light text-foreground mb-4 group-hover:text-accent transition-colors">
-                {hero.title_fa}
+                {localized(hero, 'title')}
               </h2>
-              {hero.excerpt_fa && (
+              {localized(hero, 'excerpt') && (
                 <p className="font-body text-foreground/70 leading-relaxed mb-6">
-                  {hero.excerpt_fa}
+                  {localized(hero, 'excerpt')}
                 </p>
               )}
               <div className="flex items-center gap-4">
@@ -127,7 +130,7 @@ export default function Blog() {
                   {article.image_url ? (
                     <img decoding="async" loading="lazy"
                       src={article.image_url}
-                      alt={article.title_fa}
+                      alt={localized(article, 'title')}
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (
@@ -142,11 +145,11 @@ export default function Blog() {
                   </span>
                 )}
                 <h3 className="font-heading text-xl font-medium text-foreground mt-2 mb-2 group-hover:text-accent transition-colors">
-                  {article.title_fa}
+                  {localized(article, 'title')}
                 </h3>
-                {article.excerpt_fa && (
+                {localized(article, 'excerpt') && (
                   <p className="font-body text-sm text-foreground/60 leading-relaxed mb-3 line-clamp-3">
-                    {article.excerpt_fa}
+                    {localized(article, 'excerpt')}
                   </p>
                 )}
                 <span className="flex items-center gap-1.5 font-body text-xs text-muted-foreground">
