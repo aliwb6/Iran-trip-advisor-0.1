@@ -1,7 +1,14 @@
-import { useEffect, useState } from 'react';
+import {
+  useEffect,
+  useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, ShieldAlert, AlertTriangle, Loader2 } from 'lucide-react';
+import { motion,
+  AnimatePresence } from 'framer-motion';
+import { CheckCircle2,
+  ShieldAlert,
+  AlertTriangle,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { toast } from 'sonner';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
