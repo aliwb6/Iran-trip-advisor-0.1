@@ -1,4 +1,5 @@
 import { Bell, BookOpen, CheckCheck, Clock3, MessageSquare, RefreshCw, ShieldCheck, UserPlus } from 'lucide-react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { useNotificationsContext } from '@/lib/NotificationsContext';
 
 const EVENT_CONFIG = {
@@ -40,7 +41,7 @@ export default function AdminNotificationsView({ onNavigate }) {
             </button>
           )}
           <button onClick={refresh} disabled={loading} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-white/65 transition hover:border-white/20 hover:text-white disabled:opacity-40">
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
+            {loading ? <BreathingGlow className="h-3.5 w-3.5" label="Refreshing notifications" /> : <RefreshCw className="h-3.5 w-3.5" />} Refresh
           </button>
         </div>
       </div>
