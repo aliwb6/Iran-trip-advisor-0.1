@@ -12,6 +12,7 @@ import './public-profile-layout.css';
 
 import Layout from '@/components/layout/Layout';
 import MobileBackButton from '@/components/layout/MobileBackButton';
+import { LoadingState } from '@/components/ui/BreathingGlow';
 import ChatRelationshipRoute from '@/components/chat/ChatRelationshipRoute';
 import Home from '@/pages/Home';
 
@@ -135,13 +136,7 @@ function PublicProfileShell({ children }) {
 }
 
 function RouteFallback() {
-  return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background">
-      <div className="w-10 h-10 rounded-full border-2 border-gold flex items-center justify-center">
-        <div className="w-3 h-3 bg-accent rounded-full animate-pulse" />
-      </div>
-    </div>
-  );
+  return <LoadingState fullScreen label="Loading page" />;
 }
 
 function SignupRequiredRoute({ children }) {
@@ -161,11 +156,7 @@ function SignupRequiredRoute({ children }) {
 function TripRequestsRedirect() {
   const { isAuthenticated, isLoadingAuth } = useAuth();
 
-  if (isLoadingAuth) return (
-    <div className="fixed inset-0 flex items-center justify-center bg-background">
-      <div className="w-8 h-8 rounded-full border-2 border-accent animate-spin border-t-transparent" />
-    </div>
-  );
+  if (isLoadingAuth) return <RouteFallback />;
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
