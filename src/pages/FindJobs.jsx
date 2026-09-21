@@ -11,7 +11,6 @@ import { supabase } from '../supabaseClient';
 import { getAvailableTripRequests } from '../api/tripRequests';
 import SubmitProposalModal from '@/components/dashboard/SubmitProposalModal';
 import { Button } from '@/components/ui/button';
-import { Skeleton } from '@/components/ui/skeleton';
 
 const INTEREST_COLORS = {
   Architecture: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
@@ -218,23 +217,8 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
 
 function LoadingSkeleton() {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-      {[1, 2, 3, 4, 5, 6].map(i => (
-        <div key={i} className="bg-card border border-border/50 rounded-2xl p-5 space-y-3">
-          <Skeleton className="h-5 w-3/4" />
-          <Skeleton className="h-4 w-1/2" />
-          <div className="flex gap-2">
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-          <div className="flex gap-1.5">
-            <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="h-5 w-14 rounded-full" />
-            <Skeleton className="h-5 w-18 rounded-full" />
-          </div>
-          <Skeleton className="h-9 w-full rounded-xl" />
-        </div>
-      ))}
+    <div className="flex min-h-[18rem] items-center justify-center">
+      <BreathingGlow label="Loading jobs" />
     </div>
   );
 }
