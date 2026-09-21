@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import {
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
   Star, MapPin, Globe, Calendar, BadgeCheck, ChevronLeft, ChevronRight,
   ArrowRight, Map, PenLine, Plus, Minus, ChevronDown, Building2,
   Lock, MessageCircle, Copy,
@@ -309,7 +310,7 @@ export default function AgencyProfile() {
     return (
       <div className="pt-32 pb-20 min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 rounded-full border-2 border-gold/30 border-t-gold animate-spin" />
+          <BreathingGlow />
           <p className="font-body text-muted-foreground text-sm">
             {lang === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}
           </p>
