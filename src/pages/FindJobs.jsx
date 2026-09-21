@@ -2,10 +2,10 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-import { BreathingGlow } from '@/components/ui/BreathingGlow';
   MapPin, Calendar, Users, Wallet, ChevronDown, ChevronUp,
   Briefcase, RefreshCw, Search, X,
 } from 'lucide-react';
+import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { useAuth } from '../lib/AuthContext';
 import { supabase } from '../supabaseClient';
 import { getAvailableTripRequests } from '../api/tripRequests';
