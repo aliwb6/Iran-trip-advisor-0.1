@@ -1,12 +1,28 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  useState } from 'react';
+import { Link,
+  useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion,
+  AnimatePresence } from 'framer-motion';
 import {
-  User, Mail, Lock, Phone, Globe, Eye, EyeOff, Loader2,
-  Compass, Shield, MapPin, Building2, ArrowRight, ArrowLeft, Star,
+  User,
+  Mail,
+  Lock,
+  Phone,
+  Globe,
+  Eye,
+  EyeOff,
+  Compass,
+  Shield,
+  MapPin,
+  Building2,
+  ArrowRight,
+  ArrowLeft,
+  Star,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 
 const COUNTRIES = [
   'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria',
