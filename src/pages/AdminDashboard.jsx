@@ -1276,6 +1276,8 @@ function ArticlesView({ profile }) {
   const [filter, setFilter] = useState('pending');
   const [showEditor, setShowEditor] = useState(false);
   const [busyId, setBusyId] = useState(null);
+  const [editingArticle, setEditingArticle] = useState(null);
+  const [articleDraft, setArticleDraft] = useState(null);
 
   const filtered = filter === 'all' ? articles : articles.filter(a => a.status === filter);
 
@@ -1300,6 +1302,57 @@ function ArticlesView({ profile }) {
     setBusyId(null);
     if (error) { toast.error(error.message); return; }
     toast.success(article.is_featured ? 'از ویژه‌ها حذف شد.' : 'به ویژه‌ها اضافه شد.');
+    refetch();
+  };
+
+  const openArticleEditor = (article) => {
+    setEditingArticle(article);
+    setArticleDraft({
+      title_fa: article.title_fa || '',
+      excerpt_fa: article.excerpt_fa || '',
+      content_fa: article.content_fa || '',
+      category: article.category || 'general',
+      image_url: article.image_url || '',
+    });
+  };
+
+  const closeArticleEditor = () => {
+    setEditingArticle(null);
+    setArticleDraft(null);
+  };
+
+  const saveArticleEdits = async () => {
+    if (!editingArticle || !articleDraft) return;
+    if (!articleDraft.title_fa.trim()) {
+      toast.error('عنوان مقاله الزامی است.');
+      return;
+    }
+
+    setBusyId(editingArticle.id);
+    const title = articleDraft.title_fa.trim();
+    const excerpt = articleDraft.excerpt_fa.trim();
+    const content = articleDraft.content_fa.trim();
+    const { error } = await supabase
+      .from('articles')
+      .update({
+        title_fa: title,
+        title_en: title,
+        excerpt_fa: excerpt,
+        excerpt_en: excerpt,
+        content_fa: content,
+        content_en: content,
+        category: articleDraft.category,
+        image_url: articleDraft.image_url.trim() || null,
+      })
+      .eq('id', editingArticle.id);
+    setBusyId(null);
+
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success('ویرایش مقاله ذخیره شد.');
+    closeArticleEditor();
     refetch();
   };
 
@@ -1341,6 +1394,66 @@ function ArticlesView({ profile }) {
           onSuccess={() => { setShowEditor(false); refetch(); }}
           onCancel={() => setShowEditor(false)}
         />
+      )}
+
+      {editingArticle && articleDraft && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/75 p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="article-review-title">
+          <div dir="rtl" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[hsl(222,45%,14%)] shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/[0.08] bg-[hsl(222,45%,14%)] px-5 py-4 sm:px-6">
+              <div>
+                <p className="text-[11px] font-medium text-teal-400">بررسی و ویرایش پیش از انتشار</p>
+                <h3 id="article-review-title" className="mt-1 text-base font-bold text-white">ویرایش مقاله</h3>
+              </div>
+              <button onClick={closeArticleEditor} className="rounded-lg p-2 text-white/60 transition hover:bg-white/[0.08] hover:text-white" aria-label="بستن">
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4 p-5 sm:p-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="space-y-1.5">
+                  <span className="text-xs font-medium text-white/60">عنوان مقاله</span>
+                  <input value={articleDraft.title_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, title_fa: e.target.value }))} maxLength={120} className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm text-white outline-none transition focus:border-teal-500/60" />
+                </label>
+                <label className="space-y-1.5">
+                  <span className="text-xs font-medium text-white/60">دسته‌بندی</span>
+                  <select value={articleDraft.category} onChange={(e) => setArticleDraft(draft => ({ ...draft, category: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-[hsl(222,45%,14%)] px-3 py-2.5 text-sm text-white outline-none transition focus:border-teal-500/60">
+                    <option value="architecture">معماری</option>
+                    <option value="history">تاریخ</option>
+                    <option value="culture">فرهنگ</option>
+                    <option value="nature">طبیعت</option>
+                    <option value="food">غذا</option>
+                    <option value="photography">عکاسی</option>
+                    <option value="general">عمومی</option>
+                  </select>
+                </label>
+              </div>
+
+              <label className="block space-y-1.5">
+                <span className="text-xs font-medium text-white/60">خلاصه</span>
+                <textarea value={articleDraft.excerpt_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, excerpt_fa: e.target.value }))} rows={3} maxLength={500} className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm leading-6 text-white outline-none transition focus:border-teal-500/60" />
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="text-xs font-medium text-white/60">متن کامل مقاله</span>
+                <textarea value={articleDraft.content_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, content_fa: e.target.value }))} rows={12} className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm leading-7 text-white outline-none transition focus:border-teal-500/60" placeholder="متن کامل مقاله..." />
+              </label>
+
+              <label className="block space-y-1.5">
+                <span className="text-xs font-medium text-white/60">آدرس تصویر</span>
+                <input type="url" dir="ltr" value={articleDraft.image_url} onChange={(e) => setArticleDraft(draft => ({ ...draft, image_url: e.target.value }))} placeholder="https://..." className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm text-white outline-none transition focus:border-teal-500/60" />
+              </label>
+            </div>
+
+            <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-white/[0.08] bg-[hsl(222,45%,14%)] px-5 py-4 sm:px-6">
+              <button onClick={closeArticleEditor} disabled={busyId === editingArticle.id} className="rounded-xl px-4 py-2 text-sm text-white/65 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50">انصراف</button>
+              <button onClick={saveArticleEdits} disabled={busyId === editingArticle.id} className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500 disabled:opacity-50">
+                {busyId === editingArticle.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                ذخیره تغییرات
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Filter tabs */}
@@ -1412,6 +1525,14 @@ function ArticlesView({ profile }) {
 
                 {/* Actions */}
                 <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-white/[0.06]">
+                  <button
+                    disabled={busy}
+                    onClick={() => openArticleEditor(article)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 text-xs font-medium transition disabled:opacity-50"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    ویرایش
+                  </button>
                   {article.status !== 'approved' && (
                     <button
                       disabled={busy}

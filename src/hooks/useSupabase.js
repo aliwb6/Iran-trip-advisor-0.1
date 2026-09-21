@@ -617,6 +617,56 @@ export function useArticles({ featured = false } = {}) {
   return { articles, loading, error };
 }
 
+/** Fetch one public article for the public article-detail route. */
+export function useArticleBySlug(slug) {
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchArticle = async () => {
+      if (!slug) {
+        if (isMounted) {
+          setArticle(null);
+          setLoading(false);
+        }
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const { data, error: err } = await supabase
+          .from('articles')
+          .select('*, author_profile:profiles!author_id(full_name)')
+          .eq('slug', slug)
+          .eq('status', 'approved')
+          .eq('is_published', true)
+          .maybeSingle();
+
+        if (err) throw err;
+        if (isMounted) {
+          setArticle(data || null);
+          setError(null);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setArticle(null);
+          setError(err.message);
+        }
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchArticle();
+    return () => { isMounted = false; };
+  }, [slug]);
+
+  return { article, loading, error };
+}
+
 export function useGuideArticles(authorId) {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);

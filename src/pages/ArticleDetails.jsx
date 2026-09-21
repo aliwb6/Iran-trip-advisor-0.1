@@ -2,17 +2,24 @@ import { useParams, Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
 import { motion } from 'framer-motion';
 import { 
-  Clock, ArrowRight, ArrowLeft, Calendar, User, Tag
+  ArrowRight, ArrowLeft, Calendar, User, Loader2
 } from 'lucide-react';
-import { getArticleBySlug, articles } from '@/data/articles';
+import { useArticleBySlug } from '@/hooks/useSupabase';
 
 export default function ArticleDetails() {
   const { slug } = useParams();
   const { t, lang, dir } = useI18n();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
+  const { article, loading } = useArticleBySlug(slug);
 
-  const article = getArticleBySlug(slug);
-  
+  if (loading) {
+    return (
+      <div dir={dir} className="pt-32 pb-20 min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 text-accent animate-spin" aria-label="Loading article" />
+      </div>
+    );
+  }
+
   if (!article) {
     return (
       <div dir={dir} className="pt-32 pb-20 min-h-screen flex items-center justify-center">
@@ -24,20 +31,24 @@ export default function ArticleDetails() {
     );
   }
 
-  const title = article.title[lang] || article.title.en;
-  const excerpt = article.excerpt[lang] || article.excerpt.en;
-  const category = article.category[lang] || article.category.en;
-  const author = article.author[lang] || article.author.en;
-  const tags = article.tags[lang] || article.tags.en;
-  const content = article.content[lang] || article.content.en;
-  const relatedArticles = articles.filter(a => article.relatedArticles?.includes(a.id)).slice(0, 3);
+  const localized = (field) =>
+    article[`${field}_${lang}`] || article[`${field}_fa`] || article[`${field}_en`] || '';
+  const title = localized('title');
+  const excerpt = localized('excerpt');
+  const content = localized('content');
+  const category = article.category || '';
+  const author = article.author_profile?.full_name || 'Iran Trip Advisor';
+  const date = article.created_at
+    ? new Date(article.created_at).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US')
+    : '';
+  const paragraphs = content.split(/\n\s*\n|\r?\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
 
   return (
     <div dir={dir} className="pt-0 pb-20 min-h-screen">
       {/* Hero Banner */}
       <div className="relative h-[50vh] min-h-[350px] overflow-hidden">
         <img decoding="async" loading="lazy"
-          src={article.coverImage}
+          src={article.image_url || '/images/shiraz.jpg'}
           alt={title}
           className="w-full h-full object-cover"
         />
@@ -77,11 +88,7 @@ export default function ArticleDetails() {
                 </span>
                 <span className="flex items-center gap-1.5 font-body text-sm">
                   <Calendar className="w-4 h-4" />
-                  {article.date}
-                </span>
-                <span className="flex items-center gap-1.5 font-body text-sm">
-                  <Clock className="w-4 h-4" />
-                  {article.readTime} {t('blog_min_read')}
+                  {date}
                 </span>
               </div>
             </motion.div>
@@ -109,92 +116,13 @@ export default function ArticleDetails() {
           transition={{ delay: 0.3, duration: 0.6 }}
           className="prose prose-lg max-w-none"
         >
-          {content.map((block, i) => {
-            if (block.type === 'paragraph') {
-              return (
-                <p key={i} className="font-body text-foreground/80 leading-relaxed mb-6 text-lg">
-                  {block.text}
-                </p>
-              );
-            }
-            if (block.type === 'heading') {
-              return (
-                <h2 key={i} className="font-heading text-2xl font-semibold text-foreground mt-10 mb-4">
-                  {block.text}
-                </h2>
-              );
-            }
-            if (block.type === 'quote') {
-              return (
-                <blockquote key={i} className="border-s-4 border-accent ps-6 my-8">
-                  <p className="font-heading text-xl text-foreground/70 italic">
-                    "{block.text}"
-                  </p>
-                </blockquote>
-              );
-            }
-            return null;
-          })}
+          {paragraphs.map((paragraph, i) => (
+            <p key={i} className="font-body text-foreground/80 leading-relaxed mb-6 text-lg whitespace-pre-line">
+              {paragraph}
+            </p>
+          ))}
         </motion.div>
 
-        {/* Tags */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
-          className="mt-12 pt-8 border-t border-border/50"
-        >
-          <div className="flex flex-wrap items-center gap-2">
-            <Tag className="w-4 h-4 text-muted-foreground" />
-            {tags.map((tag, i) => (
-              <span 
-                key={i} 
-                className="px-3 py-1.5 rounded-full bg-secondary text-sm font-body text-muted-foreground"
-              >
-                {tag}
-              </span>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Related Articles */}
-        {relatedArticles.length > 0 && (
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.6 }}
-            className="mt-16 pt-10 border-t border-border/50"
-          >
-            <h2 className="font-heading text-2xl font-semibold text-foreground mb-8">
-              {lang === 'fa' ? 'مقالات مرتبط' : lang === 'ar' ? 'مقالات ذات صلة' : 'Related Articles'}
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              {relatedArticles.map((related) => (
-                <Link 
-                  key={related.id} 
-                  to={`/blog/${related.slug}`}
-                  className="group"
-                >
-                  <div className="aspect-[4/3] rounded-xl overflow-hidden mb-3">
-                    <img decoding="async" loading="lazy" 
-                      src={related.coverImage} 
-                      alt={related.title[lang] || related.title.en}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                    />
-                  </div>
-                  <div className="mb-1">
-                    <span className="font-body text-xs text-accent font-medium">
-                      {related.category[lang] || related.category.en}
-                    </span>
-                  </div>
-                  <h3 className="font-heading text-base font-medium text-foreground group-hover:text-accent transition-colors line-clamp-2">
-                    {related.title[lang] || related.title.en}
-                  </h3>
-                </Link>
-              ))}
-            </div>
-          </motion.section>
-        )}
       </div>
     </div>
   );

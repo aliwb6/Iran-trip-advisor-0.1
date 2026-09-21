@@ -5,6 +5,7 @@ import {
   ArrowRight,
   CheckCircle2,
   Loader2,
+  LockKeyhole,
   MessageCircle,
   Send,
   ShieldAlert,
@@ -31,7 +32,7 @@ const C = {
   ink: '#0F2A2A',
 };
 
-function MessageBubble({ message, mine, senderName }) {
+function MessageBubble({ message, mine, senderName, lang }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -51,6 +52,7 @@ function MessageBubble({ message, mine, senderName }) {
         {message.created_at && (
           <span className="mt-1 px-1 text-[10px]" style={{ color: C.muted }}>
             {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {message.edited && ` · ${lang === 'fa' ? 'ویرایش مدیر' : lang === 'ar' ? 'عدّلها المدير' : 'Edited by admin'}`}
           </span>
         )}
       </div>
@@ -72,6 +74,7 @@ export default function Chat() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const [contactSharingAllowed, setContactSharingAllowed] = useState(false);
+  const [moderation, setModeration] = useState(null);
   const scrollerRef = useRef(null);
 
   useEffect(() => {
@@ -86,7 +89,8 @@ export default function Chat() {
       setLoading(true);
       setError('');
       try {
-        const [publicProfileRes, messagesRes, contactPermission] = await Promise.all([
+        const [participantOneId, participantTwoId] = [user.id, guideId].sort();
+        const [publicProfileRes, messagesRes, contactPermission, moderationRes] = await Promise.all([
           selectPublicProfiles(supabase, 'id, full_name, avatar_url, gender, role, city, bio')
             .eq('id', guideId)
             .maybeSingle(),
@@ -96,10 +100,16 @@ export default function Chat() {
             .or(`and(sender_id.eq.${user.id},receiver_id.eq.${guideId}),and(sender_id.eq.${guideId},receiver_id.eq.${user.id})`)
             .order('created_at', { ascending: true }),
           canShareContactWithUser(guideId).catch(() => false),
+          supabase
+            .from('direct_chat_moderation')
+            .select('is_closed, closure_reason, closed_at')
+            .eq('participant_one_id', participantOneId)
+            .eq('participant_two_id', participantTwoId)
+            .maybeSingle(),
         ]);
 
         if (cancelled) return;
-        if (messagesRes.error) throw messagesRes.error;
+        if (messagesRes.error || moderationRes.error) throw messagesRes.error || moderationRes.error;
 
         let profile = publicProfileRes.data;
         if (!profile) profile = await fetchParticipantProfile(guideId);
@@ -115,6 +125,7 @@ export default function Chat() {
         });
         setMessages(messagesRes.data || []);
         setContactSharingAllowed(contactPermission === true);
+        setModeration(moderationRes.data || null);
 
         const unreadIds = (messagesRes.data || [])
           .filter(message => message.receiver_id === user.id && !message.is_read)
@@ -131,6 +142,21 @@ export default function Chat() {
 
     load();
     return () => { cancelled = true; };
+  }, [guideId, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !guideId) return undefined;
+    const [participantOneId, participantTwoId] = [user.id, guideId].sort();
+    const channel = supabase
+      .channel(`direct-chat-moderation-${participantOneId}-${participantTwoId}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'direct_chat_moderation' }, payload => {
+        const next = payload.new;
+        if (next?.participant_one_id === participantOneId && next?.participant_two_id === participantTwoId) {
+          setModeration(next);
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [guideId, user?.id]);
 
   useEffect(() => {
@@ -160,6 +186,24 @@ export default function Chat() {
           await supabase.from('messages').update({ is_read: true }).eq('id', message.id);
         },
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `sender_id=eq.${user.id}` },
+        payload => {
+          const message = payload.new;
+          if (message.receiver_id !== guideId) return;
+          setMessages(current => current.map(item => item.id === message.id ? message : item));
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'messages', filter: `receiver_id=eq.${user.id}` },
+        payload => {
+          const message = payload.new;
+          if (message.sender_id !== guideId) return;
+          setMessages(current => current.map(item => item.id === message.id ? message : item));
+        },
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -178,7 +222,7 @@ export default function Chat() {
   const handleSend = async event => {
     event.preventDefault();
     const text = input.trim();
-    if (!text || !user?.id || !guideId || sending) return;
+    if (!text || !user?.id || !guideId || sending || moderation?.is_closed) return;
 
     const violations = contactSharingAllowed ? [] : detectContactSharing(text);
     if (violations.length > 0) {
@@ -269,6 +313,20 @@ export default function Chat() {
             </div>
           </div>
 
+          {moderation?.is_closed && (
+            <div className="shrink-0 border-b border-red-200 bg-red-50 px-4 py-3 sm:px-8">
+              <div className="mx-auto flex max-w-[760px] items-start gap-2.5">
+                <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-red-600" />
+                <div>
+                  <p className="text-xs font-semibold text-red-800">
+                    {lang === 'fa' ? 'این گفتگو توسط مدیر بسته شده است.' : lang === 'ar' ? 'تم إغلاق هذه المحادثة من قبل الإدارة.' : 'This conversation has been closed by an administrator.'}
+                  </p>
+                  <p className="mt-1 whitespace-pre-wrap text-xs leading-relaxed text-red-700">{moderation.closure_reason}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div ref={scrollerRef} className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-8">
             <div className="mx-auto flex max-w-[760px] flex-col gap-4">
               {messages.length === 0 ? (
@@ -280,7 +338,7 @@ export default function Chat() {
               ) : (
                 <AnimatePresence initial={false}>
                   {messages.map(message => (
-                    <MessageBubble key={message.id} message={message} mine={message.sender_id === user.id} senderName={participant.full_name || 'User'} />
+                    <MessageBubble key={message.id} message={message} mine={message.sender_id === user.id} senderName={participant.full_name || 'User'} lang={lang} />
                   ))}
                 </AnimatePresence>
               )}
@@ -305,13 +363,14 @@ export default function Chat() {
                   className="max-h-32 min-h-11 flex-1 resize-none rounded-2xl border px-4 py-3 text-sm outline-none transition focus:ring-2"
                   style={{ background: C.mist, borderColor: `${C.muted}25`, color: C.ink, '--tw-ring-color': `${C.turq}30` }}
                   dir="auto"
-                  disabled={sending}
+                  disabled={sending || moderation?.is_closed}
                 />
-                <button type="submit" disabled={sending || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label="Send message">
+                <button type="submit" disabled={sending || moderation?.is_closed || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label="Send message">
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                 </button>
               </div>
               {error && <p role="alert" className="mt-2 text-xs leading-relaxed text-red-500">{error}</p>}
+              {moderation?.is_closed && <p className="mt-2 text-xs font-medium text-red-600">{lang === 'fa' ? 'ارسال پیام تا زمان بازگشایی گفتگو غیرفعال است.' : lang === 'ar' ? 'تم تعطيل إرسال الرسائل حتى إعادة فتح المحادثة.' : 'Sending messages is disabled until this conversation is reopened.'}</p>}
               {!contactSharingAllowed && (
                 <p className="mt-2 text-[10px]" style={{ color: C.muted }}>
                   Contact details are automatically blocked until booking payment is confirmed.
