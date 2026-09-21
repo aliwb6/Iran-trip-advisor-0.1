@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react';
-import { BadgeCheck, ExternalLink, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
+import {
+  useEffect,
+  useState } from 'react';
+import { BadgeCheck,
+  ExternalLink,
+  FileText,
+  Image as ImageIcon,
+} from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 
 const copy = {
