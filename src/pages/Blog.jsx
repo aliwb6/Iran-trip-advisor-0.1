@@ -9,15 +9,12 @@ export default function Blog() {
   const navigate = useNavigate();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
-  const { articles: featuredArticles, loading: loadingFeatured } = useArticles({ featured: true });
-  const { articles: allArticles, loading: loadingAll } = useArticles({});
+  const { articles: allArticles, loading } = useArticles({});
 
-  const loading = loadingFeatured || loadingAll;
-
-  // hero: first featured article (falls back to first article overall)
-  const hero = featuredArticles[0] || allArticles[0] || null;
-  // grid: all approved articles except the one shown in hero
-  const gridArticles = hero ? allArticles.filter(a => a.id !== hero.id) : allArticles;
+  // Every featured article gets the prominent treatment. Regular articles never
+  // become a hero as a fallback, so the page cannot promote one at random.
+  const featuredArticles = allArticles.filter((article) => article.is_featured);
+  const gridArticles = allArticles.filter((article) => !article.is_featured);
 
   const localized = (article, field) =>
     article[`${field}_${lang}`] || article[`${field}_en`] || article[`${field}_fa`] || '';
@@ -63,54 +60,61 @@ export default function Blog() {
           </div>
         )}
 
-        {/* Featured Post */}
-        {!loading && hero && (
-          <motion.article
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            onClick={() => navigate(`/blog/${hero.slug}`, { state: { article: hero } })}
-            className="group grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16 cursor-pointer"
-          >
-            <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
-              {hero.image_url ? (
-                <img decoding="async" loading="lazy"
-                  src={hero.image_url}
-                  alt={localized(hero, 'title')}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground/20 text-6xl">
-                  ✦
-                </div>
-              )}
+        {/* Featured articles */}
+        {!loading && featuredArticles.length > 0 && (
+          <section className="mb-16" aria-label={lang === 'fa' ? 'مقالات ویژه' : lang === 'ar' ? 'المقالات المميزة' : 'Featured articles'}>
+            <div className="space-y-12">
+              {featuredArticles.map((article, index) => (
+                <motion.article
+                  key={article.id}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.05 }}
+                  onClick={() => navigate(`/blog/${article.slug}`, { state: { article } })}
+                  className="group grid grid-cols-1 lg:grid-cols-2 gap-8 cursor-pointer"
+                >
+                  <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-muted">
+                    {article.image_url ? (
+                      <img decoding="async" loading="lazy"
+                        src={article.image_url}
+                        alt={localized(article, 'title')}
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground/20 text-6xl">
+                        ✦
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex flex-col justify-center">
+                    <span className="font-body text-xs font-semibold text-accent uppercase tracking-wider mb-3">
+                      ★ {lang === 'fa' ? 'ویژه' : lang === 'ar' ? 'مميز' : 'Featured'}
+                      {article.category && ` · ${article.category}`}
+                    </span>
+                    <h2 className="font-heading text-3xl lg:text-4xl font-medium text-foreground mb-4 group-hover:text-accent transition-colors">
+                      {localized(article, 'title')}
+                    </h2>
+                    {localized(article, 'excerpt') && (
+                      <p className="font-body text-foreground/70 leading-relaxed mb-6">
+                        {localized(article, 'excerpt')}
+                      </p>
+                    )}
+                    <div className="flex items-center gap-4">
+                      <span className="flex items-center gap-1.5 font-body text-xs text-muted-foreground">
+                        <Clock className="w-3.5 h-3.5" />
+                        {dateOf(article)}
+                      </span>
+                      <span className="flex items-center gap-1.5 font-body text-sm text-accent font-medium">
+                        {t('blog_read_more')}
+                        <Arrow className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </motion.article>
+              ))}
             </div>
-            <div className="flex flex-col justify-center">
-              {hero.category && (
-                <span className="font-body text-xs font-medium text-accent uppercase tracking-wider mb-3">
-                  {hero.category}
-                </span>
-              )}
-              <h2 className="font-heading text-3xl lg:text-4xl font-light text-foreground mb-4 group-hover:text-accent transition-colors">
-                {localized(hero, 'title')}
-              </h2>
-              {localized(hero, 'excerpt') && (
-                <p className="font-body text-foreground/70 leading-relaxed mb-6">
-                  {localized(hero, 'excerpt')}
-                </p>
-              )}
-              <div className="flex items-center gap-4">
-                <span className="flex items-center gap-1.5 font-body text-xs text-muted-foreground">
-                  <Clock className="w-3.5 h-3.5" />
-                  {dateOf(hero)}
-                </span>
-                <span className="flex items-center gap-1.5 font-body text-sm text-accent font-medium">
-                  {t('blog_read_more')}
-                  <Arrow className="w-3.5 h-3.5" />
-                </span>
-              </div>
-            </div>
-          </motion.article>
+          </section>
         )}
 
         {/* Grid */}

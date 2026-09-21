@@ -19,11 +19,13 @@ import TourCard from '@/components/tours/TourCard';
 import { FALLBACK_IMAGE } from '@/hooks/useSupabase';
 import { iranianDestinations } from '@/data/iranianCities';
 import PublicProfileGallery from '@/components/profile/PublicProfileGallery';
+import PublishedArticles from '@/components/profile/PublishedArticles';
 import PublicLicenseCard from '@/components/profile/PublicLicenseCard';
 import ProfileReviewDialog from '@/components/profile/ProfileReviewDialog';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
 import { selectPublicTours } from '@/lib/publicTours';
 import { getProviderAbilityLabel, normalizeProviderAbilities } from '@/lib/providerCapabilities';
+import { useGuideArticles } from '@/hooks/useSupabase';
 
 const pickTourImage = (tour) =>
   tour.cover_image || tour.image_url || tour.image ||
@@ -253,6 +255,7 @@ export default function AgencyProfile() {
   const [reviewList, setReviewList] = useState([]);
   const [reviewError, setReviewError] = useState('');
   const [reviewOpen, setReviewOpen] = useState(false);
+  const { articles, loading: articlesLoading } = useGuideArticles(id);
 
   useEffect(() => {
     if (!id) return;
@@ -261,11 +264,12 @@ export default function AgencyProfile() {
 
     const run = async () => {
       try {
-        // Part 1/2/3: profile + published tours (newest first).
+        // Part 1/2/3: profile + published tours (newest first). New provider
+        // tours use owner_id; guide_id and agency_id remain for legacy rows.
         const [{ data: profileData, error: profileErr }, { data: tourData }, reviewResult] = await Promise.all([
           selectPublicProfiles(supabase).eq('id', id).single(),
           selectPublicTours(supabase)
-            .or(`guide_id.eq.${id},agency_id.eq.${id}`)
+            .or(`owner_id.eq.${id},guide_id.eq.${id},agency_id.eq.${id}`)
             .order('created_at', { ascending: false }),
           fetchProfileReviewsSafely(supabase, { targetType: 'agency', profileId: id }),
         ]);
@@ -608,6 +612,8 @@ export default function AgencyProfile() {
                 </p>
               </section>
             )}
+
+            <PublishedArticles articles={articles} loading={articlesLoading} authorName={name} />
 
             {/* Reviews */}
             <section>
