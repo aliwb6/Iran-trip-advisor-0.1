@@ -1,12 +1,24 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import {
+  useState } from 'react';
+import { Link,
+  useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion,
+  AnimatePresence } from 'framer-motion';
 import {
-  Mail, Lock, Eye, EyeOff, Loader2,
-  Star, Bookmark, Compass, ArrowRight, ArrowLeft, CheckCircle2,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Star,
+  Bookmark,
+  Compass,
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
 } from 'lucide-react';
+import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 
 const BENEFITS = [
   { icon: Compass, titleKey: 'login_benefit1_title', descKey: 'login_benefit1_desc' },
