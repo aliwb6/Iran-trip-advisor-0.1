@@ -15,16 +15,12 @@ import {
   X,
 } from 'lucide-react';
 
-const positions = [
-  { x: -0.72, y: -0.70 },
-  { x: 0, y: -1 },
-  { x: 0.72, y: -0.70 },
-  { x: 0.98, y: -0.05 },
-  { x: 0.72, y: 0.64 },
-  { x: 0, y: 0.92 },
-  { x: -0.72, y: 0.64 },
-  { x: -0.98, y: -0.05 },
-];
+// Spread the available entries across the entire circumference. A fixed list
+// of positions made menus with fewer than eight links look like an arc.
+const getCirclePosition = (index, total) => {
+  const angle = (-135 + (360 / total) * index) * (Math.PI / 180);
+  return { x: Math.cos(angle), y: Math.sin(angle) };
+};
 
 export default function MobileCircleMenu({
   open,
@@ -72,7 +68,7 @@ export default function MobileCircleMenu({
     if (isGuideOrAgency) primaryItems.push({ path: '/dashboard', label: t('nav_dashboard'), icon: LayoutDashboard, external: true });
     if (isTourist || isAdmin || isGuideOrAgency) primaryItems.push({ path: '/profile', label: t('nav_profile'), icon: UserRound });
 
-    return primaryItems.slice(0, positions.length);
+    return primaryItems.slice(0, 8);
   }, [isAdmin, isGuideOrAgency, isTourist, t]);
 
   return (
@@ -100,13 +96,16 @@ export default function MobileCircleMenu({
           </div>
 
           <div className="absolute left-1/2 top-[53%] -translate-x-1/2 -translate-y-1/2">
-            <div className="relative h-[300px] w-[300px]">
+            <div
+              className="relative"
+              style={{ width: `${radius * 2 + 80}px`, height: `${radius * 2 + 80}px` }}
+            >
               <div className="absolute left-1/2 top-1/2 h-[calc(var(--menu-radius)*2)] w-[calc(var(--menu-radius)*2)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-accent/15" style={{ '--menu-radius': `${radius}px` }} />
               <div className="absolute left-1/2 top-1/2 h-[calc(var(--menu-radius)*1.25)] w-[calc(var(--menu-radius)*1.25)] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/15" style={{ '--menu-radius': `${radius}px` }} />
 
               {items.map((item, index) => {
                 const Icon = item.icon;
-                const position = positions[index];
+                const position = getCirclePosition(index, items.length);
                 const active = isActive(item.path);
                 const linkProps = item.external ? { target: '_blank', rel: 'noopener noreferrer' } : {};
 
@@ -146,13 +145,15 @@ export default function MobileCircleMenu({
                 );
               })}
 
+              {/* Framer Motion owns `transform`, so its x/y values retain the
+                  centering translation while the button animates. */}
               <motion.button
                 type="button"
                 onClick={onClose}
                 className="absolute left-1/2 top-1/2 flex h-[76px] w-[76px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-gold/50 bg-foreground text-background shadow-warm-lg outline-none transition hover:scale-105 focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4"
-                initial={{ scale: 0, rotate: -90 }}
-                animate={{ scale: 1, rotate: 0 }}
-                exit={{ scale: 0, rotate: 90 }}
+                initial={{ x: '-50%', y: '-50%', scale: 0, rotate: -90 }}
+                animate={{ x: '-50%', y: '-50%', scale: 1, rotate: 0 }}
+                exit={{ x: '-50%', y: '-50%', scale: 0, rotate: 90 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 19 }}
                 aria-label={t('circle_menu_close')}
               >

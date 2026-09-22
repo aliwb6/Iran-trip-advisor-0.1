@@ -481,16 +481,16 @@ function Counter({ label, sublabel, value, onChange, min = 0 }) {
 function TimeSelect({ label, hourKey, minuteKey, periodKey, form, onChange, disabled }) {
   const cls = `bg-background/50 border border-border/40 rounded-lg px-2.5 py-2 text-sm text-foreground focus:outline-none focus:border-accent transition-colors`;
   return (
-    <div className={disabled ? 'opacity-40 pointer-events-none' : ''}>
+    <div className={`min-w-0 ${disabled ? 'opacity-40 pointer-events-none' : ''}`}>
       <p className="text-xs font-medium text-muted-foreground mb-2">{label}</p>
       <div className="flex gap-1.5">
-        <select value={form[hourKey]}   onChange={e => onChange(hourKey, e.target.value)}   className={`flex-1 ${cls}`}>
+        <select value={form[hourKey]}   onChange={e => onChange(hourKey, e.target.value)}   className={`min-w-0 flex-1 ${cls}`}>
           {HOURS.map(h => <option key={h} value={h}>{h}</option>)}
         </select>
-        <select value={form[minuteKey]} onChange={e => onChange(minuteKey, e.target.value)} className={`flex-1 ${cls}`}>
+        <select value={form[minuteKey]} onChange={e => onChange(minuteKey, e.target.value)} className={`min-w-0 flex-1 ${cls}`}>
           {MINUTES.map(m => <option key={m} value={m}>{m}</option>)}
         </select>
-        <select value={form[periodKey]} onChange={e => onChange(periodKey, e.target.value)} className={cls}>
+        <select value={form[periodKey]} onChange={e => onChange(periodKey, e.target.value)} className={`shrink-0 ${cls}`}>
           <option value="AM">AM</option>
           <option value="PM">PM</option>
         </select>
@@ -728,7 +728,7 @@ function Step1({ form, set, toggle, toggleAssistance, errors }) {
       )}
 
       {/* Times */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
         <TimeSelect
           label="Arrival Time"
           hourKey="arrival_hour" minuteKey="arrival_minute" periodKey="arrival_period"
