@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { TourDetailsSkeleton } from '@/components/ui/Skeletons';
+import { NeonBorder } from '@/components/ui/NeonBorder';
 import { transformImage, imgPresets } from '@/lib/imageTransform';
 import { toast } from 'sonner';
 import TripRequestForm from '@/components/profile/TripRequestForm';
@@ -126,13 +127,14 @@ export default function TourDetails() {
   const navigate = useNavigate();
   const routerLocation = useLocation();
   const { isAuthenticated } = useAuth();
+  const providerPickerRequested = new URLSearchParams(routerLocation.search).get('chooseProvider') === '1';
   const aiConversationId = routerLocation.state?.returnToAiChat ? routerLocation.state?.conversationId : null;
   const backDestination = aiConversationId
     ? `/ai-assistant?conversation=${encodeURIComponent(aiConversationId)}`
     : '/tours';
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const { tour, loading, error } = useTourBySlug(slug);
-  const [providerDialogOpen, setProviderDialogOpen] = useState(false);
+  const [providerDialogOpen, setProviderDialogOpen] = useState(providerPickerRequested);
   const [providerCode, setProviderCode] = useState('');
   const [requestFormOpen, setRequestFormOpen] = useState(false);
   const [requestStarting, setRequestStarting] = useState(false);
@@ -140,6 +142,26 @@ export default function TourDetails() {
   const [requestTarget, setRequestTarget] = useState(null);
   const [provider, setProvider] = useState(null);
   const [providerLoading, setProviderLoading] = useState(false);
+
+  useEffect(() => {
+    setProviderDialogOpen(providerPickerRequested);
+  }, [providerPickerRequested]);
+
+  const setProviderPickerOpen = (open) => {
+    const searchParams = new URLSearchParams(routerLocation.search);
+    if (open) searchParams.set('chooseProvider', '1');
+    else searchParams.delete('chooseProvider');
+
+    setProviderDialogOpen(open);
+    navigate({
+      pathname: routerLocation.pathname,
+      search: searchParams.toString() ? `?${searchParams.toString()}` : '',
+      hash: routerLocation.hash,
+    }, {
+      replace: true,
+      state: routerLocation.state,
+    });
+  };
 
   // Lightbox state for the sidebar gallery thumbnails. `lightboxIndex` is the
   // index into `tour.gallery` of the currently-opened image; null means closed.
@@ -233,7 +255,7 @@ export default function TourDetails() {
       const intent = await beginPackageTripRequest(tour.id, targetCode);
       setRequestIntentId(intent.intent_id);
       setRequestTarget(intent);
-      setProviderDialogOpen(false);
+      setProviderPickerOpen(false);
       setRequestFormOpen(true);
       setProviderCode('');
     } catch (requestError) {
@@ -430,7 +452,13 @@ export default function TourDetails() {
                   onClick={() => navigate(provider.role === 'agency' ? `/agencies/${provider.id}` : `/guides/${provider.id}`)}
                   className="flex min-w-0 items-center gap-3 rounded-xl text-start transition-colors hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-accent sm:-my-2 sm:px-2 sm:py-2"
                 >
-                  <img decoding="async" loading="lazy" src={avatarFor(provider)} alt={provider.full_name || ''} className="h-11 w-11 shrink-0 rounded-full object-cover ring-2 ring-accent/20" />
+                  <img
+                    decoding="async"
+                    loading="lazy"
+                    src={avatarFor(provider)}
+                    alt={provider.full_name || ''}
+                    className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-gold/45 shadow-sm"
+                  />
                   <span className="min-w-0">
                     <span className="flex items-center gap-1.5 font-heading text-sm font-semibold text-foreground">
                       <span className="truncate">{provider.full_name || (provider.role === 'agency' ? (lang === 'fa' ? 'آژانس' : 'Agency') : (lang === 'fa' ? 'راهنما' : 'Guide'))}</span>
@@ -561,15 +589,27 @@ export default function TourDetails() {
                 </h3>
 
                 <div className="space-y-3 mb-6">
-                  <button
-                    type="button"
-                    onClick={() => startPackageRequest()}
-                    disabled={requestStarting}
-                    className="w-full min-h-12 px-4 py-3 rounded-xl bg-accent text-white font-body font-semibold hover:bg-accent/90 transition-colors flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {requestStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {lang === 'fa' ? 'درخواست رزرو' : lang === 'ar' ? 'طلب الحجز' : 'Request Booking'}
-                  </button>
+                  <div className="tour-booking-cta-shell relative isolate rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => startPackageRequest()}
+                      disabled={requestStarting}
+                      className="tour-booking-cta relative z-10 w-full min-h-12 px-4 py-3 rounded-xl bg-accent text-white font-body font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {requestStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {lang === 'fa' ? 'درخواست رزرو' : lang === 'ar' ? 'طلب الحجز' : 'Request Booking'}
+                    </button>
+                    <NeonBorder
+                      className="tour-booking-neon z-20"
+                      color="#CC9149"
+                      rounded={50}
+                      thickness={3}
+                      borderSize={42}
+                      glow={70}
+                      speed={15}
+                      style={{ position: 'absolute', inset: 0 }}
+                    />
+                  </div>
 
                   <button
                     type="button"
@@ -579,7 +619,7 @@ export default function TourDetails() {
                         navigate('/login', { state: { from: `/tours/${slug}` } });
                         return;
                       }
-                      setProviderDialogOpen(true);
+                      setProviderPickerOpen(true);
                     }}
                     disabled={requestStarting}
                     className="w-full min-h-12 px-4 py-3 rounded-xl border-2 border-accent/55 bg-accent/[0.03] text-accent font-body font-semibold hover:border-accent hover:bg-accent/10 transition-colors flex items-center justify-center gap-2 text-center leading-snug disabled:opacity-60 disabled:cursor-not-allowed"
@@ -642,15 +682,59 @@ export default function TourDetails() {
         open={providerDialogOpen}
         onOpenChange={(open) => {
           if (requestStarting) return;
-          setProviderDialogOpen(open);
+          setProviderPickerOpen(open);
           if (!open) setProviderCode('');
         }}
       >
-        <DialogContent dir={dir} className="sm:max-w-md">
+        <DialogContent dir={dir} className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>{t('request_another_provider_title')}</DialogTitle>
             <DialogDescription>{t('request_another_provider_desc')}</DialogDescription>
           </DialogHeader>
+          <div className="rounded-2xl border border-border/60 bg-muted/30 p-3.5">
+            <div className="mb-3">
+              <p className="font-body text-sm font-semibold text-foreground">{t('request_provider_find_title')}</p>
+              <p className="mt-1 font-body text-xs leading-relaxed text-muted-foreground">{t('request_provider_find_desc')}</p>
+            </div>
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Link
+                to="/guides"
+                state={{ providerPickerMode: true }}
+                className="group flex min-h-[76px] items-center gap-3 rounded-xl border border-border/70 bg-card p-3 text-start transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent/10 text-accent">
+                  <UserRound className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2 font-body text-sm font-semibold text-foreground">
+                    {t('request_browse_guides')}
+                    <Arrow className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{t('request_browse_guides_desc')}</span>
+                </span>
+              </Link>
+              <Link
+                to="/agencies"
+                state={{ providerPickerMode: true }}
+                className="group flex min-h-[76px] items-center gap-3 rounded-xl border border-border/70 bg-card p-3 text-start transition-all hover:-translate-y-0.5 hover:border-accent/60 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gold/10 text-gold">
+                  <Building2 className="h-5 w-5" />
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center justify-between gap-2 font-body text-sm font-semibold text-foreground">
+                    {t('request_browse_agencies')}
+                    <Arrow className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">{t('request_browse_agencies_desc')}</span>
+                </span>
+              </Link>
+            </div>
+            <p className="mt-3 flex items-start gap-2 font-body text-[11px] leading-relaxed text-muted-foreground">
+              <Arrow className="mt-0.5 h-3.5 w-3.5 shrink-0 rotate-180" />
+              {t('request_provider_return_hint')}
+            </p>
+          </div>
           <div className="space-y-1.5 pt-2">
             <Label htmlFor="package-provider-code">{t('request_provider_code_label')}</Label>
             <div className="relative">
@@ -677,7 +761,7 @@ export default function TourDetails() {
             <p className="text-xs leading-relaxed text-muted-foreground">{t('request_provider_code_help')}</p>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={() => { setProviderDialogOpen(false); setProviderCode(''); }} disabled={requestStarting}>
+            <Button variant="outline" onClick={() => { setProviderPickerOpen(false); setProviderCode(''); }} disabled={requestStarting}>
               {t('request_cancel')}
             </Button>
             <Button onClick={() => startPackageRequest(providerCode)} disabled={requestStarting || !providerCode}>

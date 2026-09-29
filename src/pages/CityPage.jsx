@@ -3,16 +3,18 @@ import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Map as MapIcon, User, Landmark, BookOpen,
+  Map as MapIcon, User, Landmark,
   ArrowRight, ArrowLeft,
-  Clock, DollarSign, Star, Languages, MessageCircle, Compass,
-  Calendar, Plane, Info,
+  Clock, DollarSign, Star, Languages, Compass,
+  ChevronDown, MapPin, Send,
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n.jsx';
+import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/supabaseClient';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { selectPublicTours } from '@/lib/publicTours';
 import { avatarFor } from '@/lib/avatar';
+import TripRequestForm from '@/components/profile/TripRequestForm';
 
 // ── City catalog ─────────────────────────────────────────────────────────────
 // Keys are the lowercase URL slugs. Each entry carries English copy from the
@@ -176,6 +178,7 @@ export default function CityPage() {
   const { citySlug } = useParams();
   const navigate = useNavigate();
   const { lang, dir } = useI18n();
+  const { isAuthenticated } = useAuth();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
   const slug = String(citySlug || '').toLowerCase();
@@ -186,6 +189,8 @@ export default function CityPage() {
   const [guides, setGuides] = useState([]);
   const [toursLoading, setToursLoading] = useState(true);
   const [guidesLoading, setGuidesLoading] = useState(true);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [requestedAttraction, setRequestedAttraction] = useState(null);
 
   // Real Supabase data, scoped to the active city. No mock fallback —
   // when nothing matches we render a "No tour packages…" / "No guides…"
@@ -236,25 +241,32 @@ export default function CityPage() {
     tabAttract:  lang === 'fa' ? 'دیدنی‌ها' : lang === 'ar' ? 'الأماكن' : 'Attractions',
     tabAbout:    lang === 'fa' ? 'درباره' : lang === 'ar' ? 'حول' : 'About',
     viewPackage: lang === 'fa' ? 'مشاهده پکیج' : lang === 'ar' ? 'عرض الباقة' : 'View Package',
-    contactGuide:lang === 'fa' ? 'تماس با راهنما' : lang === 'ar' ? 'تواصل مع المرشد' : 'Contact Guide',
+    viewGuide:   lang === 'fa' ? 'مشاهده پروفایل راهنما' : lang === 'ar' ? 'عرض ملف المرشد' : 'View Guide Profile',
     fromPrice:   lang === 'fa' ? 'از' : lang === 'ar' ? 'من' : 'from',
     days:        lang === 'fa' ? 'روز' : lang === 'ar' ? 'أيام' : 'days',
     mockBanner:  lang === 'fa' ? 'نمونه — به‌زودی محتوای واقعی برای این شهر اضافه می‌شود' : lang === 'ar' ? 'عينة — سيُضاف محتوى حقيقي لهذه المدينة قريباً' : 'Sample — real content for this city is coming soon',
-    travelTips:  lang === 'fa' ? 'نکات سفر' : lang === 'ar' ? 'نصائح السفر' : 'Travel Tips',
-    bestTime:    lang === 'fa' ? 'بهترین زمان سفر' : lang === 'ar' ? 'أفضل وقت للزيارة' : 'Best time to visit',
-    gettingThere:lang === 'fa' ? 'دسترسی' : lang === 'ar' ? 'الوصول' : 'Getting there',
-    gettingThereVal: lang === 'fa' ? 'پرواز داخلی، اتوبوس بین‌شهری یا قطار از تهران' : lang === 'ar' ? 'رحلة داخلية أو حافلة أو قطار من طهران' : 'Domestic flight, intercity bus, or train from Tehran',
-    knowBefore:  lang === 'fa' ? 'پیش از سفر' : lang === 'ar' ? 'قبل السفر' : 'Good to know',
-    knowBeforeVal: lang === 'fa' ? 'احترام به پوشش محلی، با راهنمای مجاز سفر کن، اینترنت محدود است.' : lang === 'ar' ? 'احترم اللباس المحلي، سافر مع مرشد مرخص، الإنترنت محدود.' : 'Respect local dress codes, travel with a licensed guide, internet access can be limited.',
     // Empty-state copy
     noTours:     lang === 'fa' ? 'هنوز پکیج توری برای این شهر ثبت نشده است.' : lang === 'ar' ? 'لا توجد باقات سياحية لهذه المدينة بعد.' : 'No tour packages available for this city yet.',
     noToursSub:  lang === 'fa' ? 'به‌زودی دوباره سر بزن — در حال افزودن پکیج‌های جدید هستیم.' : lang === 'ar' ? 'تحقق لاحقاً — نضيف باقات جديدة قريباً.' : "Check back soon — we're adding new packages.",
     noGuides:    lang === 'fa' ? 'هنوز راهنمای محلی برای این شهر ثبت نشده است.' : lang === 'ar' ? 'لا يوجد مرشدون محليون مسجلون لهذه المدينة بعد.' : 'No local guides registered for this city yet.',
     noGuidesSub: lang === 'fa' ? 'می‌خواهی به‌عنوان راهنما ثبت‌نام کنی؟' : lang === 'ar' ? 'هل تريد الانضمام كمرشد؟' : 'Want to become a guide?',
     joinGuide:   lang === 'fa' ? 'ثبت‌نام به‌عنوان راهنما' : lang === 'ar' ? 'انضم كمرشد' : 'Join as a Guide',
-    attractionsSoon: lang === 'fa' ? 'دیدنی‌ها به‌زودی' : lang === 'ar' ? 'الأماكن قريباً' : 'Attractions coming soon',
-    attractionsSoonSub: lang === 'fa' ? 'در حال انتخاب بهترین جاذبه‌های این شهر هستیم.' : lang === 'ar' ? 'نختار لك أفضل المواقع في هذه المدينة.' : "We're curating the best spots in this city.",
+    attractionsTitle: lang === 'fa' ? `جاذبه‌های دیدنی ${city?.nameI18n?.fa || city?.name || ''}` : lang === 'ar' ? `معالم ${city?.nameI18n?.ar || city?.name || ''}` : `Discover ${city?.name || ''}`,
+    attractionsIntro: lang === 'fa' ? 'جاذبه موردنظرت را انتخاب کن و اجرای یک تور اختصاصی برای بازدید از آن را درخواست بده.' : lang === 'ar' ? 'اختر المعلم الذي ترغب بزيارته واطلب جولة خاصة إليه.' : 'Choose a place you would love to see and request a custom tour built around it.',
+    attractionLabel: lang === 'fa' ? 'جاذبه دیدنی' : lang === 'ar' ? 'معلم سياحي' : 'Featured attraction',
+    requestTour: lang === 'fa' ? 'درخواست اجرای تور' : lang === 'ar' ? 'اطلب جولة' : 'Request a tour',
   }), [lang, city]);
+
+  const requestAttractionTour = (attraction) => {
+    if (!isAuthenticated) {
+      navigate('/signup', {
+        state: { from: `/destinations/${slug}` },
+      });
+      return;
+    }
+
+    setRequestedAttraction(attraction);
+  };
 
   // ── Not found ──────────────────────────────────────────────────────────────
   if (!city) {
@@ -276,7 +288,6 @@ export default function CityPage() {
     { id: 'tours',       label: tx.tabTours,    icon: MapIcon },
     { id: 'guides',      label: tx.tabGuides,   icon: User },
     { id: 'attractions', label: tx.tabAttract,  icon: Landmark },
-    { id: 'about',       label: tx.tabAbout,    icon: BookOpen },
   ];
 
   return (
@@ -310,9 +321,34 @@ export default function CityPage() {
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-semibold text-white leading-tight mb-4">
               {localName}
             </h1>
-            <p className="font-body text-sm sm:text-base text-white/80 leading-relaxed max-w-xl">
-              {city.description}
-            </p>
+            <div className="max-w-xl">
+              <button
+                type="button"
+                onClick={() => setAboutOpen((open) => !open)}
+                aria-expanded={aboutOpen}
+                aria-controls="city-about"
+                className="inline-flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3.5 py-2 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+              >
+                {tx.tabAbout}
+                <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${aboutOpen ? 'rotate-180' : ''}`} />
+              </button>
+              <AnimatePresence initial={false}>
+                {aboutOpen && (
+                  <motion.div
+                    id="city-about"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                    className="overflow-hidden"
+                  >
+                    <p className="pt-3 font-body text-sm sm:text-base text-white/85 leading-relaxed">
+                      {city.description}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </motion.div>
 
         </div>
@@ -382,15 +418,22 @@ export default function CityPage() {
             )}
 
             {tab === 'attractions' && (
-              <AttractionsComingSoon tx={tx} />
+              <AttractionsGrid
+                city={city}
+                tx={tx}
+                onRequest={requestAttractionTour}
+              />
             )}
 
-            {tab === 'about' && (
-              <AboutPanel city={city} tx={tx} />
-            )}
           </motion.div>
         </AnimatePresence>
       </main>
+
+      <TripRequestForm
+        isOpen={Boolean(requestedAttraction)}
+        onClose={() => setRequestedAttraction(null)}
+        initialData={requestedAttraction ? buildAttractionRequest(city, requestedAttraction, lang) : null}
+      />
     </div>
   );
 }
@@ -526,11 +569,11 @@ function GuideGrid({ guides, cityName, tx, loading, navigate }) {
           </div>
 
           <Link
-            to={`/chat/${guide.id}`}
+            to={guide.role === 'agency' ? `/agencies/${guide.id}` : `/guides/${guide.id}`}
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-accent hover:bg-accent/90 text-white text-sm font-semibold transition"
           >
-            <MessageCircle className="w-4 h-4" />
-            {tx.contactGuide}
+            <User className="w-4 h-4" />
+            {tx.viewGuide}
           </Link>
         </div>
       ))}
@@ -538,58 +581,85 @@ function GuideGrid({ guides, cityName, tx, loading, navigate }) {
   );
 }
 
-function AttractionsComingSoon({ tx }) {
-  return (
-    <div className="text-center py-16">
-      <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-accent/10 border border-accent/30 flex items-center justify-center">
-        <Landmark className="w-7 h-7 text-accent" />
-      </div>
-      <p className="font-heading text-lg text-foreground font-semibold">{tx.attractionsSoon}</p>
-      <p className="font-body text-sm text-muted-foreground mt-2 max-w-sm mx-auto">{tx.attractionsSoonSub}</p>
-    </div>
-  );
+function buildAttractionRequest(city, attraction, lang) {
+  const requirements = lang === 'fa'
+    ? `می‌خواهم یک تور برای بازدید از «${attraction}» در ${city.nameI18n?.fa || city.name} داشته باشم. لطفاً برنامه بازدید، راهنمای محلی و رفت‌وبرگشت مناسب را پیشنهاد دهید.`
+    : lang === 'ar'
+      ? `أرغب في جولة لزيارة «${attraction}» في ${city.nameI18n?.ar || city.name}. يرجى اقتراح برنامج الزيارة ومرشد محلي ووسيلة نقل مناسبة.`
+      : `I would like a tour to visit ${attraction} in ${city.name}. Please suggest a suitable itinerary, a local guide, and transportation for this experience.`;
+
+  return {
+    destinations_array: [city.name],
+    male_adults: 1,
+    female_adults: 0,
+    children: 0,
+    requirements,
+    holiday_types: ['Culture & Heritage'],
+    additional_services: ['Attraction Tickets'],
+    tour_type: 'Private Tour',
+    needs_transport: true,
+  };
 }
 
-function AboutPanel({ city, tx }) {
+function AttractionsGrid({ city, tx, onRequest }) {
   return (
-    <div className="grid lg:grid-cols-3 gap-6">
-      <div className="lg:col-span-2 bg-card border border-border/40 rounded-3xl p-6 sm:p-8">
-        <p className="font-body text-base text-foreground/85 leading-relaxed mb-6">{city.description}</p>
-        <h3 className="font-heading text-sm font-semibold text-foreground mb-3 uppercase tracking-wider">
+    <section>
+      <div className="mb-8 max-w-2xl">
+        <span className="mb-3 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+          <Landmark className="h-4 w-4" />
           {tx.tabAttract}
-        </h3>
-        <ul className="grid sm:grid-cols-2 gap-2.5">
-          {city.highlights.map((h) => (
-            <li key={h} className="flex items-center gap-2.5 text-sm text-foreground/80">
-              <span className="w-1.5 h-1.5 rounded-full bg-gold flex-shrink-0" />
-              {h}
-            </li>
-          ))}
-        </ul>
+        </span>
+        <h2 className="font-heading text-2xl font-semibold text-foreground sm:text-3xl">
+          {tx.attractionsTitle}
+        </h2>
+        <p className="mt-3 font-body text-sm leading-relaxed text-muted-foreground sm:text-base">
+          {tx.attractionsIntro}
+        </p>
       </div>
 
-      <aside className="bg-card border border-border/40 rounded-3xl p-6 sm:p-8 space-y-5">
-        <h3 className="font-heading text-sm font-semibold text-foreground uppercase tracking-wider">
-          {tx.travelTips}
-        </h3>
-        <Tip icon={Calendar} label={tx.bestTime} value={city.bestTime} />
-        <Tip icon={Plane}    label={tx.gettingThere} value={tx.gettingThereVal} />
-        <Tip icon={Info}     label={tx.knowBefore}   value={tx.knowBeforeVal} />
-      </aside>
-    </div>
-  );
-}
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {city.highlights.map((attraction, index) => (
+          <article
+            key={attraction}
+            className="group relative isolate min-h-[290px] overflow-hidden rounded-3xl border border-white/10 bg-navy shadow-sm transition duration-500 hover:-translate-y-1 hover:shadow-xl"
+          >
+            <img
+              src={city.image}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 -z-20 h-full w-full object-cover transition duration-700 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 -z-10 bg-gradient-to-t from-navy via-navy/75 to-navy/15" />
 
-function Tip({ icon: Icon, label, value }) {
-  return (
-    <div className="flex gap-3">
-      <div className="w-9 h-9 rounded-xl bg-accent/10 text-accent flex items-center justify-center flex-shrink-0">
-        <Icon className="w-4 h-4" />
+            <div className="flex h-full min-h-[290px] flex-col justify-end p-5 sm:p-6">
+              <div className="mb-auto flex items-center justify-between">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/90 backdrop-blur-md">
+                  <MapPin className="h-3 w-3 text-gold" />
+                  {tx.attractionLabel}
+                </span>
+                <span className="font-heading text-3xl font-semibold text-white/25">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
+              </div>
+
+              <h3 className="font-heading text-xl font-semibold leading-snug text-white sm:text-2xl">
+                {attraction}
+              </h3>
+              <p className="mt-2 text-xs text-white/65">{city.name}</p>
+
+              <button
+                type="button"
+                onClick={() => onRequest(attraction)}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-navy transition hover:bg-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
+              >
+                <Send className="h-4 w-4" />
+                {tx.requestTour}
+              </button>
+            </div>
+          </article>
+        ))}
       </div>
-      <div className="min-w-0">
-        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 mb-0.5">{label}</p>
-        <p className="text-sm text-foreground/85 leading-relaxed">{value}</p>
-      </div>
-    </div>
+    </section>
   );
 }

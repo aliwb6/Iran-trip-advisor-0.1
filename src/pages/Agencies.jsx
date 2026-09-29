@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, ShieldCheck, Building2, MapPin, Globe, SlidersHorizontal, X, ArrowUpDown } from 'lucide-react';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -160,6 +160,11 @@ function AgencyCard({ agency, lang, onNavigate }) {
 export default function Agencies() {
   const { dir, lang } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
+  const openAgencyProfile = (path) => navigate(path, {
+    replace: location.state?.providerPickerMode === true,
+    state: location.state,
+  });
   // useAgencies() already filters is_approved: true from Supabase.
   const { agencies, loading, error } = useAgencies();
   const availableLanguages = useAvailableProfileLanguages();
@@ -314,7 +319,7 @@ export default function Agencies() {
         ) : (
           <div className="listing-mobile-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {sorted.map((agency) => (
-              <AgencyCard key={agency.id} agency={agency} lang={lang} onNavigate={navigate} />
+              <AgencyCard key={agency.id} agency={agency} lang={lang} onNavigate={openAgencyProfile} />
             ))}
           </div>
         )}

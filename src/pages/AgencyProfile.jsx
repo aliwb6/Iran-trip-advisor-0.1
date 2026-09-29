@@ -277,7 +277,8 @@ export default function AgencyProfile() {
         if (profileErr) throw profileErr;
 
         // Chat access follows the server-side request/proposal relationship
-        // predicate. Payment is intentionally not required to start messaging.
+        // predicate. Chat opens after an admin-approved proposal becomes a
+        // booking; payment remains responsible only for contact release.
         // Authorization failures fail closed without breaking the public profile.
         let unlocked = false;
         if (user?.id) {
@@ -351,7 +352,7 @@ export default function AgencyProfile() {
 
   const handleChat = () => {
     if (!chatUnlocked) {
-      toast(lang === 'fa' ? 'برای شروع چت ابتدا یک درخواست یا پروپوزال فعال با این آژانس داشته باشید.' : 'Start a request or proposal relationship with this agency to open chat.');
+      toast(lang === 'fa' ? 'چت پس از نهایی‌شدن رزرو تور یا تور سفارشی فعال می‌شود.' : 'Chat becomes available after booking a tour or a custom tour.');
       return;
     }
     navigate(`/chat/${id}`);
@@ -537,7 +538,7 @@ export default function AgencyProfile() {
               <button
                 onClick={() => handleChat()}
                 disabled={!chatUnlocked}
-                title={chatUnlocked ? '' : (lang === 'fa' ? 'پس از ایجاد درخواست یا پروپوزال فعال می‌شود' : 'Available after a request or proposal relationship exists')}
+                title={chatUnlocked ? '' : (lang === 'fa' ? 'پس از نهایی‌شدن رزرو فعال می‌شود' : 'Available after booking is confirmed')}
                 className={`flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-body font-semibold text-sm active:scale-[0.98] transition-all ${
                   chatUnlocked
                     ? 'border-2 border-gold text-gold hover:bg-gold/5'

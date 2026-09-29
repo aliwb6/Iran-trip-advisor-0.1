@@ -46,10 +46,10 @@ export default function ChatRelationshipRoute({ children }) {
   if (!allowed || error) {
     const title = lang === 'fa' ? 'هنوز گفت‌وگویی ایجاد نشده' : lang === 'ar' ? 'لم تبدأ المحادثة بعد' : 'Chat is not available yet';
     const copy = lang === 'fa'
-      ? 'پس از ایجاد درخواست مستقیم، درخواست تور یا ارسال پروپوزال، چت داخل سایت فعال می‌شود. برای شروع لازم نیست پرداخت انجام شده باشد.'
+      ? 'پس از نهایی‌شدن رزرو یکی از تورهای راهنما یا تور سفارشی، چت داخل سایت فعال می‌شود. پیشنهاد راهنما پیش از رزرو توسط ادمین بررسی می‌شود.'
       : lang === 'ar'
-        ? 'تتاح المحادثة داخل الموقع بعد إنشاء طلب مباشر أو طلب جولة أو إرسال عرض. لا يلزم الدفع لبدء المحادثة.'
-        : 'Chat becomes available after a direct request, tour request, or proposal relationship exists. Payment is not required to start chatting.';
+        ? 'تتاح المحادثة داخل الموقع بعد تأكيد حجز جولة أو جولة مخصصة. يراجع المسؤول عرض المرشد قبل الحجز.'
+        : 'Chat becomes available after booking one of the guide’s tours or a custom tour. The guide’s proposal is reviewed by an admin before booking.';
     const action = lang === 'fa' ? 'مشاهده درخواست‌ها' : lang === 'ar' ? 'عرض الطلبات' : 'View requests';
 
     return (

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Plus, Inbox, ArrowLeft } from 'lucide-react';
@@ -27,6 +27,13 @@ export default function RequestsPage() {
 
   const [filter, setFilter] = useState('active');
   const [formOpen, setFormOpen] = useState(false);
+
+  // Route changes preserve the browser's scroll position by default. Reset it
+  // before paint so this page always starts with its heading and first request.
+  useLayoutEffect(() => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, []);
 
   useEffect(() => {
     if (!isLoadingAuth && !isAuthenticated) navigate('/login');

@@ -38,7 +38,8 @@ test('tour packages prefill the canonical editable trip request form', () => {
   assert.equal(initial.needs_transport, true);
   assert.equal(initial.needs_accommodation, true);
   assert.equal(initial.tour_type, 'Private Tour');
-  assert.ok(initial.requirements.length >= 80);
+  assert.equal(initial.requirements, '');
+  assert.ok(initial.requirements_placeholder.length >= 80);
 });
 
 test('Tour Details exposes both package request paths and uses the canonical RPC', async () => {

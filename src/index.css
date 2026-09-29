@@ -113,6 +113,38 @@ h1, h2, h3 {
   }
 }
 
+.tour-booking-cta {
+  border: 1px solid hsl(var(--gold) / 0.42);
+  box-shadow: 0 8px 18px hsl(var(--accent) / 0.25);
+  transition: transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.tour-booking-cta-shell:has(.tour-booking-cta:not(:disabled)):hover .tour-booking-cta {
+  transform: translateY(-2px);
+  background: hsl(var(--accent) / 0.9);
+  box-shadow: 0 12px 25px hsl(var(--accent) / 0.32);
+}
+
+.tour-booking-neon {
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.tour-booking-cta-shell:has(.tour-booking-cta:not(:disabled)):hover .tour-booking-neon {
+  transform: translateY(-2px);
+}
+
+.tour-booking-cta-shell:has(.tour-booking-cta:disabled) .tour-booking-neon {
+  opacity: 0.42;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-booking-cta { transition: none; }
+  .tour-booking-neon { transition: none; }
+  .tour-booking-cta-shell:has(.tour-booking-cta:not(:disabled)):hover .tour-booking-cta,
+  .tour-booking-cta-shell:has(.tour-booking-cta:not(:disabled)):hover .tour-booking-neon { transform: none; }
+}
+
 @layer base {
   :root {
     /* Warm Ivory + Persian Blue + Turquoise + Gold */

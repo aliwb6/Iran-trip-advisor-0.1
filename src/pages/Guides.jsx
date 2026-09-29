@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Star, ShieldCheck, MapPin, Globe, SlidersHorizontal, X, ArrowUpDown } from 'lucide-react';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -153,6 +153,11 @@ function GuideCard({ guide, lang, onNavigate }) {
 export default function Guides() {
   const { t, dir, lang } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
+  const openGuideProfile = (path) => navigate(path, {
+    replace: location.state?.providerPickerMode === true,
+    state: location.state,
+  });
   const { guides: supabaseGuides, loading, error } = useGuides();
   const availableLanguages = useAvailableProfileLanguages();
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -308,7 +313,7 @@ export default function Guides() {
         ) : (
           <div className="listing-mobile-grid grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
             {sorted.map((guide) => (
-              <GuideCard key={guide.id} guide={guide} lang={lang} onNavigate={navigate} />
+              <GuideCard key={guide.id} guide={guide} lang={lang} onNavigate={openGuideProfile} />
             ))}
           </div>
         )}

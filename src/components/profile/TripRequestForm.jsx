@@ -297,7 +297,22 @@ function CityMultiSelect({ values, onChange }) {
   );
 
   const remove = (city) => onChange(values.filter(c => c !== city));
-  const add    = (city) => { onChange([...values, city]); setSearch(''); inputRef.current?.focus(); };
+  const add = (city) => {
+    const trimmedCity = city.trim();
+    if (!trimmedCity) return;
+
+    const canonicalCity = IRANIAN_CITIES.find(
+      option => option.toLocaleLowerCase() === trimmedCity.toLocaleLowerCase()
+    ) || trimmedCity;
+    const alreadySelected = values.some(
+      value => value.toLocaleLowerCase() === canonicalCity.toLocaleLowerCase()
+    );
+
+    if (!alreadySelected) onChange([...values, canonicalCity]);
+    setSearch('');
+    setOpen(false);
+    inputRef.current?.focus();
+  };
 
   return (
     <div className="relative" ref={wrapRef}>
@@ -327,7 +342,13 @@ function CityMultiSelect({ values, onChange }) {
           value={search}
           onChange={e => { setSearch(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }}
+          onKeyDown={e => {
+            if (e.key === 'Escape') setOpen(false);
+            if (e.key === 'Enter' && search.trim()) {
+              e.preventDefault();
+              add(search);
+            }
+          }}
           placeholder={values.length === 0 ? t('trip_city_placeholder') : ''}
           className="flex-1 min-w-[120px] bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/50 py-0.5"
         />
@@ -637,15 +658,21 @@ function PackageRequestSummary({ context, form, lang }) {
 
 // ── Step 1: Trip Details ───────────────────────────────────────────────────
 
-function Step1({ form, set, toggle, toggleAssistance, errors }) {
+function Step1({ form, set, toggleAssistance, errors }) {
   const starsRef = useRef(null);
-  const [customAssistance, setCustomAssistance] = useState('');
 
-  useEffect(() => {
-    if (form.assistance.includes('Accommodation') && starsRef.current) {
+  const handleAssistanceClick = (item) => {
+    const isAddingAccommodation = item === 'Accommodation'
+      && !form.assistance.includes('Accommodation');
+
+    toggleAssistance(item);
+
+    // Only reveal the star choices after an explicit user action. Running this
+    // for prefilled package data makes the modal open halfway down the form.
+    if (isAddingAccommodation) {
       setTimeout(() => starsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 80);
     }
-  }, [form.assistance]);
+  };
 
   const handleStartDate = (v) => {
     set('start_date', v);
@@ -687,30 +714,6 @@ function Step1({ form, set, toggle, toggleAssistance, errors }) {
           />
           <FieldError msg={errors?.start_date} />
         </div>
-        <div className="mt-3 flex gap-2">
-          <input
-            value={customAssistance}
-            onChange={event => setCustomAssistance(event.target.value)}
-            onKeyDown={event => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                const value = customAssistance.trim();
-                if (value && !form.assistance.includes(value)) toggleAssistance(value);
-                setCustomAssistance('');
-              }
-            }}
-            placeholder="Add another assistance need…"
-            className="min-w-0 flex-1 rounded-xl border border-border/40 bg-background/50 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-accent focus:outline-none"
-          />
-          <button type="button" onClick={() => { const value = customAssistance.trim(); if (value && !form.assistance.includes(value)) toggleAssistance(value); setCustomAssistance(''); }} className="rounded-xl border border-accent/30 px-3 text-sm font-medium text-accent hover:bg-accent/10">Add</button>
-        </div>
-        {form.assistance.filter(item => !['Transportation', 'Accommodation'].includes(item)).length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {form.assistance.filter(item => !['Transportation', 'Accommodation'].includes(item)).map(item => (
-              <button type="button" key={item} onClick={() => toggleAssistance(item)} className="rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs text-accent">{item} ×</button>
-            ))}
-          </div>
-        )}
         <div>
           <p className="text-xs font-medium text-muted-foreground mb-2">End Date</p>
           <DatePickerInput
@@ -780,13 +783,13 @@ function Step1({ form, set, toggle, toggleAssistance, errors }) {
         <div className="flex gap-3">
           <ToggleBlock
             selected={form.assistance.includes('Transportation')}
-            onClick={() => toggleAssistance('Transportation')}
+            onClick={() => handleAssistanceClick('Transportation')}
             icon={<Car className="w-4 h-4" />}
             label="Transportation"
           />
           <ToggleBlock
             selected={form.assistance.includes('Accommodation')}
-            onClick={() => toggleAssistance('Accommodation')}
+            onClick={() => handleAssistanceClick('Accommodation')}
             icon={<Hotel className="w-4 h-4" />}
             label="Accommodation"
           />
@@ -833,6 +836,7 @@ function Step2({
   form, set, toggle, errors,
   customHolidayTypes, onAddHolidayType,
   customAdditionalServices, onAddAdditionalService,
+  requirementsPlaceholder,
 }) {
   const [newHolidayType,    setNewHolidayType]    = useState('');
   const [showHolidayInput,  setShowHolidayInput]  = useState(false);
@@ -1055,13 +1059,13 @@ function Step2({
             e.target.style.height = 'auto';
             e.target.style.height = e.target.scrollHeight + 'px';
           }}
-          placeholder="Describe anything else we should know about your travel goals, interests, or special needs..."
+          placeholder={requirementsPlaceholder || 'Describe anything else we should know about your travel goals, interests, or special needs...'}
           rows={2}
           minLength={REQUIREMENTS_MIN_LENGTH}
           required
           aria-describedby="trip-requirements-help trip-requirements-count"
           style={{ minHeight: '60px', maxHeight: '200px', overflow: 'hidden', resize: 'none' }}
-          className="w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.08] border border-gray-200 dark:border-white/20 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:border-accent transition-colors"
+          className="w-full px-4 py-3 bg-gray-50 dark:bg-white/[0.08] border border-gray-200 dark:border-white/20 rounded-xl text-sm text-foreground placeholder:text-muted-foreground/45 focus:placeholder:text-transparent focus:outline-none focus:border-accent transition-colors"
         />
         <FieldError msg={errors?.requirements} />
         <div className="mt-2 flex items-start justify-between gap-3 text-xs">
@@ -1101,9 +1105,22 @@ export default function TripRequestForm({
   const [form, setForm]           = useState(INITIAL_FORM);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors]       = useState({});
+  const scrollAreaRef = useRef(null);
 
   const [customHolidayTypes,       setCustomHolidayTypes]       = useState([]);
   const [customAdditionalServices, setCustomAdditionalServices] = useState([]);
+
+  // AnimatePresence preserves the same scroll container while the modal opens
+  // and while its steps change. Start every view at the beginning of its form.
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    const frame = requestAnimationFrame(() => {
+      if (scrollAreaRef.current) scrollAreaRef.current.scrollTop = 0;
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [isOpen, step]);
 
   // Pre-populate from prefillData (AI conversational draft) — simple direct merge
   useEffect(() => {
@@ -1396,7 +1413,7 @@ export default function TripRequestForm({
               </div>
 
               {/* Scrollable content */}
-              <div className="flex-1 overflow-y-auto px-6 sm:px-8 pb-4">
+              <div ref={scrollAreaRef} className="flex-1 overflow-y-auto px-6 sm:px-8 pb-4">
                 {requestContext && !packageMode && (
                   <div className="mb-5 rounded-2xl border border-accent/20 bg-accent/[0.06] px-4 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-accent">
@@ -1426,7 +1443,7 @@ export default function TripRequestForm({
                   >
                     {step === 1 ? (
                       <Step1
-                        form={form} set={set} toggle={toggle}
+                        form={form} set={set}
                         toggleAssistance={toggleAssistance} errors={errors}
                       />
                     ) : (
@@ -1436,6 +1453,7 @@ export default function TripRequestForm({
                         onAddHolidayType={addCustomHolidayType}
                         customAdditionalServices={customAdditionalServices}
                         onAddAdditionalService={addCustomAdditionalService}
+                        requirementsPlaceholder={initialData?.requirements_placeholder}
                       />
                     )}
                   </motion.div>

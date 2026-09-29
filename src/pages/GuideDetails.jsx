@@ -307,8 +307,9 @@ export default function GuideDetails() {
         ]);
         if (profileErr) throw profileErr;
 
-        // Chat access follows the server-side request/proposal relationship
-        // predicate. Payment is intentionally not required to start messaging.
+        // Chat access follows the server-side booking relationship predicate.
+        // The booking is created only after the traveler selects an
+        // admin-approved proposal; payment still controls contact release.
         // Authorization failures fail closed without breaking the public profile.
         let unlocked = false;
         if (user?.id) {
@@ -384,7 +385,7 @@ export default function GuideDetails() {
 
   const handleChat = () => {
     if (!chatUnlocked) {
-      toast(lang === 'fa' ? 'برای شروع چت ابتدا یک درخواست یا پروپوزال فعال با این راهنما داشته باشید.' : lang === 'ar' ? 'لبدء المحادثة يجب أن يكون لديك طلب أو عرض نشط مع هذا المرشد.' : 'Start a request or proposal relationship with this guide to open chat.');
+      toast(lang === 'fa' ? 'چت پس از نهایی‌شدن رزرو یکی از تورها یا تور سفارشی فعال می‌شود.' : lang === 'ar' ? 'تتاح المحادثة بعد تأكيد حجز جولة أو جولة مخصصة.' : 'Chat becomes available after booking one of this guide’s tours or a custom tour.');
       return;
     }
     navigate(`/chat/${id}`);
@@ -563,13 +564,13 @@ export default function GuideDetails() {
                 onClick={() => navigate(`/request-trip/${id}`, { state: { guide } })}
                 className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 active:scale-[0.98] transition-all shadow-md"
               >
-                {lang === 'fa' ? 'درخواست سفر' : lang === 'ar' ? 'طلب رحلة' : 'Request A Trip'}
+                {lang === 'fa' ? 'درخواست تور سفارشی' : lang === 'ar' ? 'طلب جولة مخصصة' : 'Request A Custom Tour'}
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleChat()}
                 disabled={!chatUnlocked}
-                title={chatUnlocked ? '' : (lang === 'fa' ? 'پس از ایجاد درخواست یا پروپوزال فعال می‌شود' : lang === 'ar' ? 'متاح بعد إنشاء طلب أو عرض' : 'Available after a request or proposal relationship exists')}
+                title={chatUnlocked ? '' : (lang === 'fa' ? 'پس از نهایی‌شدن رزرو فعال می‌شود' : lang === 'ar' ? 'متاح بعد تأكيد الحجز' : 'Available after booking is confirmed')}
                 className={`flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-body font-semibold text-sm active:scale-[0.98] transition-all ${
                   chatUnlocked
                     ? 'border-2 border-gold text-gold hover:bg-gold/5'

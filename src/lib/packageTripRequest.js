@@ -75,7 +75,10 @@ export function buildPackageTripRequestInitialData(tour, lang = 'en') {
     female_adults: 0,
     children: 0,
     guide_languages: asList(tour?.guide_languages ?? tour?.languages, lang),
-    requirements: buildRequirements(tour, lang),
+    // Keep the suggestion out of the submitted value so travelers must write
+    // their own requirements instead of sending the generated copy unchanged.
+    requirements: '',
+    requirements_placeholder: buildRequirements(tour, lang),
     holiday_types: [...new Set([...themes, ...(purpose ? [purpose] : [])])],
     additional_services: [],
     tour_type: normalizeTourType(tour?.tour_type),
