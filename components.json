@@ -19,6 +19,7 @@
   },
   "iconLibrary": "lucide",
   "registries": {
-    "@componentry": "https://componentry.fun/r/{name}.json"
-  } 
+    "@componentry": "https://componentry.fun/r/{name}.json",
+    "@uselayouts": "https://uselayouts.com/r/{name}.json"
+  }
 }
