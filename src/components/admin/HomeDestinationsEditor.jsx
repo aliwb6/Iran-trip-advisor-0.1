@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useEffect,
   useState } from 'react';
@@ -122,7 +123,7 @@ export default function HomeDestinationsEditor() {
                   {item.image_url ? <img src={item.image_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-7 h-7 text-white/20" />}
                 </div>
                 <label className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-white/10 text-white/65 text-[11px] cursor-pointer hover:bg-white/15">
-                  {uploadingIndex === index ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                  {<IconSwap active={uploadingIndex === index} a={<Upload className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                   Upload image
                   <input
                     type="file"
@@ -149,7 +150,7 @@ export default function HomeDestinationsEditor() {
         ))}
       </div>
       <button onClick={save} disabled={saving} className="mt-5 ms-auto flex items-center gap-2 px-5 py-2.5 rounded-xl bg-teal-600 text-white text-sm font-semibold disabled:opacity-60">
-        {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save changes
+        {<IconSwap active={saving} a={<Save className="w-4 h-4" />} b={<Loader2 className="w-4 h-4 animate-spin" />} keepMounted={false} />} Save changes
       </button>
     </div>
   );

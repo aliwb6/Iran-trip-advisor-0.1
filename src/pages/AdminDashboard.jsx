@@ -1,3 +1,5 @@
+import IconSwap from '@/components/ui/IconSwap';
+import { TransitionSurface, TransitionPresence } from '@/components/ui/TransitionSurface';
 import {
   useState,
   useEffect } from 'react';
@@ -491,7 +493,7 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
                       onClick={() => onDelete(tour.id)}
                       className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 text-red-400 text-xs font-medium hover:bg-red-500/20 transition disabled:opacity-50"
                     >
-                      {busy ? <Loader2 className="w-3 h-3 animate-spin" /> : <Trash2 className="w-3 h-3" />}
+                      {<IconSwap active={busy} a={<Trash2 className="w-3 h-3" />} b={<Loader2 className="w-3 h-3 animate-spin" />} keepMounted={false} />}
                     </button>
                   </div>
                 </div>
@@ -543,9 +545,9 @@ function TourEditModal({ tour, onSave, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <TransitionSurface kind="backdrop" className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative w-full max-w-lg ${CARD} p-6 max-h-[90vh] overflow-y-auto`}>
+      <TransitionSurface kind="modal" className={`relative w-full max-w-lg ${CARD} p-6 max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-white font-bold">Edit Tour</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-white/50 hover:text-white transition">
@@ -592,7 +594,7 @@ function TourEditModal({ tour, onSave, onClose }) {
         <div className="flex gap-3 mt-5">
           <button onClick={handleSave} disabled={saving}
             className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[hsl(178,85%,32%)] hover:bg-[hsl(178,85%,38%)] text-white text-sm font-semibold disabled:opacity-60 transition">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+            {<IconSwap active={saving} a={<CheckCircle2 className="w-4 h-4" />} b={<Loader2 className="w-4 h-4 animate-spin" />} keepMounted={false} />}
             Save Changes
           </button>
           <button onClick={onClose}
@@ -600,8 +602,8 @@ function TourEditModal({ tour, onSave, onClose }) {
             Cancel
           </button>
         </div>
-      </div>
-    </div>
+      </TransitionSurface>
+    </TransitionSurface>
   );
 }
 
@@ -655,7 +657,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
                 onClick={() => onApprove(tour.id)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-medium transition disabled:opacity-50"
               >
-                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                {<IconSwap active={busy} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                 Approve
               </button>
             )}
@@ -665,7 +667,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
                 onClick={() => onReject(tour.id)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium transition disabled:opacity-50"
               >
-                {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                {<IconSwap active={busy} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                 Reject
               </button>
             )}
@@ -872,7 +874,7 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                   disabled={busy}
                   className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition border bg-[hsl(178,85%,32%)]/10 border-[hsl(178,85%,32%)]/25 text-[hsl(178,85%,55%)] hover:bg-[hsl(178,85%,32%)]/20 disabled:opacity-50"
                 >
-                  {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Edit2 className="w-3.5 h-3.5" />}
+                  {<IconSwap active={busy} a={<Edit2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                   View &amp; review profile
                 </button>
               </div>
@@ -980,8 +982,8 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <div className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl bg-[hsl(222,45%,12%)] border border-white/10 shadow-2xl">
+    <TransitionSurface kind="backdrop" className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
+      <TransitionSurface kind="modal" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl bg-[hsl(222,45%,12%)] border border-white/10 shadow-2xl">
         <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-5 py-4 bg-[hsl(222,45%,12%)] border-b border-white/10">
           <div className="flex items-center gap-3 min-w-0">
             <img src={avatarFor(guide)} alt="" className="w-11 h-11 rounded-xl object-cover bg-white/5" />
@@ -1033,7 +1035,7 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
                 </div>
                 {hasLicense && (
                   <button type="button" onClick={viewLicense} disabled={openingLicense} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[hsl(178,85%,32%)]/15 border border-[hsl(178,85%,32%)]/30 text-[hsl(178,85%,55%)] text-xs font-medium hover:bg-[hsl(178,85%,32%)]/25 disabled:opacity-50">
-                    {openingLicense ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <ExternalLink className="w-3.5 h-3.5" />}
+                    {<IconSwap active={openingLicense} a={<ExternalLink className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                     {openingLicense ? 'Opening…' : 'View uploaded license'}
                   </button>
                 )}
@@ -1058,8 +1060,8 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
             )}
           </div>
         </div>
-      </div>
-    </div>
+      </TransitionSurface>
+    </TransitionSurface>
   );
 }
 
@@ -1185,7 +1187,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           disabled={busy || !reviewText.trim()}
           className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.07] px-3.5 py-2 text-xs font-semibold text-white/70 hover:bg-white/[0.12] disabled:opacity-40"
         >
-          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Edit2 className="h-3.5 w-3.5" />}
+          {<IconSwap active={busy} a={<Edit2 className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
           Save edits
         </button>
         <button
@@ -1221,7 +1223,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           disabled={saving || !reply.trim()}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(178,85%,32%)] hover:bg-[hsl(178,85%,38%)] text-white text-xs font-semibold disabled:opacity-50 transition"
         >
-          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+          {<IconSwap active={saving} a={<Send className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
           {review.admin_reply ? 'Update Reply' : 'Save Reply'}
         </button>
       </div>
@@ -1424,9 +1426,9 @@ function ArticlesView({ profile }) {
         />
       )}
 
-      {editingArticle && articleDraft && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/75 p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="article-review-title">
-          <div dir="rtl" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[hsl(222,45%,14%)] shadow-2xl">
+      <TransitionPresence>{editingArticle && articleDraft && (
+        <TransitionSurface kind="backdrop" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/75 p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="article-review-title">
+          <TransitionSurface kind="modal" dir="rtl" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[hsl(222,45%,14%)] shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/[0.08] bg-[hsl(222,45%,14%)] px-5 py-4 sm:px-6">
               <div>
                 <p className="text-[11px] font-medium text-teal-400">بررسی و ویرایش پیش از انتشار</p>
@@ -1476,13 +1478,13 @@ function ArticlesView({ profile }) {
             <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-white/[0.08] bg-[hsl(222,45%,14%)] px-5 py-4 sm:px-6">
               <button onClick={closeArticleEditor} disabled={busyId === editingArticle.id} className="rounded-xl px-4 py-2 text-sm text-white/65 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50">انصراف</button>
               <button onClick={saveArticleEdits} disabled={busyId === editingArticle.id} className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500 disabled:opacity-50">
-                {busyId === editingArticle.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+                {<IconSwap active={busyId === editingArticle.id} a={<CheckCircle2 className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                 ذخیره تغییرات
               </button>
             </div>
-          </div>
-        </div>
-      )}
+          </TransitionSurface>
+        </TransitionSurface>
+      )}</TransitionPresence>
 
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
@@ -1567,7 +1569,7 @@ function ArticlesView({ profile }) {
                       onClick={() => setStatus(article.id, 'approved')}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-400 text-xs font-medium transition disabled:opacity-50"
                     >
-                      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                      {<IconSwap active={busy} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                       تایید
                     </button>
                   )}
@@ -1577,7 +1579,7 @@ function ArticlesView({ profile }) {
                       onClick={() => setStatus(article.id, 'rejected')}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium transition disabled:opacity-50"
                     >
-                      {busy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+                      {<IconSwap active={busy} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                       رد
                     </button>
                   )}
@@ -1995,14 +1997,14 @@ export default function AdminDashboard() {
         </div>
       </main>
 
-      {editingTour && (
+      <AnimatePresence>{editingTour && (
         <TourEditModal
           tour={editingTour}
           onSave={handleTourEdit}
           onClose={() => setEditingTour(null)}
         />
-      )}
-      {reviewingGuide && (
+      )}</AnimatePresence>
+      <AnimatePresence>{reviewingGuide && (
         <GuideProfileReviewModal
           key={reviewingGuide.id}
           guide={reviewingGuide}
@@ -2010,7 +2012,7 @@ export default function AdminDashboard() {
           onClose={() => setReviewingGuide(null)}
           onSave={saveGuideReview}
         />
-      )}
+      )}</AnimatePresence>
       {editingProposal && (
         <SubmitProposalModal
           open

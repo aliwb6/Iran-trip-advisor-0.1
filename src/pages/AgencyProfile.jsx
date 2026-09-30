@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -376,7 +377,7 @@ export default function AgencyProfile() {
             onClick={() => backDestination ? navigate(backDestination) : navigate(-1)}
             className="profile-page-back-button flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm transition"
           >
-            {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {<IconSwap active={isRtl} a={<ChevronLeft className="w-4 h-4" />} b={<ChevronRight className="w-4 h-4" />} />}
             {lang === 'fa' ? 'بازگشت' : 'Back'}
           </button>
         </div>
@@ -545,7 +546,7 @@ export default function AgencyProfile() {
                     : 'border-2 border-border text-muted-foreground/60 cursor-not-allowed bg-muted/30'
                 }`}
               >
-                {chatUnlocked ? <MessageCircle className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                {<IconSwap active={chatUnlocked} a={<Lock className="w-4 h-4" />} b={<MessageCircle className="w-4 h-4" />} />}
                 {lang === 'fa' ? 'چت' : 'Chat'}
               </button>
               <button type="button" onClick={handleWriteReview} className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl border-2 border-gold text-gold font-body font-semibold text-sm hover:bg-gold/5 active:scale-[0.98] transition-all">

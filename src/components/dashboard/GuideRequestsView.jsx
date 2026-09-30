@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useState,
   useEffect,
@@ -372,7 +373,7 @@ function ProposalCard({ entry, onChanged }) {
           disabled={confirming}
           className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/20 text-sm font-semibold transition disabled:opacity-50"
         >
-          {confirming ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+          {<IconSwap active={confirming} a={<CheckCircle2 className="w-4 h-4" />} b={<Loader2 className="w-4 h-4 animate-spin" />} keepMounted={false} />}
           {confirming ? 'Confirming…' : 'Confirm booking'}
         </button>
       )}
@@ -445,7 +446,7 @@ export default function GuideRequestsView({ userId }) {
           disabled={loading}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 text-xs transition disabled:opacity-40"
         >
-          {loading ? <Loader2 className="w-3 h-3" label="Refreshing requests" /> : <RefreshCw className="w-3 h-3" />}
+          {<IconSwap active={loading} a={<RefreshCw className="w-3 h-3" />} b={<Loader2 className="w-3 h-3" label="Refreshing requests" />} keepMounted={false} />}
           Refresh
         </button>
       </div>

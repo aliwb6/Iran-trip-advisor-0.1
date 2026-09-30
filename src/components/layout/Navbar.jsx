@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import { lazy, Suspense, useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -338,7 +339,7 @@ export default function Navbar() {
                 }`}
                 aria-label={t('nav_menu_aria')}
               >
-                {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+                {<IconSwap active={mobileOpen} a={<Menu className="w-4 h-4" />} b={<X className="w-4 h-4" />} />}
               </button>
             </div>
           </div>

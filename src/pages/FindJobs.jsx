@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -177,7 +178,7 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
               className="font-body text-xs rounded-xl h-9 border-border/60"
             >
               View Details
-              {expanded ? <ChevronUp className="w-3.5 h-3.5 ml-1" /> : <ChevronDown className="w-3.5 h-3.5 ml-1" />}
+              {<IconSwap active={expanded} a={<ChevronDown className="w-3.5 h-3.5 ml-1" />} b={<ChevronUp className="w-3.5 h-3.5 ml-1" />} />}
             </Button>
           )}
         </div>

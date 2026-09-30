@@ -1,5 +1,6 @@
-import {
-  useState } from 'react';
+import IconSwap from '@/components/ui/IconSwap';
+import { TransitionPresence, TransitionSurface } from '@/components/ui/TransitionSurface';
+import { useState } from 'react';
 import { Camera,
   Check,
   X,
@@ -68,8 +69,9 @@ export default function UserAvatar({ profile, userId, onSave, size = 132, editab
         </button>
       )}
 
+      <TransitionPresence>
       {open && (
-        <div className="absolute top-full mt-3 start-1/2 -translate-x-1/2 w-72 z-30 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl p-4">
+        <TransitionSurface kind="dropdown" data-origin="top-center" className="absolute top-full mt-3 left-[calc(50%-9rem)] z-30 w-72 rounded-2xl bg-card/95 backdrop-blur-xl border border-border/60 shadow-2xl p-4">
           <p className="font-body text-xs text-muted-foreground mb-2">
             {lang === 'fa' ? 'لینک تصویر پروفایل' : lang === 'ar' ? 'رابط صورة الملف الشخصي' : 'Profile photo URL'}
           </p>
@@ -89,7 +91,7 @@ export default function UserAvatar({ profile, userId, onSave, size = 132, editab
               disabled={saving}
               className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-accent hover:bg-accent/90 text-white text-xs font-semibold disabled:opacity-60 transition"
             >
-              {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+              {<IconSwap active={saving} a={<Check className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
               {lang === 'fa' ? 'ذخیره' : lang === 'ar' ? 'حفظ' : 'Save'}
             </button>
             <button
@@ -100,8 +102,9 @@ export default function UserAvatar({ profile, userId, onSave, size = 132, editab
               {lang === 'fa' ? 'لغو' : lang === 'ar' ? 'إلغاء' : 'Cancel'}
             </button>
           </div>
-        </div>
+        </TransitionSurface>
       )}
+      </TransitionPresence>
     </div>
   );
 }

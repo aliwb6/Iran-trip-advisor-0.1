@@ -1,3 +1,4 @@
+import { TransitionSurface, TransitionPresence } from '@/components/ui/TransitionSurface';
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Search, X } from 'lucide-react';
 
@@ -131,8 +132,8 @@ export default function FilterDropdown({
         )}
       </div>
 
-      {open && (
-        <div className="absolute top-full mt-2 start-0 z-50 w-full min-w-0 sm:min-w-full sm:w-72 max-w-[calc(100vw-2rem)] bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/20 py-2 overflow-hidden">
+      <TransitionPresence>{open && (
+        <TransitionSurface kind="dropdown" data-origin="top-left" className="absolute top-full mt-2 start-0 z-50 w-full min-w-0 sm:min-w-full sm:w-72 max-w-[calc(100vw-2rem)] bg-card/95 backdrop-blur-xl border border-border/60 rounded-2xl shadow-2xl shadow-black/20 py-2 overflow-hidden">
           <div className="px-4 pb-2 mb-1 border-b border-border/30">
             <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/60 flex items-center gap-1.5">
               <span className="text-accent text-xs">❖</span> {label}
@@ -202,8 +203,8 @@ export default function FilterDropdown({
               </p>
             )}
           </div>
-        </div>
-      )}
+        </TransitionSurface>
+      )}</TransitionPresence>
     </div>
   );
 }

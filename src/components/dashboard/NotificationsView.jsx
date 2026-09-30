@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import { useState, useEffect, useCallback } from 'react';
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { Bell, CheckCheck, RefreshCw, MapPin } from 'lucide-react';
@@ -150,7 +151,7 @@ export default function NotificationsView({ userId }) {
             disabled={loading}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 text-xs transition disabled:opacity-40"
           >
-            {loading ? <BreathingGlow className="w-3 h-3" label="Refreshing notifications" /> : <RefreshCw className="w-3 h-3" />}
+            {<IconSwap active={loading} a={<RefreshCw className="w-3 h-3" />} b={<BreathingGlow className="w-3 h-3" label="Refreshing notifications" />} keepMounted={false} />}
             Refresh
           </button>
         </div>

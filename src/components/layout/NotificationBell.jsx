@@ -1,3 +1,4 @@
+import { TransitionSurface, TransitionPresence } from '@/components/ui/TransitionSurface';
 import {
   useState,
   useRef,
@@ -109,8 +110,8 @@ export default function NotificationBell({ isLight }) {
         </span>
       </button>
 
-      {open && (
-        <div className="absolute end-0 top-full mt-2 w-80 sm:w-96 bg-background border border-border/60 rounded-2xl shadow-2xl overflow-hidden z-50">
+      <TransitionPresence>{open && (
+        <TransitionSurface kind="dropdown" data-origin="top-end" className="absolute end-0 top-full mt-2 w-80 sm:w-96 bg-background border border-border/60 rounded-2xl shadow-2xl overflow-hidden z-50">
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-accent" />
@@ -202,8 +203,8 @@ export default function NotificationBell({ isLight }) {
               );
             })}
           </div>
-        </div>
-      )}
+        </TransitionSurface>
+      )}</TransitionPresence>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useEffect,
   useRef,
@@ -745,7 +746,7 @@ export default function SubmitProposalModal({
                 className={inputCls}
               />
               <button type="button" onClick={openImagePicker} disabled={uploadingImages} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition hover:border-teal-300/50 hover:text-white disabled:cursor-wait disabled:opacity-70">
-                {uploadingImages ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" />}
+                {<IconSwap active={uploadingImages} a={<Upload className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
                 {uploadingImages ? 'Uploading images…' : 'Upload images from device'}
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleImagePickerChange} />

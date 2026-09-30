@@ -1,3 +1,5 @@
+import IconSwap from '@/components/ui/IconSwap';
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 // @ts-nocheck
 import {
   useState,
@@ -362,8 +364,7 @@ export default function Signup() {
                   }`}
                 >
                   {otpStatus === 'success' ? <CircleCheck className="w-8 h-8 text-emerald-500" />
-                    : otpStatus === 'error' ? <CircleX className="w-8 h-8 text-red-500" />
-                      : <Mail className="w-8 h-8 text-accent" />}
+                    : <IconSwap active={otpStatus === 'error'} a={<Mail className="w-8 h-8 text-accent" />} b={<CircleX className="w-8 h-8 text-red-500" />} />}
                 </motion.div>
               </AnimatePresence>
 
@@ -555,7 +556,7 @@ export default function Signup() {
                       className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition ${isRtl ? 'start-3.5' : 'end-3.5'}`}
                       tabIndex={-1}
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {<IconSwap active={showPassword} a={<Eye className="w-4 h-4" />} b={<EyeOff className="w-4 h-4" />} />}
                     </button>
                   </div>
                 </div>
@@ -700,11 +701,7 @@ export default function Signup() {
                             {/* Dropdown suggestions */}
                             <AnimatePresence>
                               {showSuggestions && customCity.trim() && citySuggestions.length > 0 && (
-                                <motion.div
-                                  initial={{ opacity: 0, translateY: -8 }}
-                                  animate={{ opacity: 1, translateY: 0 }}
-                                  exit={{ opacity: 0, translateY: -8 }}
-                                  transition={{ duration: 0.15 }}
+                                <TransitionSurface kind="dropdown" data-origin="top-left"
                                   className="absolute z-10 mt-2 w-full bg-white border border-border rounded-xl shadow-lg overflow-hidden"
                                 >
                                   {citySuggestions.map(c => (
@@ -718,7 +715,7 @@ export default function Signup() {
                                       <span className="text-foreground font-medium">{cityLabel(c)}</span>
                                     </button>
                                   ))}
-                                </motion.div>
+                                </TransitionSurface>
                               )}
                             </AnimatePresence>
                           </div>

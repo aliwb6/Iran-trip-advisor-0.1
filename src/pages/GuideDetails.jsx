@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -409,7 +410,7 @@ export default function GuideDetails() {
             onClick={() => backDestination ? navigate(backDestination) : navigate(-1)}
             className="profile-page-back-button flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm transition"
           >
-            {isRtl ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {<IconSwap active={isRtl} a={<ChevronLeft className="w-4 h-4" />} b={<ChevronRight className="w-4 h-4" />} />}
             {lang === 'fa' ? 'بازگشت' : lang === 'ar' ? 'عودة' : 'Back'}
           </button>
         </div>
@@ -577,7 +578,7 @@ export default function GuideDetails() {
                     : 'border-2 border-border text-muted-foreground/60 cursor-not-allowed bg-muted/30'
                 }`}
               >
-                {chatUnlocked ? <MessageCircle className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                {<IconSwap active={chatUnlocked} a={<Lock className="w-4 h-4" />} b={<MessageCircle className="w-4 h-4" />} />}
                 {lang === 'fa' ? 'چت' : lang === 'ar' ? 'محادثة' : 'Chat'}
               </button>
               <button

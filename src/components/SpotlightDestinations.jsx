@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -343,7 +344,7 @@ export default function SpotlightDestinations() {
               className="flex h-8 w-8 items-center justify-center rounded-full border-0 bg-transparent transition-colors hover:bg-gold/10 hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
               aria-label={heading.previous}
             >
-              {dir === 'rtl' ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              {<IconSwap active={dir === 'rtl'} a={<ChevronLeft className="h-4 w-4" />} b={<ChevronRight className="h-4 w-4" />} />}
             </button>
 
             <div className="flex items-center justify-center gap-1" aria-label={`${activeIndex + 1} / ${destinations.length}`}>
@@ -366,7 +367,7 @@ export default function SpotlightDestinations() {
               className="flex h-8 w-8 items-center justify-center rounded-full border-0 bg-transparent transition-colors hover:bg-gold/10 hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
               aria-label={heading.next}
             >
-              {dir === 'rtl' ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+              {<IconSwap active={dir === 'rtl'} a={<ChevronRight className="h-4 w-4" />} b={<ChevronLeft className="h-4 w-4" />} />}
             </button>
           </div>
         </div>

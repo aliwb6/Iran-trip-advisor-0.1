@@ -1,3 +1,4 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import {
   useEffect,
   useState } from 'react';
@@ -334,17 +335,11 @@ export default function SettingsPage() {
       {/* Deactivate confirmation */}
       <AnimatePresence>
         {deactivateOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <TransitionSurface kind="backdrop"
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
             onClick={(e) => e.target === e.currentTarget && setDeactivateOpen(false)}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+            <TransitionSurface kind="modal"
               className="bg-card border border-border/60 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
             >
               <div className="flex items-start gap-3 mb-4">
@@ -372,8 +367,8 @@ export default function SettingsPage() {
                   {tx.confirm}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </TransitionSurface>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>

@@ -1,6 +1,7 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { User, ClipboardList, Settings, LogOut, X, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
@@ -75,11 +76,7 @@ export default function UserDropdown({ isLight = false }) {
 
         <AnimatePresence>
           {open && (
-            <motion.div
-              initial={{ opacity: 0, y: -8, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8, scale: 0.98 }}
-              transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            <TransitionSurface kind="dropdown" data-origin="top-end"
               className="absolute end-0 mt-2 w-72 origin-top-end rounded-2xl bg-popover/95 backdrop-blur-2xl border border-border/60 shadow-2xl overflow-hidden z-50"
               role="menu"
             >
@@ -122,7 +119,7 @@ export default function UserDropdown({ isLight = false }) {
                   {tx.signOut}
                 </button>
               </div>
-            </motion.div>
+            </TransitionSurface>
           )}
         </AnimatePresence>
       </div>
@@ -130,18 +127,11 @@ export default function UserDropdown({ isLight = false }) {
       {/* Sign-out confirmation modal */}
       <AnimatePresence>
         {confirmingSignOut && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <TransitionSurface kind="backdrop"
             className="fixed inset-0 z-[60] flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
             onClick={(e) => e.target === e.currentTarget && setConfirmingSignOut(false)}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+            <TransitionSurface kind="modal"
               className="bg-card border border-border/60 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
             >
               <div className="flex items-start justify-between mb-3">
@@ -171,8 +161,8 @@ export default function UserDropdown({ isLight = false }) {
                   {tx.yesSignOut}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </TransitionSurface>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </>

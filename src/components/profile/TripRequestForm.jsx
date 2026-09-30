@@ -1,3 +1,4 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import {
   useState,
   useEffect,
@@ -195,11 +196,7 @@ function DatePickerInput({ value, onChange, otherDate }) {
 
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -8 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -8 }}
-            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          <TransitionSurface kind="dropdown" data-origin="top-left"
             className="absolute top-full left-0 mt-1.5 z-50 bg-card border border-border/60 rounded-2xl shadow-2xl p-4 w-[272px]"
           >
             <div className="flex items-center justify-between mb-3">
@@ -267,7 +264,7 @@ function DatePickerInput({ value, onChange, otherDate }) {
                 );
               })}
             </div>
-          </motion.div>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>
@@ -356,11 +353,7 @@ function CityMultiSelect({ values, onChange }) {
 
       <AnimatePresence>
         {open && filtered.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.98 }}
-            transition={{ duration: 0.13, ease: [0.22, 1, 0.36, 1] }}
+          <TransitionSurface kind="dropdown" data-origin="top-left"
             className="absolute left-0 top-full mt-1.5 z-50 w-full bg-card border border-border/60 rounded-xl shadow-xl max-h-48 overflow-y-auto py-1"
           >
             {filtered.map(city => (
@@ -374,7 +367,7 @@ function CityMultiSelect({ values, onChange }) {
                 {city}
               </button>
             ))}
-          </motion.div>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>
@@ -443,7 +436,7 @@ function LanguageMultiSelect({ values, onChange }) {
 
       <AnimatePresence>
         {open && (filtered.length > 0 || (search.trim() && !exactOptionExists)) && (
-          <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }} transition={{ duration: 0.13 }} className="absolute left-0 top-full mt-1.5 z-50 w-full bg-card border border-border/60 rounded-xl shadow-xl max-h-56 overflow-y-auto py-1">
+          <TransitionSurface kind="dropdown" data-origin="top-left" className="absolute left-0 top-full mt-1.5 z-50 w-full bg-card border border-border/60 rounded-xl shadow-xl max-h-56 overflow-y-auto py-1">
             {filtered.slice(0, 20).map(language => (
               <button key={language} type="button" onMouseDown={event => { event.preventDefault(); add(language); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-accent/10 hover:text-accent text-start">
                 {language}
@@ -454,7 +447,7 @@ function LanguageMultiSelect({ values, onChange }) {
                 <Plus className="w-4 h-4" /> Add “{search.trim()}”
               </button>
             )}
-          </motion.div>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>
@@ -1321,29 +1314,18 @@ export default function TripRequestForm({
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <TransitionSurface kind="backdrop"
           key="modal-root"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6"
         >
           {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={handleClose}
           />
 
           {/* Modal card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.97, y: 12 }}
-            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+          <TransitionSurface kind="modal"
             className={`relative z-10 flex w-full overflow-hidden shadow-2xl ${packageMode ? 'max-w-6xl rounded-2xl border border-border/60' : 'max-w-4xl rounded-3xl'}`}
             style={{ maxHeight: 'min(92vh, 800px)' }}
           >
@@ -1501,8 +1483,8 @@ export default function TripRequestForm({
                 )}
               </div>
             </div>
-          </motion.div>
-        </motion.div>
+          </TransitionSurface>
+        </TransitionSurface>
       )}
     </AnimatePresence>
   );

@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 // @ts-nocheck
 import {
   useEffect,
@@ -1172,9 +1173,7 @@ export default function AIAssistant() {
                   style={{ background: `linear-gradient(135deg, ${C.turq}, ${C.turqDeep})`, color: '#FFFFFF', boxShadow: `0 6px 18px ${C.turq}40` }}
                   aria-label="Send"
                 >
-                  {loading
-                    ? <Loader2 className="h-4 w-4 animate-spin" />
-                    : <Send className="h-4 w-4" />}
+                  {<IconSwap active={loading} a={<Send className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                 </button>
               </div>
             </div>

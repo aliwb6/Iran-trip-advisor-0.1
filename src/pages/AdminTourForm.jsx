@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
   import {
   useState } from 'react';
   import { useNavigate } from 'react-router-dom';
@@ -352,7 +353,7 @@ import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
             disabled={saving}
             className="w-full flex items-center justify-center gap-2 py-4 rounded-xl bg-accent text-white font-body font-semibold hover:bg-accent/90 transition-colors disabled:opacity-50"
           >
-            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+            {<IconSwap active={saving} a={<Save className="w-5 h-5" />} b={<Loader2 className="w-5 h-5 animate-spin" />} keepMounted={false} />}
             {saving ? (lang === 'fa' ? 'در حال ذخیره...' : lang === 'ar' ? 'جارٍ الحفظ...' : 'Saving...') : (lang === 'fa' ? 'ذخیره تور' : lang === 'ar' ? 'حفظ الرحلة' : 'Save Tour')}
           </button>
         </div>

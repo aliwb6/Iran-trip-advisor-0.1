@@ -1,3 +1,4 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, SlidersHorizontal, X, Star } from 'lucide-react';
@@ -78,10 +79,7 @@ export function FiltersShell({ children, activeCount = 0, onClearAll }) {
       {/* Mobile drawer */}
       <AnimatePresence>
         {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <TransitionSurface kind="backdrop"
             className="lg:hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm"
             onClick={(e) => e.target === e.currentTarget && setMobileOpen(false)}
           >
@@ -128,7 +126,7 @@ export function FiltersShell({ children, activeCount = 0, onClearAll }) {
                 </button>
               </div>
             </motion.div>
-          </motion.div>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </>

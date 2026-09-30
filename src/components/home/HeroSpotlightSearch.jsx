@@ -1,6 +1,7 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { ArrowLeft, ArrowRight, CornerDownLeft, MapPin, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { destinationLabel, iranianDestinations, popularIranianDestinations } from '@/data/iranianCities';
@@ -49,9 +50,9 @@ export default function HeroSpotlightSearch() {
   useEffect(() => setActive(0), [query]);
 
   const dialog = <AnimatePresence>{open && (
-    <motion.div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[max(5rem,12vh)] sm:px-6" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} role="dialog" aria-modal="true" aria-label={text.input}>
+    <TransitionSurface kind="backdrop" className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-[max(5rem,12vh)] sm:px-6"    role="dialog" aria-modal="true" aria-label={text.input}>
       <button type="button" onClick={close} className="absolute inset-0 cursor-default bg-navy/65 backdrop-blur-md" aria-label={text.close} />
-      <motion.div dir={dir} initial={{ opacity: 0, y: -22, scale: 0.96, filter: 'blur(12px)' }} animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }} exit={{ opacity: 0, y: -14, scale: 0.97, filter: 'blur(10px)' }} transition={{ type: 'spring', stiffness: 410, damping: 31, mass: 0.8 }} className="relative w-full max-w-2xl overflow-hidden rounded-[1.65rem] border border-white/20 bg-[#10131ce8] shadow-[0_32px_100px_rgba(0,0,0,0.55)]">
+      <TransitionSurface kind="modal" dir={dir}     className="relative w-full max-w-2xl overflow-hidden rounded-[1.65rem] border border-white/20 bg-[#10131ce8] shadow-[0_32px_100px_rgba(0,0,0,0.55)]">
         <form className="flex items-center gap-3 border-b border-white/10 px-4 py-3 sm:px-5 sm:py-4" onSubmit={(event) => { event.preventDefault(); submit(items[active]); }}>
           <Search className="h-5 w-5 shrink-0 text-gold" />
           <input ref={inputRef} value={query} onChange={(event) => setQuery(event.target.value)} onKeyDown={(event) => { if (event.key === 'ArrowDown') { event.preventDefault(); setActive((i) => Math.min(i + 1, Math.max(items.length - 1, 0))); } if (event.key === 'ArrowUp') { event.preventDefault(); setActive((i) => Math.max(i - 1, 0)); } }} placeholder={text.input} autoComplete="off" className="min-w-0 flex-1 bg-transparent font-body text-base text-white outline-none placeholder:text-white/40 sm:text-lg" />
@@ -66,8 +67,8 @@ export default function HeroSpotlightSearch() {
           </>}
         </div>
         <div className="flex justify-end border-t border-white/10 px-5 py-3 font-body text-[11px] text-white/40"><span className="flex items-center gap-1.5"><CornerDownLeft className="h-3.5 w-3.5" /> {text.select}</span></div>
-      </motion.div>
-    </motion.div>
+      </TransitionSurface>
+    </TransitionSurface>
   )}</AnimatePresence>;
 
   return <><button type="button" onClick={() => { preloadRoute('/tours'); setOpen(true); }} onMouseEnter={() => preloadRoute('/tours')} className="group flex w-full max-w-lg items-center gap-3 rounded-2xl border border-white/20 bg-black/30 px-4 py-3 text-start shadow-xl backdrop-blur-md transition duration-300 hover:border-gold/60 hover:bg-black/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-gold" aria-haspopup="dialog" aria-expanded={open}><MapPin className="h-4 w-4 shrink-0 text-gold" /><span className="min-w-0 flex-1 truncate font-body text-sm text-white/55">{text.placeholder}</span><span className="hidden rounded-lg border border-white/15 bg-white/[0.08] px-2 py-1 font-body text-[10px] text-white/50 sm:inline">⌘ K</span><span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/10 text-white transition group-hover:bg-accent"><Search className="h-3.5 w-3.5" /></span></button>{typeof document !== 'undefined' ? createPortal(dialog, document.body) : null}</>;

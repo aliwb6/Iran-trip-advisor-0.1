@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -98,7 +99,7 @@ export default function MobileHomePrimaryNav() {
         aria-label={t('nav_menu_aria')}
         aria-expanded={menuOpen}
       >
-        {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {<IconSwap active={menuOpen} a={<Menu className="h-5 w-5" />} b={<X className="h-5 w-5" />} />}
       </button>
 
       <AnimatePresence>

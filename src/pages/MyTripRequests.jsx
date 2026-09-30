@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useState,
   useEffect,
@@ -464,7 +465,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
                   disabled={startingPayment}
                   className="w-full gap-2 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700"
                 >
-                  {startingPayment ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+                  {<IconSwap active={startingPayment} a={<CreditCard className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                   {startingPayment
                     ? 'Opening secure checkout…'
                     : `Pay deposit ${formatMoney(booking.deposit_amount, booking.currency)}`}
@@ -511,7 +512,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
                       disabled={contactLoading}
                       className="gap-2 rounded-xl"
                     >
-                      {contactLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Contact className="h-3.5 w-3.5" />}
+                      {<IconSwap active={contactLoading} a={<Contact className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
                       {contactLoading ? 'Loading contact…' : 'View guide / agency contact'}
                     </Button>
                     {contactError && <p className="mt-2 text-xs text-destructive">{contactError}</p>}
@@ -552,7 +553,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
               disabled={rebroadcasting}
               className="w-full font-body text-sm rounded-xl border-dashed border-border/60 gap-2"
             >
-              {rebroadcasting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+              {<IconSwap active={rebroadcasting} a={<RefreshCw className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
               {rebroadcasting ? 'Re-broadcasting…' : 'Re-broadcast to Guides'}
             </Button>
           )}
@@ -564,7 +565,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
               disabled={completing}
               className="w-full font-body text-sm rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
-              {completing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              {<IconSwap active={completing} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
               {completing ? 'Completing…' : 'Mark trip as completed'}
             </Button>
           )}
@@ -583,7 +584,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
               disabled={cancelling}
               className="w-full font-body text-sm rounded-xl gap-2 border-red-500/30 text-red-600 hover:bg-red-500/5"
             >
-              {cancelling ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+              {<IconSwap active={cancelling} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
               {cancelling ? 'Cancelling…' : 'Cancel trip request'}
             </Button>
           )}

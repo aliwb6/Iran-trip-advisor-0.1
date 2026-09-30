@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -102,7 +103,7 @@ export default function BookingContactCard({ bookingId, released = false, dark =
                     }}
                     className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${dark ? 'border-white/10 text-white/60 hover:bg-white/5' : 'border-border text-muted-foreground hover:bg-muted'}`}
                   >
-                    {copied === key ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                    {<IconSwap active={copied === key} a={<Copy className="h-3 w-3" />} b={<Check className="h-3 w-3" />} />}
                     {copied === key ? 'Copied' : 'Copy'}
                   </button>
                   {href && (

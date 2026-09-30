@@ -1,3 +1,4 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
@@ -67,16 +68,10 @@ export default function TripBuilder({
     }
   };
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          transition={{ duration: 0.3 }}
+      {isOpen && <TransitionSurface kind="backdrop" className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <TransitionSurface kind="modal"
           dir={dir}
           className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
         >
@@ -159,8 +154,8 @@ export default function TripBuilder({
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
-      </div>
+        </TransitionSurface>
+      </TransitionSurface>}
     </AnimatePresence>
   );
 }

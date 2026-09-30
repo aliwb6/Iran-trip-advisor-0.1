@@ -1,6 +1,7 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, X, CheckCheck, MapPin } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
 import { fetchNotifications, markNotificationRead } from '@/api/tourRequestFlow';
@@ -136,11 +137,7 @@ export default function NotificationBell({ userId, isLight = false }) {
       {/* Dropdown */}
       <AnimatePresence>
         {open && (
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.97 }}
-            transition={{ duration: 0.15, ease: [0.22, 1, 0.36, 1] }}
+          <TransitionSurface kind="dropdown" data-origin="top-end"
             className="absolute end-0 top-full mt-2 w-80 bg-background border border-border/60 rounded-2xl shadow-xl shadow-black/10 overflow-hidden z-50"
           >
             {/* Header */}
@@ -217,7 +214,7 @@ export default function NotificationBell({ userId, isLight = false }) {
                 ))
               )}
             </div>
-          </motion.div>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>

@@ -1,3 +1,5 @@
+import IconSwap from '@/components/ui/IconSwap';
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import {
   useState,
   useEffect,
@@ -206,7 +208,7 @@ function ProfileCityMultiSelect({ values, onChange, lang }) {
       </div>
       <AnimatePresence>
         {open && normalizedSearch && (matches.length > 0 || (!exactMatch && !customAlreadySelected)) && (
-          <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="absolute z-40 mt-1.5 w-full max-h-56 overflow-y-auto rounded-xl bg-[hsl(222,45%,14%)] border border-white/10 shadow-2xl py-1">
+          <TransitionSurface kind="dropdown" data-origin="top-left" className="absolute z-40 mt-1.5 w-full max-h-56 overflow-y-auto rounded-xl bg-[hsl(222,45%,14%)] border border-white/10 shadow-2xl py-1">
             {matches.map(city => (
               <button key={city.en} type="button" onMouseDown={event => { event.preventDefault(); add(city.en); }} className="w-full flex items-center gap-2 px-3 py-2 text-start text-sm text-white/70 hover:bg-white/[0.07] hover:text-white">
                 <MapPin className="w-3.5 h-3.5 text-teal-400" />{city[lang] || city.en}
@@ -217,7 +219,7 @@ function ProfileCityMultiSelect({ values, onChange, lang }) {
                 <Plus className="w-3.5 h-3.5" />{lang === 'fa' ? `افزودن «${search.trim()}»` : lang === 'ar' ? `إضافة «${search.trim()}»` : `Add “${search.trim()}”`}
               </button>
             )}
-          </motion.div>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>
@@ -326,9 +328,7 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
                 {NAV_LABELS[item.id] || item.label}
               </span>
               {item.sub && (
-                profileExpanded
-                  ? <ChevronDown className="w-3 h-3 text-white/30" />
-                  : <ChevronRight className="w-3 h-3 text-white/30" />
+                <IconSwap active={profileExpanded} a={<ChevronRight className="w-3 h-3 text-white/30" />} b={<ChevronDown className="w-3 h-3 text-white/30" />} />
               )}
             </button>
 
@@ -490,9 +490,7 @@ function LicenseCard({ profile, onSave }) {
         <div onClick={openPicker}
           className="flex-1 flex flex-col items-center justify-center py-4 cursor-pointer">
           <div className="w-12 h-12 rounded-2xl bg-white/5 border-2 border-dashed border-white/15 flex items-center justify-center mb-3">
-            {uploading
-              ? <Loader2 className="w-5 h-5 text-white/40 animate-spin" />
-              : <Upload className="w-5 h-5 text-white/25" />}
+            {<IconSwap active={uploading} a={<Upload className="w-5 h-5 text-white/25" />} b={<Loader2 className="w-5 h-5 text-white/40 animate-spin" />} keepMounted={false} />}
           </div>
           <p className="text-white/40 text-xs text-center mb-1">{t('dashboard_license_missing')}</p>
           <p className="text-white/25 text-[10px] text-center mb-4">
@@ -1341,7 +1339,7 @@ function ProfileView({ profile, userId, onSave }) {
               </p>
               <p className="text-white/30 text-xs mt-1">JPG, PNG, WEBP · max 5 MB</p>
             </div>
-            {uploadingAvatar ? <Loader2 className="w-5 h-5 text-teal-400 animate-spin" /> : <Upload className="w-5 h-5 text-white/35" />}
+            {<IconSwap active={uploadingAvatar} a={<Upload className="w-5 h-5 text-white/35" />} b={<Loader2 className="w-5 h-5 text-teal-400 animate-spin" />} keepMounted={false} />}
           </div>
           <input
             ref={avatarFileRef}
@@ -1808,17 +1806,11 @@ function GalleryView({ profile, userId, onSave }) {
       {/* Add Photo Modal */}
       <AnimatePresence>
         {showModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <TransitionSurface kind="backdrop"
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
             onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+            <TransitionSurface kind="modal"
               className="bg-[hsl(222,55%,10%)] border border-white/10 rounded-2xl p-6 w-full max-w-md"
             >
               <div className="flex items-center justify-between mb-5">
@@ -1913,12 +1905,12 @@ function GalleryView({ profile, userId, onSave }) {
                   disabled={!newUrl.trim() || adding || uploading}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[hsl(178,85%,32%)] text-white text-sm font-semibold hover:bg-[hsl(178,85%,28%)] disabled:opacity-50 transition"
                 >
-                  {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                  {<IconSwap active={adding} a={<Plus className="w-4 h-4" />} b={<Loader2 className="w-4 h-4 animate-spin" />} keepMounted={false} />}
                   {t('gallery_add')}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </TransitionSurface>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>
@@ -2168,17 +2160,11 @@ function SettingsView({ profile, userId, onSave }) {
       {/* Deactivate Confirmation Modal */}
       <AnimatePresence>
         {showDeactivateModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <TransitionSurface kind="backdrop"
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
             onClick={e => e.target === e.currentTarget && setShowDeactivateModal(false)}
           >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
+            <TransitionSurface kind="modal"
               className="bg-[hsl(222,55%,10%)] border border-white/10 rounded-2xl p-6 w-full max-w-sm"
             >
               <div className="flex items-center gap-3 mb-4">
@@ -2203,8 +2189,8 @@ function SettingsView({ profile, userId, onSave }) {
                   {t('settings_deactivate')}
                 </button>
               </div>
-            </motion.div>
-          </motion.div>
+            </TransitionSurface>
+          </TransitionSurface>
         )}
       </AnimatePresence>
     </div>

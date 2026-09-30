@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useState,
   useEffect } from 'react';
@@ -143,7 +144,7 @@ export default function EditableField({
                   disabled={saving}
                   className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-accent hover:bg-accent/90 text-white text-xs font-semibold disabled:opacity-60 transition"
                 >
-                  {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                  {<IconSwap active={saving} a={<Check className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                   {lang === 'fa' ? 'ذخیره' : lang === 'ar' ? 'حفظ' : 'Save'}
                 </button>
                 <button

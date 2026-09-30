@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useRef,
   useState } from 'react';
@@ -181,7 +182,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
             disabled={uploadingImage || submitting}
             className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-teal-400/40 bg-teal-400/10 px-4 py-2.5 text-sm font-medium text-teal-300 transition hover:border-teal-300 hover:bg-teal-400/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {uploadingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />}
+            {<IconSwap active={uploadingImage} a={<ImagePlus className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
             {uploadingImage
               ? (lang === 'fa' ? 'در حال آپلود...' : lang === 'ar' ? 'جارٍ الرفع...' : 'Uploading...')
               : (lang === 'fa' ? 'انتخاب از دستگاه' : lang === 'ar' ? 'اختيار من الجهاز' : 'Upload from device')}

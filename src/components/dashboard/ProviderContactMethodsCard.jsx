@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useEffect,
   useState } from 'react';
@@ -126,7 +127,7 @@ export default function ProviderContactMethodsCard({ providerId, profile }) {
           disabled={loading || saving}
           className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-500 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+          {<IconSwap active={saving} a={<Save className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
           {saving ? 'Saving…' : 'Save contact methods'}
         </button>
       </div>

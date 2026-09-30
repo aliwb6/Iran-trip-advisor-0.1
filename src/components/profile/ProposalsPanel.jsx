@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useState } from 'react';
 import { motion } from 'framer-motion';
@@ -405,7 +406,7 @@ function ProposalRow({
               disabled={selecting || rejecting || pendingBusy}
               className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
             >
-              {selecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+              {<IconSwap active={selecting} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
               {selecting ? (lang === 'fa' ? 'در حال تأیید…' : 'Approving…') : approveLabel}
             </button>
           )}
@@ -422,7 +423,7 @@ function ProposalRow({
                   : 'border-amber-400/45 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20 dark:text-amber-300'
               }`}
             >
-              {pendingBusy ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Clock3 className="w-3.5 h-3.5" />}
+              {<IconSwap active={pendingBusy} a={<Clock3 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
               {pendingBusy ? (lang === 'fa' ? 'در حال ذخیره…' : 'Saving…') : pendingLabel}
             </button>
           )}
@@ -434,7 +435,7 @@ function ProposalRow({
               disabled={rejecting || selecting || pendingBusy}
               className="shrink-0 inline-flex items-center gap-1 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-500/15 hover:text-red-600 disabled:opacity-50 transition-colors"
             >
-              {rejecting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5" />}
+              {<IconSwap active={rejecting} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
               {rejectLabel}
             </button>
           )}

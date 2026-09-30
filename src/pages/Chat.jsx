@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useEffect,
   useRef,
@@ -310,9 +311,7 @@ export default function Chat() {
 
           <div className={`shrink-0 border-b px-4 py-3 sm:px-8 ${contactSharingAllowed ? 'bg-emerald-50 border-emerald-100' : 'bg-amber-50 border-amber-100'}`}>
             <div className="mx-auto flex max-w-[760px] items-start gap-2.5">
-              {contactSharingAllowed
-                ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
-                : <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />}
+              {<IconSwap active={contactSharingAllowed} a={<ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />} b={<CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />} />}
               <p className={`text-xs leading-relaxed ${contactSharingAllowed ? 'text-emerald-800' : 'text-amber-900'}`}>
                 {contactSharingAllowed
                   ? (lang === 'fa' ? 'پرداخت تأیید شده است؛ اشتراک اطلاعات تماس برای هماهنگی رزرو مجاز است.' : lang === 'ar' ? 'تم تأكيد الدفع؛ يمكن الآن مشاركة معلومات الاتصال لتنسيق الحجز.' : 'Payment is confirmed. Contact information may now be shared for booking coordination.')
@@ -374,7 +373,7 @@ export default function Chat() {
                   disabled={sending || moderation?.is_closed}
                 />
                 <button type="submit" disabled={sending || moderation?.is_closed || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label="Send message">
-                  {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                  {<IconSwap active={sending} a={<Send className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                 </button>
               </div>
               {error && <p role="alert" className="mt-2 text-xs leading-relaxed text-red-500">{error}</p>}

@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useEffect,
   useState } from 'react';
@@ -175,7 +176,7 @@ export default function RequestPaymentGate({ requestId, requestStatus }) {
               </div>
             </div>
             <button type="button" onClick={startPayment} disabled={!canPay || startingPayment || paymentConfigLoading} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 text-sm font-bold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50">
-              {startingPayment || paymentConfigLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
+              {<IconSwap active={startingPayment || paymentConfigLoading} a={<CreditCard className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
               {startingPayment ? 'Redirecting…' : tx.pay}
             </button>
           </div>

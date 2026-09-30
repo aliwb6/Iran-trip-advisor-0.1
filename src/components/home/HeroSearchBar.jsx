@@ -1,3 +1,4 @@
+import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -143,11 +144,7 @@ export default function HeroSearchBar() {
           {/* City autocomplete dropdown */}
           <AnimatePresence>
             {showDropdown && filteredCities.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, translateY: -8 }}
-                animate={{ opacity: 1, translateY: 0 }}
-                exit={{ opacity: 0, translateY: -8 }}
-                transition={{ duration: 0.2 }}
+              <TransitionSurface kind="dropdown" data-origin="top-left"
                 className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden z-50"
               >
                 {filteredCities.map((city) => (
@@ -160,7 +157,7 @@ export default function HeroSearchBar() {
                     <span className="text-gray-900 font-medium">{city}</span>
                   </button>
                 ))}
-              </motion.div>
+              </TransitionSurface>
             )}
           </AnimatePresence>
         </motion.div>

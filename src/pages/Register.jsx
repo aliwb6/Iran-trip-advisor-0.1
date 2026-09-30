@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useState } from 'react';
 import { Link,
@@ -393,7 +394,7 @@ export default function Register() {
                   className={`absolute top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition ${isRtl ? 'start-3.5' : 'end-3.5'}`}
                   tabIndex={-1}
                 >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {<IconSwap active={showPassword} a={<Eye className="w-4 h-4" />} b={<EyeOff className="w-4 h-4" />} />}
                 </button>
               </div>
               <p className="mt-1 font-body text-xs text-muted-foreground/70">

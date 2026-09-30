@@ -1,3 +1,4 @@
+import IconSwap from '@/components/ui/IconSwap';
 import {
   useState,
   useEffect } from 'react';
@@ -462,7 +463,7 @@ export default function TourDetails() {
                   <span className="min-w-0">
                     <span className="flex items-center gap-1.5 font-heading text-sm font-semibold text-foreground">
                       <span className="truncate">{provider.full_name || (provider.role === 'agency' ? (lang === 'fa' ? 'آژانس' : 'Agency') : (lang === 'fa' ? 'راهنما' : 'Guide'))}</span>
-                      {provider.role === 'agency' ? <Building2 className="h-4 w-4 shrink-0 text-accent" /> : <UserRound className="h-4 w-4 shrink-0 text-accent" />}
+                      {<IconSwap active={provider.role === 'agency'} a={<UserRound className="h-4 w-4 shrink-0 text-accent" />} b={<Building2 className="h-4 w-4 shrink-0 text-accent" />} />}
                     </span>
                     <span className="mt-0.5 flex items-center gap-1 font-body text-xs text-muted-foreground">
                       <span>{provider.role === 'agency' ? (lang === 'fa' ? 'آژانس مسافرتی' : lang === 'ar' ? 'وكالة سفر' : 'Travel agency') : (lang === 'fa' ? 'راهنمای محلی' : lang === 'ar' ? 'مرشد محلي' : 'Local guide')}</span>
@@ -596,7 +597,7 @@ export default function TourDetails() {
                       disabled={requestStarting}
                       className="tour-booking-cta relative z-10 w-full min-h-12 px-4 py-3 rounded-xl bg-accent text-white font-body font-semibold flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                      {requestStarting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {<IconSwap active={requestStarting} a={<Send className="w-4 h-4" />} b={<Loader2 className="w-4 h-4 animate-spin" />} keepMounted={false} />}
                       {lang === 'fa' ? 'درخواست رزرو' : lang === 'ar' ? 'طلب الحجز' : 'Request Booking'}
                     </button>
                     <NeonBorder

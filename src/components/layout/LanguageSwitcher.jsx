@@ -1,3 +1,4 @@
+import { TransitionSurface, TransitionPresence } from '@/components/ui/TransitionSurface';
 import { useI18n } from '@/lib/i18n.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/supabaseClient';
@@ -48,8 +49,8 @@ export default function LanguageSwitcher() {
         <span className="text-sm font-body font-medium">{current?.label}</span>
       </button>
 
-      {open && (
-          <div
+      <TransitionPresence>{open && (
+          <TransitionSurface kind="dropdown" data-origin="top-end"
             className="absolute top-full mt-2 end-0 bg-white dark:bg-gray-900 border border-border rounded-xl shadow-xl overflow-hidden min-w-[160px] z-50"
           >
             {languages.map((l) => (
@@ -64,8 +65,8 @@ export default function LanguageSwitcher() {
                 <span className="text-xs text-gray-500 dark:text-gray-400">{l.label}</span>
               </button>
             ))}
-          </div>
-      )}
+          </TransitionSurface>
+      )}</TransitionPresence>
     </div>
   );
 }
