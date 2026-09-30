@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
-import { PulsingBorder } from "https://esm.sh/@paper-design/shaders-react@0.0.61?external=react,react-dom&deps=@paper-design/shaders@0.0.61";
+import { PulsingBorder } from "@paper-design/shaders-react";
 
 interface PulsatingBorderProps {
   colors?: string[];
@@ -67,9 +67,15 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
   const [portalTarget, setPortalTarget] = React.useState<HTMLElement | null>(
     null
   );
+  const [reduceMotion, setReduceMotion] = React.useState(false);
 
   React.useEffect(() => {
     setPortalTarget(document.body);
+    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const updateMotion = () => setReduceMotion(media.matches);
+    updateMotion();
+    media.addEventListener("change", updateMotion);
+    return () => media.removeEventListener("change", updateMotion);
   }, []);
 
   React.useEffect(() => {
@@ -77,7 +83,6 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
     if (!host) return;
     let raf = 0;
     const read = () => {
-      raf = 0;
       const r = host.getBoundingClientRect();
       const w = host.clientWidth;
       const h = host.clientHeight;
@@ -91,20 +96,20 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
       );
     };
 
-    const schedule = () => {
-      if (!raf) raf = requestAnimationFrame(read);
+    // A body portal does not follow ancestor transforms. Track the host while
+    // the empty-state card animates, as well as after scroll and layout changes.
+    const trackPosition = () => {
+      read();
+      raf = requestAnimationFrame(trackPosition);
     };
     read();
-    const ro = new ResizeObserver(schedule);
+    raf = requestAnimationFrame(trackPosition);
+    const ro = new ResizeObserver(read);
     ro.observe(host);
 
-    window.addEventListener("scroll", schedule, true);
-    window.addEventListener("resize", schedule);
     return () => {
       if (raf) cancelAnimationFrame(raf);
       ro.disconnect();
-      window.removeEventListener("scroll", schedule, true);
-      window.removeEventListener("resize", schedule);
     };
   }, []);
 
@@ -126,9 +131,10 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
 
   const layer = measured ? (
     <PulsingBorder
+      aria-hidden="true"
       colors={colors}
       colorBack={colorBack}
-      speed={speed}
+      speed={reduceMotion ? 0 : speed}
       roundness={radius / 100}
       thickness={thickness / 100}
       softness={softness / 100}
@@ -161,6 +167,7 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
         top: escapes ? rect.top - bleed : -bleed,
         width: canvasW,
         height: canvasH,
+        zIndex: 20,
 
         pointerEvents: "none",
       }}
@@ -170,6 +177,7 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
   return (
     <div
       ref={hostRef}
+      data-pulsating-border-host=""
       style={{
         position: "relative",
         width: "100%",
@@ -177,6 +185,7 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
         flexShrink: 0,
 
         overflow: "visible",
+        pointerEvents: "none",
         ...style,
       }}
     >
@@ -186,8 +195,3 @@ export default function PulsatingBorder(props: PulsatingBorderProps) {
 }
 
 PulsatingBorder.displayName = "Pulsating Border";
-
-PulsatingBorder.defaultProps = {
-  ...DEFAULTS,
-  colors: DEFAULT_COLORS,
-};

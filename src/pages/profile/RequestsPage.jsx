@@ -11,6 +11,40 @@ import RequestPaymentGate from '@/components/profile/RequestPaymentGate';
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { getMyActiveDispatchRecipients } from '@/api/tripRequests';
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
+import PulsatingBorder from '@/components/originkit/ui/pulsating-border';
+
+function NewTripRequestButton({ onClick, spacious = false, compactOnMobile = false, className = '' }) {
+  return (
+    <div className={`relative inline-flex w-fit shrink-0 ${className}`}>
+      <button
+        type="button"
+        onClick={onClick}
+        className={`relative inline-flex items-center gap-2 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent ${spacious ? 'px-6 py-3' : 'px-4 py-2'}`}
+      >
+        <Plus className="w-4 h-4" />
+        {compactOnMobile ? (
+          <>
+            <span className="hidden sm:inline">New Trip Request</span>
+            <span className="sm:hidden">New</span>
+          </>
+        ) : 'New Trip Request'}
+      </button>
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <PulsatingBorder
+          colors={['#F4F1EA', '#00FFE5', '#4DA6E6']}
+          speed={1}
+          radius={100}
+          thickness={7}
+          softness={60}
+          intensity={45}
+          bloom={60}
+          spread={31}
+          spotSize={60}
+        />
+      </div>
+    </div>
+  );
+}
 
 const HOLIDAY_TYPE_LABELS = {
   active:       'Active',
@@ -206,14 +240,10 @@ export default function RequestsPage() {
 
             {/* New request button — only shown when at least one request already exists */}
             {requests.length > 0 && (
-              <button
+              <NewTripRequestButton
                 onClick={() => setFormOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25 shrink-0"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">New Trip Request</span>
-                <span className="sm:hidden">New</span>
-              </button>
+                compactOnMobile
+              />
             )}
           </div>
         </header>
@@ -242,13 +272,11 @@ export default function RequestsPage() {
                 {tx.emptyDesc}
               </p>
               {filter === 'active' && (
-                <button
+                <NewTripRequestButton
                   onClick={() => setFormOpen(true)}
-                  className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition shadow-lg shadow-accent/20"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Trip Request
-                </button>
+                  spacious
+                  className="mt-8"
+                />
               )}
             </div>
           </motion.div>
