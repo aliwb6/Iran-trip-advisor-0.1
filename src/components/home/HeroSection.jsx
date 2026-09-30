@@ -1,9 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { useReducedMotion } from 'framer-motion';
 import { useI18n } from '@/lib/i18n.jsx';
 import { ArrowRight, ArrowLeft, Sparkles, Star } from 'lucide-react';
 import { preloadRoute } from '@/lib/route-loaders';
 import HeroSpotlightSearch from '@/components/home/HeroSpotlightSearch';
+import { TextMorph } from '@/components/ui/text-morph';
+import ParticleSurge from '@/components/originkit/ui/particle-surge';
+
+const HERO_HEADING_WORDS = {
+  en: ['Discovering', 'Exploring', 'Uncovering'],
+  fa: ['کشف', 'کاوش', 'شناخت'],
+  ar: ['اكتشاف', 'استكشاف', 'معرفة'],
+};
 
 const HERO_IMAGES = [
   "https://media.base44.com/images/public/69fddcfab0730c36bda3631e/7a7bd2ab5_generated_847e20ff.png",
@@ -29,6 +38,10 @@ function shouldRunHeroCarousel() {
 
 export default function HeroSection() {
   const { t, dir, lang } = useI18n();
+  const reducedMotion = useReducedMotion();
+  const headingWords = HERO_HEADING_WORDS[lang] || HERO_HEADING_WORDS.en;
+  const heading = t('hero_title');
+  const canMorphHeading = heading.startsWith(`${headingWords[0]} `);
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const [activeImg, setActiveImg] = useState(0);
   const [carouselEnabled] = useState(shouldRunHeroCarousel);
@@ -101,7 +114,18 @@ export default function HeroSection() {
           className="font-heading text-white mb-6 max-w-4xl text-balance"
           style={{ fontSize: 'clamp(2.6rem, 6.5vw, 6rem)', lineHeight: '1.06', letterSpacing: '-0.02em', wordSpacing: '0.15em' }}
         >
-          {t('hero_title')}
+          {canMorphHeading ? (
+            <>
+              <TextMorph
+                key={lang}
+                words={headingWords}
+                interval={3000}
+                morphDuration={680}
+                className="align-bottom font-heading text-inherit"
+              />
+              {heading.slice(headingWords[0].length)}
+            </>
+          ) : heading}
         </h1>
 
         <p className="font-body text-white/70 text-base lg:text-lg leading-relaxed mb-10 max-w-xl">
@@ -137,7 +161,22 @@ export default function HeroSection() {
                 animation: carouselEnabled ? 'shimmer-sweep 3s ease-in-out infinite' : 'none',
               }}
             />
-            <Sparkles className="w-4 h-4 text-gold relative z-10" />
+            <span aria-hidden="true" className="pointer-events-none relative z-10 flex h-8 w-8 shrink-0 items-center justify-center">
+              {reducedMotion ? (
+                <Sparkles className="w-4 h-4 text-gold" />
+              ) : (
+                <ParticleSurge
+                  width={32}
+                  height={32}
+                  dotColor="#D4AF37"
+                  accentColor="#F4F1EA"
+                  density={150}
+                  dotSize={200}
+                  speed={30}
+                  pointer={{ drag: 0 }}
+                />
+              )}
+            </span>
             <span className="relative z-10">
               {lang === 'fa' ? 'با هوش مصنوعی برنامه‌ریزی کن' : lang === 'ar' ? 'خطط مع الذكاء الاصطناعي' : t('hero_cta_ai')}
             </span>

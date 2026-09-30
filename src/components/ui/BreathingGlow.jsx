@@ -53,11 +53,29 @@ export function LoadingState({
     <div
       className={cn(
         'flex items-center justify-center',
-        fullScreen ? 'fixed inset-0 z-[100] bg-background' : 'min-h-[12rem]',
+        fullScreen ? 'fixed inset-0 z-[100] overflow-hidden bg-background' : 'min-h-[12rem]',
         className,
       )}
     >
-      <BreathingGlow className={loaderClassName} label={label} />
+      {fullScreen ? (
+        <div
+          role="status"
+          aria-label={label}
+          className="pointer-events-none relative aspect-square shrink-0"
+          style={{ width: 'min(70vw, 70dvh, 20rem)' }}
+        >
+          <div aria-hidden="true" className="absolute inset-0">
+            <ParticleSurge
+              dotColor="#C49A38"
+              accentColor="#C49A38"
+              pointer={{ drag: 0 }}
+            />
+          </div>
+          <span className="sr-only">{label}</span>
+        </div>
+      ) : (
+        <BreathingGlow className={loaderClassName} label={label} />
+      )}
     </div>
   );
 }
