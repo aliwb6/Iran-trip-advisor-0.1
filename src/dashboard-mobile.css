@@ -1,5 +1,5 @@
 /* Mobile-first fixes for the guide/agency dashboard and admin panel.
-   Desktop layout is intentionally unchanged. */
+   Desktop Bento workspace styles are scoped at the end of this file. */
 
 @media (max-width: 1023px) {
   .min-h-screen:has(> aside[class*="w-[190px]"]) > main > div,
@@ -203,5 +203,155 @@
   .min-h-screen:has(> aside[class*="w-[190px]"]) main h2,
   .min-h-screen:has(> aside[class*="w-[210px]"]) main h2 {
     line-height: 1.6;
+  }
+}
+
+/* Desktop Bento workspace: useLayouts' layered surface and moving sidebar
+   indicators, with the existing navy content palette kept for internal cards. */
+.bento-content-deck {
+  position: relative;
+  min-width: 0;
+}
+
+.bento-nav-highlight,
+.bento-nav-pill {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .bento-dashboard {
+    padding: 1.5rem 1.5rem 1.5rem 17rem;
+    background: hsl(var(--sand));
+    align-items: flex-start;
+  }
+
+  .bento-dashboard > .bento-dashboard-sidebar {
+    position: fixed;
+    left: 1.5rem;
+    top: 1.5rem;
+    width: 14rem;
+    height: calc(100dvh - 3rem);
+    z-index: 30;
+    border: 1px solid hsl(var(--border));
+    border-radius: 1.5rem;
+    background: hsl(var(--card));
+    box-shadow: 0 12px 40px hsl(var(--foreground) / 0.04);
+    scrollbar-width: thin;
+  }
+
+  .bento-dashboard-sidebar [class*="border-white"] {
+    border-color: hsl(var(--border));
+  }
+
+  .bento-dashboard-sidebar [class*="text-white"] {
+    color: hsl(var(--muted-foreground));
+  }
+
+  .bento-dashboard-sidebar > div:first-child a > span,
+  .bento-dashboard-sidebar > div:nth-child(2) p:first-of-type {
+    color: hsl(var(--foreground));
+  }
+
+  .bento-dashboard-sidebar > div:first-child a > div svg,
+  .bento-dashboard-sidebar > div:nth-child(2) > div > span {
+    color: white;
+  }
+
+  .bento-dashboard-sidebar nav {
+    padding: 1rem 0.75rem;
+  }
+
+  .bento-dashboard-sidebar .bento-nav-item {
+    position: relative;
+    isolation: isolate;
+    min-height: 2.75rem;
+    padding: 0.75rem;
+    color: hsl(var(--muted-foreground));
+    background: transparent;
+    transition: color 150ms ease;
+    text-align: start;
+  }
+
+  .bento-dashboard-sidebar .bento-nav-item:hover:not(:disabled) {
+    color: hsl(var(--foreground));
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  .bento-dashboard-sidebar .bento-nav-item[aria-current="page"] {
+    color: hsl(var(--accent));
+    background: transparent;
+  }
+
+  .bento-dashboard-sidebar nav button[aria-current="page"]:not(.bento-nav-item) {
+    color: hsl(var(--accent));
+  }
+
+  .bento-dashboard-sidebar nav button:focus-visible {
+    outline: 2px solid hsl(var(--accent));
+    outline-offset: 2px;
+  }
+
+  .bento-dashboard-sidebar nav button:disabled {
+    color: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  .bento-dashboard-sidebar nav button[aria-current="page"] > span[class*="px-1.5"] {
+    color: hsl(var(--accent));
+    background: hsl(var(--accent) / 0.12);
+  }
+
+  .bento-dashboard-sidebar nav button:not([aria-current="page"]) > span[class*="px-1.5"] {
+    color: hsl(var(--muted-foreground));
+    background: hsl(var(--muted));
+  }
+
+  .bento-nav-highlight {
+    display: block;
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: 0.75rem;
+    border: 1px solid hsl(var(--accent) / 0.12);
+    background: hsl(var(--accent) / 0.07);
+  }
+
+  .bento-nav-pill {
+    display: block;
+    position: absolute;
+    left: 0;
+    width: 2px;
+    height: 1rem;
+    border-radius: 999px;
+    background: hsl(var(--accent));
+  }
+
+  .bento-dashboard-main {
+    min-width: 0;
+    width: 100%;
+    padding: 0.5rem;
+    overflow: visible;
+  }
+
+  .bento-dashboard-surface {
+    position: relative;
+    isolation: isolate;
+    min-height: calc(100dvh - 4rem);
+    max-width: 80rem;
+    padding: 2rem;
+    border: 1px solid hsl(var(--border));
+    border-radius: 2rem;
+    background: hsl(222 50% 10%);
+    box-shadow: 0 20px 60px hsl(var(--foreground) / 0.12),
+      0 0 0 6px hsl(var(--card) / 0.8);
+  }
+
+  .bento-dashboard-surface::before {
+    content: '';
+    position: absolute;
+    inset: 0.5rem -0.5rem -0.5rem 0.5rem;
+    z-index: -1;
+    border: 1px solid hsl(var(--border));
+    border-radius: inherit;
+    background: transparent;
   }
 }
