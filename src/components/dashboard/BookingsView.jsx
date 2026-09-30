@@ -25,53 +25,53 @@ function BookingCard({ booking }) {
     && ['deposit_paid', 'paid'].includes(booking.payment_status);
 
   return (
-    <article className="rounded-2xl border border-white/[0.08] bg-[hsl(222,45%,14%)] p-5">
+    <article className="rounded-2xl border border-border bg-card p-5">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="font-semibold text-white">{booking.tour_title || 'Custom trip booking'}</h3>
-          <p className="mt-1 text-xs text-white/45">{dates}</p>
+          <h3 className="font-semibold text-foreground">{booking.tour_title || 'Custom trip booking'}</h3>
+          <p className="mt-1 text-xs text-muted-foreground">{dates}</p>
         </div>
         <div className="flex flex-col items-end gap-1">
-          <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">{booking.status}</span>
-          <span className="text-[11px] text-white/40">Payment: {booking.payment_status}</span>
+          <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">{booking.status}</span>
+          <span className="text-[11px] text-muted-foreground">Payment: {booking.payment_status}</span>
         </div>
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-4">
-        <div className="rounded-xl bg-white/[0.04] p-3">
-          <Users className="mb-1 h-3.5 w-3.5 text-white/40" />
-          <p className="text-white/40">Travelers</p>
-          <p className="mt-0.5 font-semibold text-white">{booking.traveler_count}</p>
+        <div className="rounded-xl bg-card p-3">
+          <Users className="mb-1 h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-muted-foreground">Travelers</p>
+          <p className="mt-0.5 font-semibold text-foreground">{booking.traveler_count}</p>
         </div>
-        <div className="rounded-xl bg-white/[0.04] p-3">
-          <CalendarDays className="mb-1 h-3.5 w-3.5 text-white/40" />
-          <p className="text-white/40">Duration</p>
-          <p className="mt-0.5 font-semibold text-white">{booking.trip_duration_days} day(s)</p>
+        <div className="rounded-xl bg-card p-3">
+          <CalendarDays className="mb-1 h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-muted-foreground">Duration</p>
+          <p className="mt-0.5 font-semibold text-foreground">{booking.trip_duration_days} day(s)</p>
         </div>
-        <div className="rounded-xl bg-white/[0.04] p-3">
-          <Wallet className="mb-1 h-3.5 w-3.5 text-white/40" />
-          <p className="text-white/40">Booking total</p>
-          <p className="mt-0.5 font-semibold text-white">{money(booking.price, currency)}</p>
+        <div className="rounded-xl bg-card p-3">
+          <Wallet className="mb-1 h-3.5 w-3.5 text-muted-foreground" />
+          <p className="text-muted-foreground">Booking total</p>
+          <p className="mt-0.5 font-semibold text-foreground">{money(booking.price, currency)}</p>
         </div>
-        <div className="rounded-xl bg-white/[0.04] p-3">
-          <p className="text-white/40">Original unit quote</p>
-          <p className="mt-0.5 font-semibold text-white">{money(booking.quoted_unit_price, currency)}</p>
-          <p className="mt-0.5 text-[10px] text-white/35">{booking.price_type} · {booking.price_period}</p>
+        <div className="rounded-xl bg-card p-3">
+          <p className="text-muted-foreground">Original unit quote</p>
+          <p className="mt-0.5 font-semibold text-foreground">{money(booking.quoted_unit_price, currency)}</p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">{booking.price_type} · {booking.price_period}</p>
         </div>
       </div>
 
-      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-white/[0.07] pt-4 text-xs sm:grid-cols-4">
-        <div><dt className="text-white/40">Commission ({percent(booking.commission_rate)})</dt><dd className="mt-0.5 font-medium text-white">{money(booking.commission_amount, currency)}</dd></div>
-        <div><dt className="text-white/40">Expected payout</dt><dd className="mt-0.5 font-medium text-emerald-300">{money(booking.guide_payout, currency)}</dd></div>
-        <div><dt className="text-white/40">Deposit ({percent(booking.deposit_percentage)})</dt><dd className="mt-0.5 font-medium text-white">{money(booking.deposit_amount, currency)}</dd></div>
-        <div><dt className="text-white/40">Balance due</dt><dd className="mt-0.5 font-medium text-white">{money(booking.balance_due, currency)}</dd></div>
+      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 border-t border-border pt-4 text-xs sm:grid-cols-4">
+        <div><dt className="text-muted-foreground">Commission ({percent(booking.commission_rate)})</dt><dd className="mt-0.5 font-medium text-foreground">{money(booking.commission_amount, currency)}</dd></div>
+        <div><dt className="text-muted-foreground">Expected payout</dt><dd className="mt-0.5 font-medium text-emerald-700">{money(booking.guide_payout, currency)}</dd></div>
+        <div><dt className="text-muted-foreground">Deposit ({percent(booking.deposit_percentage)})</dt><dd className="mt-0.5 font-medium text-foreground">{money(booking.deposit_amount, currency)}</dd></div>
+        <div><dt className="text-muted-foreground">Balance due</dt><dd className="mt-0.5 font-medium text-foreground">{money(booking.balance_due, currency)}</dd></div>
       </dl>
 
-      <div className="mt-4 border-t border-white/[0.07] pt-4">
+      <div className="mt-4 border-t border-border pt-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold text-white">Chat with traveler</p>
-            <p className="mt-1 text-[11px] leading-relaxed text-white/40">
+            <p className="text-xs font-semibold text-foreground">Chat with traveler</p>
+            <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
               {contactReleased
                 ? 'Payment is confirmed. Contact details and contact sharing are available.'
                 : 'Chat is available now. Private contact details remain locked until the traveler payment is confirmed.'}
@@ -87,7 +87,7 @@ function BookingCard({ booking }) {
         </div>
 
         {contactReleased && (
-          <BookingContactCard bookingId={booking.id} released dark className="mt-3" />
+          <BookingContactCard bookingId={booking.id} released className="mt-3" />
         )}
       </div>
     </article>
@@ -100,17 +100,17 @@ export default function BookingsView() {
     queryFn: fetchMyBookings,
   });
 
-  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-white/40" /></div>;
-  if (error) return <p className="rounded-xl bg-red-500/10 p-4 text-sm text-red-300">{error.message || 'Could not load bookings.'}</p>;
+  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  if (error) return <p className="rounded-xl bg-red-500/10 p-4 text-sm text-red-700">{error.message || 'Could not load bookings.'}</p>;
 
   return (
     <section>
-      <h2 className="text-xl font-bold text-white">My Bookings</h2>
-      <p className="mt-1 text-sm text-white/40">Chat remains on-platform before payment; verified payment releases private contact details.</p>
+      <h2 className="text-xl font-bold text-foreground">My Bookings</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Chat remains on-platform before payment; verified payment releases private contact details.</p>
       {bookings.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] py-16 text-center">
-          <CalendarDays className="mx-auto h-8 w-8 text-white/20" />
-          <p className="mt-3 text-sm text-white/50">No confirmed bookings yet.</p>
+        <div className="mt-6 rounded-2xl border border-border bg-card py-16 text-center">
+          <CalendarDays className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-3 text-sm text-muted-foreground">No confirmed bookings yet.</p>
         </div>
       ) : (
         <div className="mt-6 space-y-4">{bookings.map(booking => <BookingCard key={booking.id} booking={booking} />)}</div>

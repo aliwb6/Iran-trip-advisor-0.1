@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useId, useState } from 'react';
 import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
 
 const MotionContext = createContext(false);
@@ -44,47 +44,36 @@ export function BentoSidebarIndicator({ active }) {
 export function BentoDashboardContent({ section, renderSection }) {
   const enabled = useContext(MotionContext);
   const [visited, setVisited] = useState([section]);
-  const activeRef = useRef(null);
-  const [height, setHeight] = useState(null);
-  useLayoutEffect(() => {
-    const node = activeRef.current;
-    if (!node) return undefined;
-    const updateHeight = () => setHeight(node.offsetHeight);
-    updateHeight();
-    const observer = new ResizeObserver(updateHeight);
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [section]);
   // Remember only visited sections, without mounting or fetching unused views.
   // Updating this component's own state during render avoids an empty frame.
   if (!visited.includes(section)) setVisited([...visited, section]);
   return (
-    <motion.div className="bento-content-deck" initial={false} animate={{ height: height ?? 'auto' }} transition={enabled ? contentTransition : { duration: 0 }}>
+    <div className="bento-content-deck">
       {visited.map(id => {
         const active = id === section;
         return (
           <motion.div
             key={id}
-            ref={active ? activeRef : undefined}
             data-bento-section={id}
             aria-hidden={!active}
             inert={active ? undefined : ''}
             initial={enabled ? { opacity: 0, y: 8, filter: 'blur(4px)' } : false}
             animate={active ? {
-              display: 'block', opacity: 1, y: 0, filter: 'blur(0px)',
+              opacity: 1, y: 0, filter: 'blur(0px)',
               // Clear the filter so existing fixed dialogs stay viewport-based.
               transitionEnd: { filter: 'none' },
             } : {
-              opacity: 0, y: enabled ? -8 : 0, filter: enabled ? 'blur(4px)' : 'blur(0px)',
-              transitionEnd: { display: 'none', y: enabled ? 8 : 0 },
+              opacity: 0, y: enabled ? 8 : 0, filter: enabled ? 'blur(4px)' : 'blur(0px)',
             }}
-            transition={enabled ? contentTransition : { duration: 0 }}
-            style={{ position: active ? 'relative' : 'absolute', inset: active ? undefined : '0', width: '100%' }}
+            transition={enabled && active ? contentTransition : { duration: 0 }}
+            // Keep the active content in normal flow. Inactive panels stay
+            // mounted for draft retention without occupying document space.
+            style={{ display: active ? 'block' : 'none', width: '100%' }}
           >
             {renderSection(id)}
           </motion.div>
         );
       })}
-    </motion.div>
+    </div>
   );
 }

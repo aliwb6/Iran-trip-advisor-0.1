@@ -27,7 +27,7 @@ const TYPE_CONFIG = {
   message:         { dot: 'bg-violet-400',             label: 'New Message' },
   proposals_ready: { dot: 'bg-violet-400',             label: 'Guides Ready' },
   guide_selected:  { dot: 'bg-emerald-400',            label: 'Selected! 🎉' },
-  request_filled:  { dot: 'bg-white/30',               label: 'Not selected' },
+  request_filled:  { dot: 'bg-muted',               label: 'Not selected' },
   info:            { dot: 'bg-[hsl(178,85%,45%)]',     label: 'Info' },
 };
 
@@ -46,26 +46,26 @@ function NotifCard({ notif, onMarkRead, onNavigate }) {
       }}
       className={`w-full text-left rounded-2xl border p-4 transition-colors ${
         notif.is_read
-          ? 'bg-[hsl(222,45%,14%)] border-white/[0.06] hover:border-white/[0.12]'
-          : 'bg-[hsl(222,45%,16%)] border-[hsl(178,85%,45%)]/20 hover:border-[hsl(178,85%,45%)]/35'
+          ? 'bg-card border-border hover:border-accent/30'
+          : 'bg-card border-[hsl(178,85%,45%)]/20 hover:border-[hsl(178,85%,45%)]/35'
       }`}
     >
       <div className="flex items-start gap-3">
         <div className="flex flex-col items-center gap-1.5 pt-0.5">
-          <div className={`w-2 h-2 rounded-full shrink-0 ${notif.is_read ? 'bg-white/15' : cfg.dot}`} />
+          <div className={`w-2 h-2 rounded-full shrink-0 ${notif.is_read ? 'bg-muted' : cfg.dot}`} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-0.5">
             <span className={`font-body text-[10px] font-semibold uppercase tracking-wider ${
-              notif.is_read ? 'text-white/30' : 'text-[hsl(178,85%,55%)]'
+              notif.is_read ? 'text-muted-foreground' : 'text-accent'
             }`}>
               {cfg.label}
             </span>
-            <span className="font-body text-[10px] text-white/30 shrink-0">{timeAgo(notif.created_at)}</span>
+            <span className="font-body text-[10px] text-muted-foreground shrink-0">{timeAgo(notif.created_at)}</span>
           </div>
-          <p className="font-body text-xs text-white/70 leading-relaxed">{notif.message}</p>
+          <p className="font-body text-xs text-foreground/80 leading-relaxed">{notif.message}</p>
           {notificationDestination(notif) && (
-            <p className="font-body text-[10px] text-white/30 mt-1 flex items-center gap-1">
+            <p className="font-body text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
               <MapPin className="w-2.5 h-2.5" />
               {notif.type === 'message' ? 'Tap to open chat' : 'Tap to view request'}
             </p>
@@ -131,8 +131,8 @@ export default function NotificationsView({ userId }) {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-white font-bold text-xl">Notifications</h2>
-          <p className="text-white/40 text-xs mt-0.5">
+          <h2 className="text-foreground font-bold text-xl">Notifications</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">
             {unreadCount > 0 ? `${unreadCount} unread` : 'All caught up'}
           </p>
         </div>
@@ -140,7 +140,7 @@ export default function NotificationsView({ userId }) {
           {unreadCount > 0 && (
             <button
               onClick={handleMarkAllRead}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 text-xs transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-accent/30 text-xs transition"
             >
               <CheckCheck className="w-3.5 h-3.5" />
               Mark all read
@@ -149,7 +149,7 @@ export default function NotificationsView({ userId }) {
           <button
             onClick={load}
             disabled={loading}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 text-xs transition disabled:opacity-40"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-accent/30 text-xs transition disabled:opacity-40"
           >
             {<IconSwap active={loading} a={<RefreshCw className="w-3 h-3" />} b={<BreathingGlow className="w-3 h-3" label="Refreshing notifications" />} keepMounted={false} />}
             Refresh
@@ -158,7 +158,7 @@ export default function NotificationsView({ userId }) {
       </div>
 
       {/* Filter tabs */}
-      <div className="flex bg-white/[0.05] rounded-xl p-1 mb-6 w-fit gap-1">
+      <div className="flex bg-card rounded-xl p-1 mb-6 w-fit gap-1">
         {[
           { id: 'all', label: 'All', count: notifications.length },
           { id: 'unread', label: 'Unread', count: unreadCount },
@@ -169,13 +169,13 @@ export default function NotificationsView({ userId }) {
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
               filter === tab.id
                 ? 'bg-[hsl(178,85%,32%)] text-white shadow'
-                : 'text-white/50 hover:text-white'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {tab.label}
             {tab.count > 0 && (
               <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                filter === tab.id ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'
+                filter === tab.id ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
               }`}>
                 {tab.count}
               </span>
@@ -191,13 +191,13 @@ export default function NotificationsView({ userId }) {
         </div>
       ) : displayed.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4">
-            <Bell className="w-7 h-7 text-white/20" />
+          <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+            <Bell className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="text-white/50 font-medium text-sm mb-1">
+          <p className="text-muted-foreground font-medium text-sm mb-1">
             {filter === 'unread' ? 'No unread notifications' : 'No notifications yet'}
           </p>
-          <p className="text-white/30 text-xs max-w-xs">
+          <p className="text-muted-foreground text-xs max-w-xs">
             {filter === 'unread'
               ? 'Switch to "All" to see your notification history.'
               : 'New trip requests and updates will appear here.'}

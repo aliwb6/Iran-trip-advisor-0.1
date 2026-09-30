@@ -98,31 +98,31 @@ export default function HomeDestinationsEditor() {
     toast.success('Homepage destinations saved.');
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-7 h-7 animate-spin text-teal-400" /></div>;
+  if (loading) return <div className="flex justify-center py-20"><Loader2 className="w-7 h-7 animate-spin text-teal-700" /></div>;
 
-  const inputClass = 'w-full px-3 py-2 rounded-lg border border-white/10 bg-white/[0.05] text-white text-xs placeholder:text-white/25 focus:outline-none focus:border-teal-400';
+  const inputClass = 'w-full px-3 py-2 rounded-lg border border-border bg-card text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:border-teal-400';
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-white font-bold text-lg">Explore Iran&apos;s Hidden Wonders</h2>
-          <p className="text-white/40 text-xs mt-1">Edit homepage destination cards, labels and images.</p>
+          <h2 className="text-foreground font-bold text-lg">Explore Iran&apos;s Hidden Wonders</h2>
+          <p className="text-muted-foreground text-xs mt-1">Edit homepage destination cards, labels and images.</p>
         </div>
-        <button onClick={() => setItems(current => [...current, emptyItem()])} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 text-white text-xs hover:bg-white/15">
+        <button onClick={() => setItems(current => [...current, emptyItem()])} className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted text-foreground text-xs hover:bg-muted">
           <Plus className="w-4 h-4" /> Add destination
         </button>
       </div>
 
       <div className="space-y-4">
         {items.map((item, index) => (
-          <div key={item.id || `${item.slug}-${index}`} className="p-4 rounded-2xl bg-[hsl(222,45%,14%)] border border-white/[0.08]">
+          <div key={item.id || `${item.slug}-${index}`} className="p-4 rounded-2xl bg-card border border-border">
             <div className="flex gap-4">
               <div className="w-28 shrink-0">
-                <div className="w-28 h-28 rounded-xl overflow-hidden bg-white/5 flex items-center justify-center">
-                  {item.image_url ? <img src={item.image_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-7 h-7 text-white/20" />}
+                <div className="w-28 h-28 rounded-xl overflow-hidden bg-card flex items-center justify-center">
+                  {item.image_url ? <img src={item.image_url} alt="" className="w-full h-full object-cover" /> : <ImageIcon className="w-7 h-7 text-muted-foreground" />}
                 </div>
-                <label className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-white/10 text-white/65 text-[11px] cursor-pointer hover:bg-white/15">
+                <label className="mt-2 w-full flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg bg-muted text-muted-foreground text-[11px] cursor-pointer hover:bg-muted">
                   {<IconSwap active={uploadingIndex === index} a={<Upload className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                   Upload image
                   <input
@@ -144,7 +144,7 @@ export default function HomeDestinationsEditor() {
                 <input className={`${inputClass} md:col-span-2`} value={item.image_url} onChange={e => change(index, 'image_url', e.target.value)} placeholder="Image URL *" dir="ltr" />
                 <input className={inputClass} value={item.slug} onChange={e => change(index, 'slug', e.target.value)} placeholder="Destination slug *" dir="ltr" />
               </div>
-              <button onClick={() => remove(index)} className="self-start p-2 rounded-lg text-red-400 bg-red-500/10 hover:bg-red-500/20" aria-label="Delete destination"><Trash2 className="w-4 h-4" /></button>
+              <button onClick={() => remove(index)} className="self-start p-2 rounded-lg text-red-700 bg-red-500/10 hover:bg-red-500/20" aria-label="Delete destination"><Trash2 className="w-4 h-4" /></button>
             </div>
           </div>
         ))}

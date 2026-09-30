@@ -121,11 +121,11 @@ const PROFILE_TOUR_TYPES = [
 function EmptyState({ Icon, title, desc }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-        <Icon className="w-7 h-7 text-white/25" />
+      <div className="w-14 h-14 rounded-2xl bg-card flex items-center justify-center mb-4">
+        <Icon className="w-7 h-7 text-muted-foreground" />
       </div>
-      <p className="text-white/60 font-medium text-sm mb-1">{title}</p>
-      {desc && <p className="text-white/35 text-xs max-w-xs">{desc}</p>}
+      <p className="text-muted-foreground font-medium text-sm mb-1">{title}</p>
+      {desc && <p className="text-muted-foreground text-xs max-w-xs">{desc}</p>}
     </div>
   );
 }
@@ -183,13 +183,13 @@ function ProfileCityMultiSelect({ values, onChange, lang }) {
     <div ref={wrapRef} className="relative">
       <div className="flex flex-wrap gap-2 mb-2">
         {values.map(city => (
-          <button key={city} type="button" onClick={() => onChange(values.filter(value => value !== city))} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)] text-teal-300 text-xs" title="Remove city">
+          <button key={city} type="button" onClick={() => onChange(values.filter(value => value !== city))} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)] text-teal-700 text-xs" title="Remove city">
             <MapPin className="w-3 h-3" />{labelFor(city)}<X className="w-3 h-3" />
           </button>
         ))}
       </div>
       <div className="relative">
-        <MapPin className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+        <MapPin className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
         <input
           ref={inputRef}
           value={search}
@@ -202,21 +202,21 @@ function ProfileCityMultiSelect({ values, onChange, lang }) {
               add(matches[0]?.en || exactMatch?.en || search);
             }
           }}
-          className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition"
+          className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition"
           placeholder={lang === 'fa' ? 'جست‌وجو و افزودن شهر…' : lang === 'ar' ? 'ابحث عن مدينة وأضفها…' : 'Search and add a city…'}
           autoComplete="off"
         />
       </div>
       <AnimatePresence>
         {open && normalizedSearch && (matches.length > 0 || (!exactMatch && !customAlreadySelected)) && (
-          <TransitionSurface kind="dropdown" data-origin="top-left" className="absolute z-40 mt-1.5 w-full max-h-56 overflow-y-auto rounded-xl bg-[hsl(222,45%,14%)] border border-white/10 shadow-2xl py-1">
+          <TransitionSurface kind="dropdown" data-origin="top-left" className="absolute z-40 mt-1.5 w-full max-h-56 overflow-y-auto rounded-xl bg-card border border-border shadow-2xl py-1">
             {matches.map(city => (
-              <button key={city.en} type="button" onMouseDown={event => { event.preventDefault(); add(city.en); }} className="w-full flex items-center gap-2 px-3 py-2 text-start text-sm text-white/70 hover:bg-white/[0.07] hover:text-white">
-                <MapPin className="w-3.5 h-3.5 text-teal-400" />{city[lang] || city.en}
+              <button key={city.en} type="button" onMouseDown={event => { event.preventDefault(); add(city.en); }} className="w-full flex items-center gap-2 px-3 py-2 text-start text-sm text-foreground/80 hover:bg-muted hover:text-foreground">
+                <MapPin className="w-3.5 h-3.5 text-teal-700" />{city[lang] || city.en}
               </button>
             ))}
             {!exactMatch && !customAlreadySelected && (
-              <button type="button" onMouseDown={event => { event.preventDefault(); add(search); }} className="w-full flex items-center gap-2 px-3 py-2 text-start text-sm text-teal-300 hover:bg-teal-500/10 border-t border-white/[0.06]">
+              <button type="button" onMouseDown={event => { event.preventDefault(); add(search); }} className="w-full flex items-center gap-2 px-3 py-2 text-start text-sm text-teal-700 hover:bg-teal-500/10 border-t border-border">
                 <Plus className="w-3.5 h-3.5" />{lang === 'fa' ? `افزودن «${search.trim()}»` : lang === 'ar' ? `إضافة «${search.trim()}»` : `Add “${search.trim()}”`}
               </button>
             )}
@@ -233,7 +233,7 @@ function StarRating({ rating }) {
       {[1, 2, 3, 4, 5].map(n => (
         <Star
           key={n}
-          className={`w-3.5 h-3.5 ${n <= rating ? 'text-[hsl(38,62%,58%)] fill-[hsl(38,62%,58%)]' : 'text-white/20'}`}
+          className={`w-3.5 h-3.5 ${n <= rating ? 'text-amber-700 fill-[hsl(38,62%,58%)]' : 'text-muted-foreground'}`}
         />
       ))}
     </div>
@@ -469,23 +469,23 @@ function LicenseCard({ profile, onSave }) {
       className={`flex-1 flex flex-col rounded-xl transition ${dragActive ? 'bg-[hsl(178,85%,32%)]/10 ring-2 ring-[hsl(178,85%,42%)]' : ''}`}
     >
       <div className="flex items-center gap-2 mb-3">
-        <Shield className="w-4 h-4 text-[hsl(38,62%,58%)]" />
-        <p className="text-white/70 text-xs font-medium">{t('dashboard_my_license')}</p>
+        <Shield className="w-4 h-4 text-amber-700" />
+        <p className="text-foreground/80 text-xs font-medium">{t('dashboard_my_license')}</p>
       </div>
 
       {licensePath ? (
         <div className="flex-1 flex flex-col items-center justify-center py-4">
           <div className="w-12 h-12 rounded-2xl bg-[hsl(178,85%,32%)]/15 border border-[hsl(178,85%,32%)]/30 flex items-center justify-center mb-3">
-            <CheckCircle2 className="w-5 h-5 text-[hsl(178,85%,45%)]" />
+            <CheckCircle2 className="w-5 h-5 text-accent" />
           </div>
-          <p className="text-white/50 text-xs text-center mb-3">{statusLabel}</p>
+          <p className="text-muted-foreground text-xs text-center mb-3">{statusLabel}</p>
           <div className="flex items-center gap-2">
             <button type="button" onClick={handleView}
-              className="px-3 py-1.5 rounded-xl border border-white/20 text-white/70 text-xs font-medium hover:border-[hsl(38,62%,58%)] hover:text-[hsl(38,62%,58%)] transition">
+              className="px-3 py-1.5 rounded-xl border border-border text-foreground/80 text-xs font-medium hover:border-[hsl(38,62%,58%)] hover:text-amber-700 transition">
               {t('license_view')}
             </button>
             <button type="button" onClick={openPicker} disabled={uploading}
-              className="px-3 py-1.5 rounded-xl border border-white/20 text-white/70 text-xs font-medium hover:border-[hsl(38,62%,58%)] hover:text-[hsl(38,62%,58%)] transition disabled:opacity-50">
+              className="px-3 py-1.5 rounded-xl border border-border text-foreground/80 text-xs font-medium hover:border-[hsl(38,62%,58%)] hover:text-amber-700 transition disabled:opacity-50">
               {uploading ? '...' : t('license_replace')}
             </button>
           </div>
@@ -493,21 +493,21 @@ function LicenseCard({ profile, onSave }) {
       ) : (
         <div onClick={openPicker}
           className="flex-1 flex flex-col items-center justify-center py-4 cursor-pointer">
-          <div className="w-12 h-12 rounded-2xl bg-white/5 border-2 border-dashed border-white/15 flex items-center justify-center mb-3">
-            {<IconSwap active={uploading} a={<Upload className="w-5 h-5 text-white/25" />} b={<Loader2 className="w-5 h-5 text-white/40 animate-spin" />} keepMounted={false} />}
+          <div className="w-12 h-12 rounded-2xl bg-card border-2 border-dashed border-border flex items-center justify-center mb-3">
+            {<IconSwap active={uploading} a={<Upload className="w-5 h-5 text-muted-foreground" />} b={<Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />} keepMounted={false} />}
           </div>
-          <p className="text-white/40 text-xs text-center mb-1">{t('dashboard_license_missing')}</p>
-          <p className="text-white/25 text-[10px] text-center mb-4">
+          <p className="text-muted-foreground text-xs text-center mb-1">{t('dashboard_license_missing')}</p>
+          <p className="text-muted-foreground text-[10px] text-center mb-4">
             {lang === 'fa' ? 'فایل را اینجا رها کنید یا از دستگاه انتخاب کنید' : lang === 'ar' ? 'اسحب الملف هنا أو اختره من جهازك' : 'Drop a file here or choose from your device'}
           </p>
           <button type="button" onClick={(e) => { e.stopPropagation(); openPicker(); }} disabled={uploading}
-            className="px-4 py-2 rounded-xl border border-white/20 text-white/60 text-xs font-medium hover:border-[hsl(38,62%,58%)] hover:text-[hsl(38,62%,58%)] transition disabled:opacity-50">
+            className="px-4 py-2 rounded-xl border border-border text-muted-foreground text-xs font-medium hover:border-[hsl(38,62%,58%)] hover:text-amber-700 transition disabled:opacity-50">
             {uploading ? t('dashboard_saving') : t('dashboard_upload_license')}
           </button>
         </div>
       )}
 
-      {error && <p className="text-red-400 text-[11px] text-center mt-2">{error}</p>}
+      {error && <p className="text-red-700 text-[11px] text-center mt-2">{error}</p>}
 
       <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp,application/pdf"
         className="hidden" onChange={(e) => handleUpload(e.target.files?.[0])} />
@@ -643,23 +643,23 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
     return d.toLocaleDateString();
   };
 
-  const cardBase = 'bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl p-5';
+  const cardBase = 'bg-card border border-border rounded-2xl p-5';
 
   return (
     <div className="space-y-5">
 
       {isProfileIncomplete && (
         <div className="mb-4 flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl px-4 py-3">
-          <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+          <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="text-amber-300 font-semibold text-sm mb-0.5">Complete your profile to receive tour requests</p>
-            <p className="text-amber-200/60 text-xs">
+            <p className="text-amber-700 font-semibold text-sm mb-0.5">Complete your profile to receive tour requests</p>
+            <p className="text-amber-700/60 text-xs">
               Missing: {missingItems.join(', ')}. Tourists and agencies can only find guides with complete profiles.
             </p>
           </div>
           <button
             onClick={() => onNavigate('profile')}
-            className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-medium transition-colors"
+            className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 text-xs font-medium transition-colors"
           >
             Fix Now
           </button>
@@ -672,11 +672,11 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
         {/* Welcome */}
         <div className={`${cardBase} flex flex-col`}>
           <div>
-            <p className="text-white/40 text-xs mb-1">{t('dashboard_welcome')}</p>
-            <h2 className="text-white font-bold text-lg leading-tight">
+            <p className="text-muted-foreground text-xs mb-1">{t('dashboard_welcome')}</p>
+            <h2 className="text-foreground font-bold text-lg leading-tight">
               {profile?.full_name?.split(' ')[0] || 'Guide'} 👋
             </h2>
-            <p className="text-white/50 text-xs mt-2 leading-relaxed">
+            <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
               {t('dashboard_nav_tours')}
             </p>
           </div>
@@ -684,10 +684,10 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
             onClick={() => onNavigate('add-tour')}
             disabled={!canAddTour}
             title={!canAddTour ? t('profile_completion_required_for_tour') : ''}
-            className="mt-4 flex-1 min-h-[140px] w-full rounded-xl bg-[hsl(178,85%,32%)]/[0.08] hover:bg-[hsl(178,85%,32%)]/[0.15] border-2 border-dashed border-[hsl(178,85%,32%)]/40 hover:border-[hsl(178,85%,45%)] flex flex-col items-center justify-center gap-2 text-[hsl(178,85%,50%)] transition group disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-4 flex-1 min-h-[140px] w-full rounded-xl bg-[hsl(178,85%,32%)]/[0.08] hover:bg-[hsl(178,85%,32%)]/[0.15] border-2 border-dashed border-[hsl(178,85%,32%)]/40 hover:border-[hsl(178,85%,45%)] flex flex-col items-center justify-center gap-2 text-accent transition group disabled:cursor-not-allowed disabled:opacity-40"
           >
             <div className="w-12 h-12 rounded-2xl bg-[hsl(178,85%,32%)]/20 group-hover:bg-[hsl(178,85%,32%)] flex items-center justify-center transition">
-              <Plus className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
+              <Plus className="w-6 h-6 text-foreground group-hover:scale-110 transition-transform" />
             </div>
             <span className="text-xs font-semibold">+ {t('dashboard_add_tour')}</span>
           </button>
@@ -695,7 +695,7 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
 
         {/* Upcoming Tour */}
         <div className={`${cardBase} flex flex-col`}>
-          <p className="text-white/40 text-xs mb-3">{t('dashboard_upcoming_tour')}</p>
+          <p className="text-muted-foreground text-xs mb-3">{t('dashboard_upcoming_tour')}</p>
           {upcomingTour ? (
             <div>
               {upcomingTour.image_url && (
@@ -703,10 +703,10 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
                   <img decoding="async" loading="lazy" src={upcomingTour.image_url} alt={upcomingTour.title} className="w-full h-full object-cover" />
                 </div>
               )}
-              <p className="text-white font-semibold text-sm leading-tight mb-1 line-clamp-2">
+              <p className="text-foreground font-semibold text-sm leading-tight mb-1 line-clamp-2">
                 {upcomingTour.title}
               </p>
-              <div className="flex items-center gap-3 text-white/40 text-[11px]">
+              <div className="flex items-center gap-3 text-muted-foreground text-[11px]">
                 {upcomingTour.location && (
                   <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{upcomingTour.location}</span>
                 )}
@@ -720,13 +720,13 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
               onClick={() => onNavigate('add-tour')}
               disabled={!canAddTour}
               title={!canAddTour ? t('profile_completion_required_for_tour') : ''}
-              className="flex-1 min-h-[180px] w-full rounded-xl border-2 border-dashed border-white/15 hover:border-[hsl(178,85%,45%)] hover:bg-[hsl(178,85%,32%)]/[0.05] flex flex-col items-center justify-center gap-2 text-white/35 hover:text-[hsl(178,85%,50%)] transition group disabled:cursor-not-allowed disabled:opacity-40"
+              className="flex-1 min-h-[180px] w-full rounded-xl border-2 border-dashed border-border hover:border-[hsl(178,85%,45%)] hover:bg-[hsl(178,85%,32%)]/[0.05] flex flex-col items-center justify-center gap-2 text-muted-foreground hover:text-accent transition group disabled:cursor-not-allowed disabled:opacity-40"
             >
-              <div className="w-12 h-12 rounded-2xl bg-white/[0.06] group-hover:bg-[hsl(178,85%,32%)]/20 flex items-center justify-center transition">
+              <div className="w-12 h-12 rounded-2xl bg-muted group-hover:bg-[hsl(178,85%,32%)]/20 flex items-center justify-center transition">
                 <Plus className="w-6 h-6" />
               </div>
               <p className="font-medium text-sm">{t('dashboard_no_upcoming')}</p>
-              <p className="text-[11px] text-white/30">{t('dashboard_add_tour')}</p>
+              <p className="text-[11px] text-muted-foreground">{t('dashboard_add_tour')}</p>
             </button>
           )}
         </div>
@@ -744,16 +744,16 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
         <div className={`${cardBase} md:col-span-3`}>
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Send className="w-4 h-4 text-[hsl(178,85%,50%)]" />
-              <p className="text-white/70 text-sm font-semibold">{t('dashboard_tour_requests')}</p>
+              <Send className="w-4 h-4 text-accent" />
+              <p className="text-foreground/80 text-sm font-semibold">{t('dashboard_tour_requests')}</p>
             </div>
-            <div className="flex bg-white/[0.06] rounded-lg p-0.5">
+            <div className="flex bg-muted rounded-lg p-0.5">
               {['new', 'invitations'].map(tab => (
                 <button
                   key={tab}
                   onClick={() => setReqTab(tab)}
                   className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all capitalize ${
-                    reqTab === tab ? 'bg-[hsl(178,85%,32%)] text-white' : 'text-white/40 hover:text-white/60'
+                    reqTab === tab ? 'bg-[hsl(178,85%,32%)] text-white' : 'text-muted-foreground hover:text-muted-foreground'
                   }`}
                 >
                   {tab === 'new' ? t('dashboard_new_requests') : t('dashboard_invitations')}
@@ -767,21 +767,21 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
                 <button
                   key={req.id}
                   onClick={() => onOpenChat(req.sender_id)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] hover:border-[hsl(178,85%,32%)]/40 transition text-left"
+                  className="w-full flex items-center gap-3 p-3 rounded-xl bg-card hover:bg-muted border border-border hover:border-[hsl(178,85%,32%)]/40 transition text-left"
                 >
                   <img decoding="async" loading="lazy"
                     src={avatarFor(req.sender)}
                     alt=""
-                    className="w-10 h-10 rounded-full object-cover border border-white/10 flex-shrink-0"
+                    className="w-10 h-10 rounded-full object-cover border border-border flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <p className="text-white text-xs font-semibold truncate">
+                      <p className="text-foreground text-xs font-semibold truncate">
                         {req.sender?.full_name || (lang === 'fa' ? 'مسافر' : lang === 'ar' ? 'مسافر' : 'Traveller')}
                       </p>
-                      <span className="text-white/35 text-[10px] flex-shrink-0">{timeLabel(req.created_at)}</span>
+                      <span className="text-muted-foreground text-[10px] flex-shrink-0">{timeLabel(req.created_at)}</span>
                     </div>
-                    <p className="text-white/55 text-[11px] truncate">{req.content}</p>
+                    <p className="text-muted-foreground text-[11px] truncate">{req.content}</p>
                   </div>
                   <span className="w-2 h-2 rounded-full bg-[hsl(178,85%,45%)] flex-shrink-0" />
                 </button>
@@ -799,11 +799,11 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
         {/* Latest Chat */}
         <div className={`${cardBase} md:col-span-2`}>
           <div className="flex items-center justify-between mb-4">
-            <p className="text-white/70 text-sm font-semibold">{t('dashboard_latest_chat')}</p>
+            <p className="text-foreground/80 text-sm font-semibold">{t('dashboard_latest_chat')}</p>
             {latestChats.length > 0 && (
               <button
                 onClick={() => onNavigate('chat')}
-                className="text-[hsl(178,85%,50%)] hover:text-[hsl(178,85%,60%)] text-[11px] font-medium transition"
+                className="text-accent hover:text-accent text-[11px] font-medium transition"
               >
                 {lang === 'fa' ? 'مشاهده همه' : lang === 'ar' ? 'عرض الكل' : 'View all'}
               </button>
@@ -811,7 +811,7 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
           </div>
           {latestChatsLoading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="w-5 h-5 text-[hsl(178,85%,45%)] animate-spin" />
+              <Loader2 className="w-5 h-5 text-accent animate-spin" />
             </div>
           ) : latestChats.length === 0 ? (
             <EmptyState
@@ -825,21 +825,21 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
                 <button
                   key={c.otherId}
                   onClick={() => onOpenChat(c.otherId)}
-                  className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-white/[0.04] transition text-left"
+                  className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted transition text-left"
                 >
                   <img decoding="async" loading="lazy"
                     src={avatarFor(c.profile)}
                     alt=""
-                    className="w-9 h-9 rounded-full object-cover border border-white/10 flex-shrink-0"
+                    className="w-9 h-9 rounded-full object-cover border border-border flex-shrink-0"
                   />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2 mb-0.5">
-                      <p className="text-white text-xs font-semibold truncate">
+                      <p className="text-foreground text-xs font-semibold truncate">
                         {c.profile?.full_name || (lang === 'fa' ? 'کاربر' : lang === 'ar' ? 'مستخدم' : 'User')}
                       </p>
-                      <span className="text-white/35 text-[10px] flex-shrink-0">{timeLabel(c.last?.created_at)}</span>
+                      <span className="text-muted-foreground text-[10px] flex-shrink-0">{timeLabel(c.last?.created_at)}</span>
                     </div>
-                    <p className={`text-[11px] truncate ${c.unread > 0 ? 'text-white/90 font-medium' : 'text-white/45'}`}>
+                    <p className={`text-[11px] truncate ${c.unread > 0 ? 'text-foreground/80 font-medium' : 'text-muted-foreground'}`}>
                       {messagePreview(c.last)}
                     </p>
                   </div>
@@ -859,44 +859,44 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
       <div className={cardBase}>
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
-            <TrendingUp className="w-4 h-4 text-[hsl(178,85%,45%)]" />
-            <p className="text-white/80 text-sm font-semibold">{t('dashboard_earnings_title')}</p>
+            <TrendingUp className="w-4 h-4 text-accent" />
+            <p className="text-foreground/80 text-sm font-semibold">{t('dashboard_earnings_title')}</p>
           </div>
-          <div className="flex items-center gap-4 text-xs text-white/50">
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[hsl(178,85%,32%)]" />
-              Actual Earnings: <span className="text-white font-medium">$0</span>
+              Actual Earnings: <span className="text-foreground font-medium">$0</span>
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[hsl(38,62%,52%)]" />
-              Future Earnings: <span className="text-white font-medium">$0</span>
+              Future Earnings: <span className="text-foreground font-medium">$0</span>
             </span>
           </div>
         </div>
         <ResponsiveContainer width="100%" height={180}>
           <BarChart data={CHART_DATA} barSize={10} barCategoryGap="40%">
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
             <XAxis
               dataKey="name"
-              tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
             />
             <YAxis
-              tick={{ fill: 'rgba(255,255,255,0.35)', fontSize: 10 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
               axisLine={false}
               tickLine={false}
               width={28}
             />
             <Tooltip
               contentStyle={{
-                background: 'hsl(222,55%,12%)',
-                border: '1px solid rgba(255,255,255,0.1)',
+                background: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
                 borderRadius: 10,
-                color: 'white',
+                color: 'hsl(var(--foreground))',
                 fontSize: 12,
               }}
-              cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+              cursor={{ fill: 'hsl(var(--muted))' }}
             />
             <Bar dataKey="actual" name="Actual" fill="hsl(178,85%,32%)" radius={[3, 3, 0, 0]} />
             <Bar dataKey="future" name="Future" fill="hsl(38,62%,52%)" radius={[3, 3, 0, 0]} />
@@ -907,19 +907,19 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
       {/* ── Row 4: Stats ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: t('dashboard_stat_tours'), value: totalTours, color: 'text-white', Icon: Briefcase },
-          { label: t('dashboard_published'), value: publishedCount, color: 'text-emerald-400', Icon: CheckCircle2 },
-          { label: t('dashboard_draft'), value: draftCount, color: 'text-yellow-400', Icon: Package },
-          { label: t('dashboard_recent_reviews'), value: totalReviews, extra: avgRating !== '—' ? `Avg ${avgRating}★` : null, color: 'text-[hsl(38,62%,58%)]', Icon: Star },
+          { label: t('dashboard_stat_tours'), value: totalTours, color: 'text-foreground', Icon: Briefcase },
+          { label: t('dashboard_published'), value: publishedCount, color: 'text-emerald-700', Icon: CheckCircle2 },
+          { label: t('dashboard_draft'), value: draftCount, color: 'text-yellow-700', Icon: Package },
+          { label: t('dashboard_recent_reviews'), value: totalReviews, extra: avgRating !== '—' ? `Avg ${avgRating}★` : null, color: 'text-amber-700', Icon: Star },
         ].map(stat => (
           <div key={stat.label} className={`${cardBase} flex items-center gap-3`}>
-            <div className="w-9 h-9 rounded-xl bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+            <div className="w-9 h-9 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
               <stat.Icon className={`w-4 h-4 ${stat.color}`} />
             </div>
             <div>
               <p className={`text-xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-white/40 text-[11px]">{stat.label}</p>
-              {stat.extra && <p className="text-white/30 text-[10px]">{stat.extra}</p>}
+              <p className="text-muted-foreground text-[11px]">{stat.label}</p>
+              {stat.extra && <p className="text-muted-foreground text-[10px]">{stat.extra}</p>}
             </div>
           </div>
         ))}
@@ -927,7 +927,7 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
 
       {/* ── Row 5: Recent Reviews ── */}
       <div className={cardBase}>
-        <p className="text-white/70 text-sm font-semibold mb-4">{t('dashboard_recent_reviews')}</p>
+        <p className="text-foreground/80 text-sm font-semibold mb-4">{t('dashboard_recent_reviews')}</p>
         {reviews.length === 0 ? (
           <EmptyState
             Icon={Star}
@@ -937,17 +937,17 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
         ) : (
           <div className="space-y-4">
             {reviews.slice(0, 5).map(review => (
-              <div key={review.id} className="flex items-start gap-3 pb-4 border-b border-white/[0.07] last:border-0 last:pb-0">
-                <div className="w-8 h-8 rounded-full bg-[hsl(178,85%,32%)]/30 flex items-center justify-center flex-shrink-0 text-[hsl(178,85%,50%)] text-xs font-bold">
+              <div key={review.id} className="flex items-start gap-3 pb-4 border-b border-border last:border-0 last:pb-0">
+                <div className="w-8 h-8 rounded-full bg-[hsl(178,85%,32%)]/30 flex items-center justify-center flex-shrink-0 text-accent text-xs font-bold">
                   {(review.reviewer?.full_name || review.reviewer_name)?.[0]?.toUpperCase() || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-white text-xs font-medium">{review.reviewer?.full_name || review.reviewer_name || 'Anonymous'}</p>
+                    <p className="text-foreground text-xs font-medium">{review.reviewer?.full_name || review.reviewer_name || 'Anonymous'}</p>
                     <StarRating rating={review.rating || 0} />
                   </div>
                   {review.review_text && (
-                    <p className="text-white/45 text-[11px] leading-relaxed line-clamp-2">{review.review_text}</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2">{review.review_text}</p>
                   )}
                 </div>
               </div>
@@ -966,34 +966,34 @@ function MyToursView({ tours, onEdit, onDelete }) {
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-white font-bold text-lg">{t('dashboard_my_tours')}</h2>
-        <span className="text-white/40 text-xs">{tours.length} tour{tours.length !== 1 ? 's' : ''}</span>
+        <h2 className="text-foreground font-bold text-lg">{t('dashboard_my_tours')}</h2>
+        <span className="text-muted-foreground text-xs">{tours.length} tour{tours.length !== 1 ? 's' : ''}</span>
       </div>
       {tours.length === 0 ? (
-        <div className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl">
+        <div className="bg-card border border-border rounded-2xl">
           <EmptyState Icon={Briefcase} title={t('dashboard_no_tours')} desc={t('dashboard_no_tours_desc')} />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {tours.map(tour => (
-            <div key={tour.id} className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl overflow-hidden group hover:border-white/20 transition-all duration-200">
+            <div key={tour.id} className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-accent/30 transition-all duration-200">
               {/* Image */}
-              <div className="aspect-[16/9] bg-white/5 relative overflow-hidden">
+              <div className="aspect-[16/9] bg-card relative overflow-hidden">
                 {tour.image_url ? (
                   <img decoding="async" loading="lazy" src={tour.image_url} alt={tour.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <ImageIcon className="w-8 h-8 text-white/15" />
+                    <ImageIcon className="w-8 h-8 text-muted-foreground" />
                   </div>
                 )}
                 {/* Status badge */}
                 {(() => {
                   const STATUS_CFG = {
-                    pending:   { icon: '⏳', label: lang === 'fa' ? 'در انتظار تایید' : lang === 'ar' ? 'بانتظار الموافقة' : 'Awaiting Approval', wrap: 'bg-yellow-500/20 border-yellow-500/30 text-yellow-300' },
-                    published: { icon: '✅', label: lang === 'fa' ? 'تایید شده' : lang === 'ar' ? 'موافق عليه' : 'Approved',                      wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' },
-                    active:    { icon: '✅', label: lang === 'fa' ? 'تایید شده' : lang === 'ar' ? 'موافق عليه' : 'Approved',                      wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' },
-                    inactive:  { icon: '⏸', label: lang === 'fa' ? 'غیرفعال'   : lang === 'ar' ? 'غير نشط'   : 'Inactive',                       wrap: 'bg-gray-500/20    border-gray-500/30    text-gray-300'    },
-                    draft:     { icon: '📝', label: lang === 'fa' ? 'پیش‌نویس'   : lang === 'ar' ? 'مسودة'    : 'Draft',                          wrap: 'bg-gray-500/20    border-gray-500/30    text-gray-300'    },
+                    pending:   { icon: '⏳', label: lang === 'fa' ? 'در انتظار تایید' : lang === 'ar' ? 'بانتظار الموافقة' : 'Awaiting Approval', wrap: 'bg-yellow-500/20 border-yellow-500/30 text-yellow-700' },
+                    published: { icon: '✅', label: lang === 'fa' ? 'تایید شده' : lang === 'ar' ? 'موافق عليه' : 'Approved',                      wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-700' },
+                    active:    { icon: '✅', label: lang === 'fa' ? 'تایید شده' : lang === 'ar' ? 'موافق عليه' : 'Approved',                      wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-700' },
+                    inactive:  { icon: '⏸', label: lang === 'fa' ? 'غیرفعال'   : lang === 'ar' ? 'غير نشط'   : 'Inactive',                       wrap: 'bg-gray-500/20    border-gray-500/30    text-gray-700'    },
+                    draft:     { icon: '📝', label: lang === 'fa' ? 'پیش‌نویس'   : lang === 'ar' ? 'مسودة'    : 'Draft',                          wrap: 'bg-gray-500/20    border-gray-500/30    text-gray-700'    },
                   };
                   const cfg = STATUS_CFG[tour.status] || STATUS_CFG.draft;
                   return (
@@ -1007,8 +1007,8 @@ function MyToursView({ tours, onEdit, onDelete }) {
 
               {/* Info */}
               <div className="p-4">
-                <p className="text-white font-semibold text-sm mb-2 line-clamp-2">{tour.title}</p>
-                <div className="flex items-center gap-3 text-white/40 text-[11px] mb-3">
+                <p className="text-foreground font-semibold text-sm mb-2 line-clamp-2">{tour.title}</p>
+                <div className="flex items-center gap-3 text-muted-foreground text-[11px] mb-3">
                   {tour.location && <span className="flex items-center gap-1"><MapPin className="w-3 h-3" />{tour.location}</span>}
                   {tour.duration && <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{tour.duration}d</span>}
                   {tour.price && <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />{Number(tour.price).toLocaleString()}</span>}
@@ -1017,10 +1017,10 @@ function MyToursView({ tours, onEdit, onDelete }) {
                 {/* Admin reason — only shown when an admin_note exists and tour isn't approved */}
                 {tour.admin_note && tour.status !== 'published' && tour.status !== 'active' && (
                   <div className="mb-3 p-2.5 rounded-lg bg-red-500/[0.08] border border-red-500/20">
-                    <p className="text-red-300/90 text-[10px] font-semibold uppercase tracking-wide mb-0.5">
+                    <p className="text-red-700/90 text-[10px] font-semibold uppercase tracking-wide mb-0.5">
                       {lang === 'fa' ? 'دلیل:' : lang === 'ar' ? 'السبب:' : 'Reason:'}
                     </p>
-                    <p className="text-red-300/80 text-xs leading-snug">{tour.admin_note}</p>
+                    <p className="text-red-700/80 text-xs leading-snug">{tour.admin_note}</p>
                   </div>
                 )}
 
@@ -1028,14 +1028,14 @@ function MyToursView({ tours, onEdit, onDelete }) {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => onEdit(tour)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white/60 hover:text-white text-xs font-medium transition"
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-muted hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-medium transition"
                   >
                     <Edit2 className="w-3 h-3" /> {t('dashboard_edit')}
                   </button>
                   {tour.slug && (
                     <Link
                       to={`/tours/${tour.slug}`}
-                      className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.06] hover:bg-white/[0.1] text-white/60 hover:text-white transition"
+                      className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted hover:bg-muted text-muted-foreground hover:text-foreground transition"
                       title="View on site"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
@@ -1043,7 +1043,7 @@ function MyToursView({ tours, onEdit, onDelete }) {
                   )}
                   <button
                     onClick={() => onDelete(tour.id)}
-                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/[0.08] hover:bg-red-500/20 text-red-400/60 hover:text-red-400 transition"
+                    className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/[0.08] hover:bg-red-500/20 text-red-700/60 hover:text-red-700 transition"
                     title="Delete tour"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -1256,20 +1256,20 @@ function ProfileView({ profile, userId, onSave }) {
     }
   };
 
-  const inputClass = 'w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition';
-  const labelClass = 'block text-white/50 text-xs mb-1.5 font-medium';
+  const inputClass = 'w-full px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition';
+  const labelClass = 'block text-muted-foreground text-xs mb-1.5 font-medium';
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-white font-bold text-lg">{t('dashboard_my_profile')}</h2>
-          <p className="text-white/40 text-xs mt-0.5">{t('dashboard_save_profile')}</p>
+          <h2 className="text-foreground font-bold text-lg">{t('dashboard_my_profile')}</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">{t('dashboard_save_profile')}</p>
         </div>
         {/* Completion */}
         <div className="text-right">
-          <p className="text-white/40 text-xs mb-1.5">{t('dashboard_profile_completion')} {completion}%</p>
-          <div className="w-32 h-1.5 bg-white/10 rounded-full overflow-hidden">
+          <p className="text-muted-foreground text-xs mb-1.5">{t('dashboard_profile_completion')} {completion}%</p>
+          <div className="w-32 h-1.5 bg-muted rounded-full overflow-hidden">
             <div
               className="h-full bg-[hsl(178,85%,32%)] rounded-full transition-all duration-500"
               style={{ width: `${completion}%` }}
@@ -1281,12 +1281,12 @@ function ProfileView({ profile, userId, onSave }) {
       {/* License status is separate from user-completable profile fields. */}
       {isGuideOrAgencyProfile && profile?.license_status !== 'verified' && (
         <div className={`mb-4 p-4 rounded-xl border flex items-start gap-3 ${profile?.license_url && profile?.license_status !== 'rejected' ? 'bg-amber-500/10 border-amber-500/25' : 'bg-red-500/10 border-red-500/25'}`}>
-          <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-400' : 'text-red-400'}`} />
+          <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-700' : 'text-red-700'}`} />
           <div>
-            <p className={`font-semibold text-sm ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-400' : 'text-red-400'}`}>
+            <p className={`font-semibold text-sm ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-700' : 'text-red-700'}`}>
               {profile?.license_status === 'rejected' ? 'License Document Rejected' : profile?.license_url ? 'License Awaiting Admin Review' : 'License Document Required'}
             </p>
-            <p className={`text-xs mt-1 ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-400/70' : 'text-red-400/70'}`}>
+            <p className={`text-xs mt-1 ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-700/70' : 'text-red-700/70'}`}>
               {profile?.license_status === 'rejected'
                 ? 'Please upload a replacement license document for review.'
                 : profile?.license_url
@@ -1298,13 +1298,13 @@ function ProfileView({ profile, userId, onSave }) {
       )}
 
       {error && (
-        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm">{error}</div>
+        <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-700 text-sm">{error}</div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-6 space-y-5">
 
         {/* Avatar upload */}
-        <div className="pb-5 border-b border-white/[0.07]">
+        <div className="pb-5 border-b border-border">
           <label className={labelClass}>{lang === 'fa' ? 'عکس پروفایل' : lang === 'ar' ? 'صورة الملف الشخصي' : 'Profile Photo'}</label>
           <div
             role="button"
@@ -1329,21 +1329,21 @@ function ProfileView({ profile, userId, onSave }) {
             }}
             className={`flex items-center gap-4 p-4 rounded-2xl border-2 border-dashed cursor-pointer transition ${avatarDragActive
               ? 'border-[hsl(178,85%,45%)] bg-[hsl(178,85%,32%)]/10'
-              : 'border-white/15 bg-white/[0.02] hover:border-[hsl(178,85%,40%)]/60'
+              : 'border-border bg-card hover:border-[hsl(178,85%,40%)]/60'
             }`}
           >
             <div className="w-20 h-20 rounded-2xl bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)]/30 flex items-center justify-center flex-shrink-0 overflow-hidden">
               <img decoding="async" src={avatarFor(form)} alt="" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1">
-              <p className="text-white/70 text-sm font-medium">
+              <p className="text-foreground/80 text-sm font-medium">
                 {uploadingAvatar
                   ? (lang === 'fa' ? 'در حال بارگذاری…' : 'Uploading…')
                   : (lang === 'fa' ? 'عکس را اینجا رها کنید یا برای انتخاب کلیک کنید' : lang === 'ar' ? 'اسحب الصورة هنا أو انقر للاختيار' : 'Drop your photo here or click to choose')}
               </p>
-              <p className="text-white/30 text-xs mt-1">JPG, PNG, WEBP · max 5 MB</p>
+              <p className="text-muted-foreground text-xs mt-1">JPG, PNG, WEBP · max 5 MB</p>
             </div>
-            {<IconSwap active={uploadingAvatar} a={<Upload className="w-5 h-5 text-white/35" />} b={<Loader2 className="w-5 h-5 text-teal-400 animate-spin" />} keepMounted={false} />}
+            {<IconSwap active={uploadingAvatar} a={<Upload className="w-5 h-5 text-muted-foreground" />} b={<Loader2 className="w-5 h-5 text-teal-700 animate-spin" />} keepMounted={false} />}
           </div>
           <input
             ref={avatarFileRef}
@@ -1392,8 +1392,8 @@ function ProfileView({ profile, userId, onSave }) {
                     type="button"
                     onClick={() => toggleLanguage(language)}
                     className={`px-3 py-1.5 rounded-full text-xs border transition ${selected
-                      ? 'bg-[hsl(178,85%,32%)]/20 border-[hsl(178,85%,32%)] text-teal-300'
-                      : 'bg-white/[0.03] border-white/10 text-white/55 hover:border-white/25'
+                      ? 'bg-[hsl(178,85%,32%)]/20 border-[hsl(178,85%,32%)] text-teal-700'
+                      : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                     }`}
                   >
                     {selected && <span className="me-1">✓</span>}{language}
@@ -1411,7 +1411,7 @@ function ProfileView({ profile, userId, onSave }) {
                       key={language}
                       type="button"
                       onClick={() => toggleLanguage(language)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)] text-teal-300"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)] text-teal-700"
                       title="Remove language"
                     >
                       {language}<X className="w-3 h-3" />
@@ -1437,7 +1437,7 @@ function ProfileView({ profile, userId, onSave }) {
               <button
                 type="button"
                 onClick={addOtherLanguage}
-                className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-white/10 text-white/70 text-xs hover:bg-white/15"
+                className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted"
               >
                 <Plus className="w-3.5 h-3.5" /> Add
               </button>
@@ -1449,7 +1449,7 @@ function ProfileView({ profile, userId, onSave }) {
         {isGuideOrAgencyProfile && (
           <div>
             <label className={labelClass}>{isAgency ? 'Tour Types' : 'Tour Types / Specialties'}</label>
-            <p className="text-white/35 text-xs mb-3">
+            <p className="text-muted-foreground text-xs mb-3">
               {lang === 'fa' ? 'حداقل یک نوع تور یا تخصص را انتخاب کنید.' : lang === 'ar' ? 'اختر نوع رحلة أو تخصصاً واحداً على الأقل.' : 'Choose at least one tour type or specialty.'}
             </p>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -1461,8 +1461,8 @@ function ProfileView({ profile, userId, onSave }) {
                     type="button"
                     onClick={() => toggleTourType(option.value)}
                     className={`px-3 py-1.5 rounded-full text-xs border transition ${selected
-                      ? 'bg-[hsl(38,62%,58%)]/20 border-[hsl(38,62%,58%)] text-[hsl(38,62%,70%)]'
-                      : 'bg-white/[0.03] border-white/10 text-white/55 hover:border-white/25'
+                      ? 'bg-[hsl(38,62%,58%)]/20 border-[hsl(38,62%,58%)] text-amber-700'
+                      : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                     }`}
                   >
                     {selected && <span className="me-1">✓</span>}{option[lang] || option.en}
@@ -1476,7 +1476,7 @@ function ProfileView({ profile, userId, onSave }) {
                 {form.tourTypes
                   .filter(tourType => !PROFILE_TOUR_TYPES.some(option => option.value.toLocaleLowerCase() === tourType.toLocaleLowerCase()))
                   .map(tourType => (
-                    <button key={tourType} type="button" onClick={() => toggleTourType(tourType)} className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[hsl(38,62%,58%)]/20 border border-[hsl(38,62%,58%)] text-[hsl(38,62%,70%)]" title="Remove tour type">
+                    <button key={tourType} type="button" onClick={() => toggleTourType(tourType)} className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[hsl(38,62%,58%)]/20 border border-[hsl(38,62%,58%)] text-amber-700" title="Remove tour type">
                       {tourType}<X className="w-3 h-3" />
                     </button>
                   ))}
@@ -1497,7 +1497,7 @@ function ProfileView({ profile, userId, onSave }) {
                 placeholder={lang === 'fa' ? 'نوع تور یا تخصص دیگر' : lang === 'ar' ? 'نوع رحلة أو تخصص آخر' : 'Other tour type or specialty'}
                 maxLength={80}
               />
-              <button type="button" onClick={addOtherTourType} className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-white/10 text-white/70 text-xs hover:bg-white/15">
+              <button type="button" onClick={addOtherTourType} className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted">
                 <Plus className="w-3.5 h-3.5" /> Add
               </button>
             </div>
@@ -1506,11 +1506,11 @@ function ProfileView({ profile, userId, onSave }) {
 
         {/* Provider abilities are distinct from tour types / specialties. */}
         {isGuideOrAgencyProfile && (
-          <div className="border-t border-white/[0.07] pt-5">
+          <div className="border-t border-border pt-5">
             <label className={labelClass}>
               {lang === 'fa' ? 'توانایی‌های ویژه' : lang === 'ar' ? 'المهارات الخاصة' : 'Special Abilities'} *
             </label>
-            <p className="text-white/35 text-xs mb-3">
+            <p className="text-muted-foreground text-xs mb-3">
               {lang === 'fa' ? 'حداقل یک توانایی را انتخاب یا اضافه کنید.' : lang === 'ar' ? 'اختر أو أضف مهارة واحدة على الأقل.' : 'Choose or add at least one ability.'}
             </p>
             <div className="flex flex-wrap gap-2 mb-3">
@@ -1525,8 +1525,8 @@ function ProfileView({ profile, userId, onSave }) {
                     aria-pressed={selected}
                     onClick={() => toggleSpecialAbility(option.value)}
                     className={`px-3 py-1.5 rounded-full text-xs border transition ${selected
-                      ? 'bg-violet-500/20 border-violet-400/60 text-violet-200'
-                      : 'bg-white/[0.03] border-white/10 text-white/55 hover:border-white/25'
+                      ? 'bg-violet-500/20 border-violet-400/60 text-violet-700'
+                      : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                     }`}
                   >
                     {selected && <span className="me-1">✓</span>}{option[lang] || option.en}
@@ -1548,7 +1548,7 @@ function ProfileView({ profile, userId, onSave }) {
                       key={ability}
                       type="button"
                       onClick={() => toggleSpecialAbility(ability)}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-violet-500/20 border border-violet-400/60 text-violet-200"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-violet-500/20 border border-violet-400/60 text-violet-700"
                       title={lang === 'fa' ? 'حذف توانایی' : lang === 'ar' ? 'إزالة المهارة' : 'Remove ability'}
                     >
                       {ability}<X className="w-3 h-3" />
@@ -1575,7 +1575,7 @@ function ProfileView({ profile, userId, onSave }) {
                 type="button"
                 onClick={addOtherSpecialAbility}
                 disabled={!otherSpecialAbility.trim()}
-                className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-white/10 text-white/70 text-xs hover:bg-white/15 disabled:opacity-40"
+                className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted disabled:opacity-40"
               >
                 <Plus className="w-3.5 h-3.5" />
                 {lang === 'fa' ? 'افزودن' : lang === 'ar' ? 'إضافة' : 'Add'}
@@ -1606,8 +1606,8 @@ function ProfileView({ profile, userId, onSave }) {
                     aria-pressed={selected}
                     onClick={() => setForm(prev => ({ ...prev, hasVehicle: option.value }))}
                     className={`px-4 py-2.5 rounded-xl text-sm border transition ${selected
-                      ? 'bg-[hsl(178,85%,32%)]/20 border-[hsl(178,85%,40%)] text-teal-200'
-                      : 'bg-white/[0.03] border-white/10 text-white/55 hover:border-white/25'
+                      ? 'bg-[hsl(178,85%,32%)]/20 border-[hsl(178,85%,40%)] text-teal-700'
+                      : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                     }`}
                   >
                     {selected && <span className="me-1.5">✓</span>}{option.label}
@@ -1626,14 +1626,14 @@ function ProfileView({ profile, userId, onSave }) {
 
         {/* License Document Section */}
         {(profile?.role === 'guide' || profile?.role === 'agency') && (
-          <div className="border-t border-white/[0.07] pt-5 min-h-52 flex flex-col">
+          <div className="border-t border-border pt-5 min-h-52 flex flex-col">
             <LicenseCard profile={{ ...profile, id: userId }} onSave={onSave} />
           </div>
         )}
 
         <div className="flex items-center justify-between pt-2">
           {saved && (
-            <span className="flex items-center gap-1.5 text-emerald-400 text-sm">
+            <span className="flex items-center gap-1.5 text-emerald-700 text-sm">
               <CheckCircle2 className="w-4 h-4" /> {t('dashboard_saved')}
             </span>
           )}
@@ -1769,8 +1769,8 @@ function GalleryView({ profile, userId, onSave }) {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-white font-bold text-lg">{t('gallery_title')}</h2>
-          <p className="text-white/40 text-xs mt-0.5">
+          <h2 className="text-foreground font-bold text-lg">{t('gallery_title')}</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">
             {gallery.length}/20 {t('gallery_max')}
           </p>
         </div>
@@ -1786,13 +1786,13 @@ function GalleryView({ profile, userId, onSave }) {
       </div>
 
       {gallery.length === 0 ? (
-        <div className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl">
+        <div className="bg-card border border-border rounded-2xl">
           <EmptyState Icon={ImageIcon} title={t('gallery_empty')} desc={t('gallery_max')} />
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
           {gallery.map((img, i) => (
-            <div key={i} className="relative group aspect-square rounded-2xl overflow-hidden bg-white/[0.05] border border-white/[0.08]">
+            <div key={i} className="relative group aspect-square rounded-2xl overflow-hidden bg-card border border-border">
               <img decoding="async" loading="lazy" src={img} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center">
                 <button
@@ -1815,17 +1815,17 @@ function GalleryView({ profile, userId, onSave }) {
             onClick={(e) => e.target === e.currentTarget && setShowModal(false)}
           >
             <TransitionSurface kind="modal"
-              className="bg-[hsl(222,55%,10%)] border border-white/10 rounded-2xl p-6 w-full max-w-md"
+              className="bg-card border border-border rounded-2xl p-6 w-full max-w-md"
             >
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-white font-semibold text-base">{t('gallery_add')}</h3>
-                <button onClick={() => setShowModal(false)} className="w-7 h-7 rounded-lg bg-white/[0.06] flex items-center justify-center text-white/50 hover:text-white transition">
+                <h3 className="text-foreground font-semibold text-base">{t('gallery_add')}</h3>
+                <button onClick={() => setShowModal(false)} className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               {error && (
-                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm">{error}</div>
+                <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-700 text-sm">{error}</div>
               )}
 
               <div
@@ -1851,19 +1851,19 @@ function GalleryView({ profile, userId, onSave }) {
                 }}
                 className={`mb-5 p-6 rounded-xl border-2 border-dashed text-center cursor-pointer transition ${dragActive
                   ? 'border-teal-400 bg-teal-400/10'
-                  : 'border-white/15 bg-white/[0.03] hover:border-teal-400/60'
+                  : 'border-border bg-card hover:border-teal-400/60'
                 }`}
               >
                 {uploading ? (
-                  <div className="flex flex-col items-center gap-2 text-teal-300">
+                  <div className="flex flex-col items-center gap-2 text-teal-700">
                     <Loader2 className="w-6 h-6 animate-spin" />
                     <p className="text-sm">{lang === 'fa' ? 'در حال بارگذاری…' : 'Uploading…'}</p>
                   </div>
                 ) : (
-                  <div className="flex flex-col items-center gap-2 text-white/45">
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Upload className="w-7 h-7" />
                     <p className="text-sm">{lang === 'fa' ? 'عکس‌ها را اینجا رها کنید یا برای انتخاب کلیک کنید' : 'Drop photos here or click to choose'}</p>
-                    <p className="text-[10px] text-white/25">JPG, PNG, WEBP · max 5 MB each · up to {20 - gallery.length}</p>
+                    <p className="text-[10px] text-muted-foreground">JPG, PNG, WEBP · max 5 MB each · up to {20 - gallery.length}</p>
                   </div>
                 )}
               </div>
@@ -1877,9 +1877,9 @@ function GalleryView({ profile, userId, onSave }) {
               />
 
               <div className="flex items-center gap-3 mb-4">
-                <div className="h-px flex-1 bg-white/10" />
-                <span className="text-white/30 text-[10px] uppercase">{lang === 'fa' ? 'یا لینک عکس' : 'or image URL'}</span>
-                <div className="h-px flex-1 bg-white/10" />
+                <div className="h-px flex-1 bg-muted" />
+                <span className="text-muted-foreground text-[10px] uppercase">{lang === 'fa' ? 'یا لینک عکس' : 'or image URL'}</span>
+                <div className="h-px flex-1 bg-muted" />
               </div>
 
               <input
@@ -1887,12 +1887,12 @@ function GalleryView({ profile, userId, onSave }) {
                 value={newUrl}
                 onChange={e => setNewUrl(e.target.value)}
                 placeholder={t('gallery_add_url')}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition mb-4"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition mb-4"
                 onKeyDown={e => e.key === 'Enter' && handleAddPhoto()}
               />
 
               {newUrl && (
-                <div className="w-full aspect-video rounded-xl overflow-hidden bg-white/5 mb-4">
+                <div className="w-full aspect-video rounded-xl overflow-hidden bg-card mb-4">
                   <img decoding="async" loading="lazy" src={newUrl} alt="Preview" className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
                 </div>
               )}
@@ -1900,7 +1900,7 @@ function GalleryView({ profile, userId, onSave }) {
               <div className="flex gap-3">
                 <button
                   onClick={() => setShowModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-white/15 text-white/50 text-sm hover:text-white hover:border-white/30 transition"
+                  className="flex-1 py-2.5 rounded-xl border border-border text-muted-foreground text-sm hover:text-foreground hover:border-accent/30 transition"
                 >
                   {t('dashboard_cancel')}
                 </button>
@@ -1941,7 +1941,7 @@ function Toggle({ checked, onChange }) {
       type="button"
       onClick={() => onChange(!checked)}
       className={`relative w-11 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
-        checked ? 'bg-[hsl(178,85%,32%)]' : 'bg-white/15'
+        checked ? 'bg-[hsl(178,85%,32%)]' : 'bg-muted'
       }`}
     >
       <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow transition-transform duration-200 ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -1993,16 +1993,16 @@ function SettingsView({ profile, userId, onSave }) {
     }
   };
 
-  const selectClass = 'w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm focus:outline-none focus:border-[hsl(178,85%,32%)] transition appearance-none cursor-pointer';
-  const labelClass = 'block text-white/50 text-xs mb-1.5 font-medium';
+  const selectClass = 'w-full px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm focus:outline-none focus:border-[hsl(178,85%,32%)] transition appearance-none cursor-pointer';
+  const labelClass = 'block text-muted-foreground text-xs mb-1.5 font-medium';
   const tabs = ['general', 'notifications', 'privacy'];
 
   return (
     <div>
-      <h2 className="text-white font-bold text-lg mb-6">{t('dashboard_nav_settings')}</h2>
+      <h2 className="text-foreground font-bold text-lg mb-6">{t('dashboard_nav_settings')}</h2>
 
       {/* Tabs */}
-      <div className="flex bg-white/[0.05] rounded-xl p-1 mb-6 w-fit gap-1">
+      <div className="flex bg-card rounded-xl p-1 mb-6 w-fit gap-1">
         {tabs.map(tabId => (
           <button
             key={tabId}
@@ -2010,7 +2010,7 @@ function SettingsView({ profile, userId, onSave }) {
             className={`px-4 py-2 rounded-lg text-xs font-medium transition-all capitalize ${
               tab === tabId
                 ? 'bg-[hsl(178,85%,32%)] text-white shadow'
-                : 'text-white/50 hover:text-white'
+                : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {t(`settings_${tabId}`)}
@@ -2019,10 +2019,10 @@ function SettingsView({ profile, userId, onSave }) {
       </div>
 
       {error && (
-        <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm">{error}</div>
+        <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-700 text-sm">{error}</div>
       )}
 
-      <div className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl p-6 space-y-6">
+      <div className="bg-card border border-border rounded-2xl p-6 space-y-6">
 
         {/* ── General Tab ── */}
         {tab === 'general' && (
@@ -2030,7 +2030,7 @@ function SettingsView({ profile, userId, onSave }) {
             {/* Accept bookings toggle */}
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-white text-sm font-medium">{t('settings_accept_bookings')}</p>
+                <p className="text-foreground text-sm font-medium">{t('settings_accept_bookings')}</p>
               </div>
               <Toggle checked={acceptBookings} onChange={setAcceptBookings} />
             </div>
@@ -2046,7 +2046,7 @@ function SettingsView({ profile, userId, onSave }) {
                 >
                   {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
-                <Globe className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+                <Globe className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
 
@@ -2061,7 +2061,7 @@ function SettingsView({ profile, userId, onSave }) {
                 >
                   {TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
                 </select>
-                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30 pointer-events-none" />
+                <Clock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               </div>
             </div>
           </>
@@ -2071,12 +2071,12 @@ function SettingsView({ profile, userId, onSave }) {
         {tab === 'notifications' && (
           <>
             <div className="flex items-center justify-between gap-4">
-              <p className="text-white text-sm font-medium">{t('settings_notify_requests')}</p>
+              <p className="text-foreground text-sm font-medium">{t('settings_notify_requests')}</p>
               <Toggle checked={notifyRequests} onChange={setNotifyRequests} />
             </div>
 
             <div>
-              <p className="text-white/50 text-xs font-medium mb-3">{t('settings_notify_area')}</p>
+              <p className="text-muted-foreground text-xs font-medium mb-3">{t('settings_notify_area')}</p>
               <div className="space-y-3">
                 {[
                   { value: 'nearby', label: t('settings_notify_nearby') },
@@ -2086,13 +2086,13 @@ function SettingsView({ profile, userId, onSave }) {
                     <div className={`w-4 h-4 rounded-full border-2 flex-shrink-0 transition-colors ${
                       notifyArea === opt.value
                         ? 'border-[hsl(178,85%,45%)] bg-[hsl(178,85%,32%)]'
-                        : 'border-white/20 group-hover:border-white/40'
+                        : 'border-border group-hover:border-accent/30'
                     }`}>
                       {notifyArea === opt.value && (
-                        <div className="w-full h-full rounded-full bg-white/80 scale-[0.4]" />
+                        <div className="w-full h-full rounded-full bg-muted scale-[0.4]" />
                       )}
                     </div>
-                    <span className="text-white/70 text-sm group-hover:text-white transition">{opt.label}</span>
+                    <span className="text-foreground/80 text-sm group-hover:text-foreground transition">{opt.label}</span>
                     <input
                       type="radio"
                       name="notifyArea"
@@ -2106,13 +2106,13 @@ function SettingsView({ profile, userId, onSave }) {
               </div>
             </div>
 
-            <div className="space-y-5 pt-2 border-t border-white/[0.07]">
+            <div className="space-y-5 pt-2 border-t border-border">
               <div className="flex items-center justify-between gap-4">
-                <p className="text-white text-sm">{t('settings_notify_email')}</p>
+                <p className="text-foreground text-sm">{t('settings_notify_email')}</p>
                 <Toggle checked={notifyEmail} onChange={setNotifyEmail} />
               </div>
               <div className="flex items-center justify-between gap-4">
-                <p className="text-white text-sm">{t('settings_notify_whatsapp')}</p>
+                <p className="text-foreground text-sm">{t('settings_notify_whatsapp')}</p>
                 <Toggle checked={notifyWhatsapp} onChange={setNotifyWhatsapp} />
               </div>
             </div>
@@ -2124,17 +2124,17 @@ function SettingsView({ profile, userId, onSave }) {
           <>
             <div className="flex items-center justify-between gap-4">
               <div>
-                <p className="text-white text-sm font-medium">{t('settings_publish_profile')}</p>
-                <p className="text-white/40 text-xs mt-0.5">{t('settings_publish_desc')}</p>
+                <p className="text-foreground text-sm font-medium">{t('settings_publish_profile')}</p>
+                <p className="text-muted-foreground text-xs mt-0.5">{t('settings_publish_desc')}</p>
               </div>
               <Toggle checked={isPublic} onChange={setIsPublic} />
             </div>
 
-            <div className="pt-4 border-t border-white/[0.07]">
+            <div className="pt-4 border-t border-border">
               <button
                 type="button"
                 onClick={() => setShowDeactivateModal(true)}
-                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-400 text-sm font-medium hover:bg-red-500/10 transition"
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-red-500/30 text-red-700 text-sm font-medium hover:bg-red-500/10 transition"
               >
                 <AlertTriangle className="w-4 h-4" />
                 {t('settings_deactivate')}
@@ -2147,7 +2147,7 @@ function SettingsView({ profile, userId, onSave }) {
       {/* Save button */}
       <div className="flex items-center justify-end gap-3 mt-5">
         {saved && (
-          <span className="flex items-center gap-1.5 text-emerald-400 text-sm">
+          <span className="flex items-center gap-1.5 text-emerald-700 text-sm">
             <CheckCircle2 className="w-4 h-4" /> {t('dashboard_saved')}
           </span>
         )}
@@ -2169,21 +2169,21 @@ function SettingsView({ profile, userId, onSave }) {
             onClick={e => e.target === e.currentTarget && setShowDeactivateModal(false)}
           >
             <TransitionSurface kind="modal"
-              className="bg-[hsl(222,55%,10%)] border border-white/10 rounded-2xl p-6 w-full max-w-sm"
+              className="bg-card border border-border rounded-2xl p-6 w-full max-w-sm"
             >
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-10 h-10 rounded-xl bg-red-500/15 flex items-center justify-center flex-shrink-0">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                  <AlertTriangle className="w-5 h-5 text-red-700" />
                 </div>
                 <div>
-                  <h3 className="text-white font-semibold text-sm">{t('settings_deactivate')}</h3>
-                  <p className="text-white/40 text-xs mt-0.5">This action cannot be undone.</p>
+                  <h3 className="text-foreground font-semibold text-sm">{t('settings_deactivate')}</h3>
+                  <p className="text-muted-foreground text-xs mt-0.5">This action cannot be undone.</p>
                 </div>
               </div>
               <div className="flex gap-3 mt-5">
                 <button
                   onClick={() => setShowDeactivateModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-white/15 text-white/50 text-sm hover:text-white hover:border-white/30 transition"
+                  className="flex-1 py-2.5 rounded-xl border border-border text-muted-foreground text-sm hover:text-foreground hover:border-accent/30 transition"
                 >
                   {t('dashboard_cancel')}
                 </button>
@@ -2302,8 +2302,8 @@ function MessagesView({ userId, onOpen }) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-white font-bold text-2xl mb-1">{t('dashboard_nav_chat') || 'Messages'}</h1>
-        <p className="text-white/40 text-sm">
+        <h1 className="text-foreground font-bold text-2xl mb-1">{t('dashboard_nav_chat') || 'Messages'}</h1>
+        <p className="text-muted-foreground text-sm">
           {lang === 'fa'
             ? 'تمام مکالمات شما با مسافران'
             : lang === 'ar'
@@ -2314,25 +2314,25 @@ function MessagesView({ userId, onOpen }) {
 
       {loading ? (
         <div className="flex items-center justify-center py-20">
-          <Loader2 className="w-6 h-6 text-[hsl(178,85%,45%)] animate-spin" />
+          <Loader2 className="w-6 h-6 text-accent animate-spin" />
         </div>
       ) : error ? (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm">
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/25 text-red-700 text-sm">
           {error}
         </div>
       ) : conversations.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4">
-            <MessageCircle className="w-7 h-7 text-white/25" />
+          <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+            <MessageCircle className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="text-white/60 font-medium text-sm mb-1">
+          <p className="text-muted-foreground font-medium text-sm mb-1">
             {lang === 'fa'
               ? 'هنوز مکالمه‌ای ندارید'
               : lang === 'ar'
               ? 'لا توجد محادثات بعد'
               : 'No conversations yet'}
           </p>
-          <p className="text-white/35 text-xs max-w-xs">
+          <p className="text-muted-foreground text-xs max-w-xs">
             {lang === 'fa'
               ? 'مسافران از طریق پروفایل شما می‌توانند پیام بفرستند'
               : lang === 'ar'
@@ -2346,21 +2346,21 @@ function MessagesView({ userId, onOpen }) {
             <button
               key={c.otherId}
               onClick={() => onOpen(c.otherId)}
-              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-[hsl(222,45%,14%)] border border-white/[0.06] hover:border-[hsl(178,85%,32%)]/40 hover:bg-[hsl(222,45%,16%)] transition text-left"
+              className="w-full flex items-center gap-4 p-4 rounded-2xl bg-card border border-border hover:border-[hsl(178,85%,32%)]/40 hover:bg-muted transition text-left"
             >
               <img decoding="async" loading="lazy"
                 src={avatarFor(c.profile)}
                 alt=""
-                className="w-12 h-12 rounded-full object-cover border border-white/10 flex-shrink-0"
+                className="w-12 h-12 rounded-full object-cover border border-border flex-shrink-0"
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2 mb-0.5">
-                  <p className="text-white font-semibold text-sm truncate">
+                  <p className="text-foreground font-semibold text-sm truncate">
                     {c.profile?.full_name || (lang === 'fa' ? 'کاربر' : lang === 'ar' ? 'مستخدم' : 'User')}
                   </p>
-                  <span className="text-white/35 text-[11px] flex-shrink-0">{timeLabel(c.last?.created_at)}</span>
+                  <span className="text-muted-foreground text-[11px] flex-shrink-0">{timeLabel(c.last?.created_at)}</span>
                 </div>
-                <p className={`text-xs truncate ${c.unread > 0 ? 'text-white/85 font-medium' : 'text-white/45'}`}>
+                <p className={`text-xs truncate ${c.unread > 0 ? 'text-foreground/80 font-medium' : 'text-muted-foreground'}`}>
                   {previewText(c.last)}
                 </p>
               </div>
@@ -2400,11 +2400,11 @@ function EmptySection({ section }) {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="text-center">
-        <div className="w-16 h-16 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mx-auto mb-4">
-          <Icon className="w-8 h-8 text-white/20" />
+        <div className="w-16 h-16 rounded-2xl bg-card border border-border flex items-center justify-center mx-auto mb-4">
+          <Icon className="w-8 h-8 text-muted-foreground" />
         </div>
-        <h2 className="text-white font-bold text-xl mb-2">{t(titleKey)}</h2>
-        <p className="text-white/40 text-sm max-w-xs">{t(descKey)}</p>
+        <h2 className="text-foreground font-bold text-xl mb-2">{t(titleKey)}</h2>
+        <p className="text-muted-foreground text-sm max-w-xs">{t(descKey)}</p>
       </div>
     </div>
   );
@@ -2446,15 +2446,15 @@ function MyTripRequestsView({ userId }) {
   };
 
   const statusColor = (s) => {
-    if (s === 'active')   return 'bg-green-500/15 text-green-400';
-    if (s === 'inactive') return 'bg-yellow-500/15 text-yellow-400';
-    return 'bg-white/10 text-white/40';
+    if (s === 'active')   return 'bg-green-500/15 text-green-700';
+    if (s === 'inactive') return 'bg-yellow-500/15 text-yellow-700';
+    return 'bg-muted text-muted-foreground';
   };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-white font-bold text-xl">My Trip Requests</h2>
+        <h2 className="text-foreground font-bold text-xl">My Trip Requests</h2>
         <button
           onClick={() => setFormOpen(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(178,85%,32%)] text-white text-sm font-medium hover:bg-[hsl(178,85%,28%)] transition"
@@ -2466,38 +2466,38 @@ function MyTripRequestsView({ userId }) {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <Loader2 className="w-6 h-6 text-white/30 animate-spin" />
+          <Loader2 className="w-6 h-6 text-muted-foreground animate-spin" />
         </div>
       ) : requests.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4">
-            <MapPin className="w-7 h-7 text-white/20" />
+          <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+            <MapPin className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="text-white/60 font-medium mb-1">No trip requests yet</p>
-          <p className="text-white/30 text-sm">Create your first request and local guides will reach out.</p>
+          <p className="text-muted-foreground font-medium mb-1">No trip requests yet</p>
+          <p className="text-muted-foreground text-sm">Create your first request and local guides will reach out.</p>
         </div>
       ) : (
         <div className="space-y-3">
           {requests.map(req => (
             <div
               key={req.id}
-              className="bg-white/[0.04] border border-white/10 rounded-2xl p-5 flex items-start justify-between gap-4"
+              className="bg-card border border-border rounded-2xl p-5 flex items-start justify-between gap-4"
             >
               <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-white font-semibold text-sm truncate">
+                  <span className="text-foreground font-semibold text-sm truncate">
                     {Array.isArray(req.destination) ? req.destination.join(', ') : req.destination || 'No destination'}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(req.status)}`}>
                     {req.status || 'active'}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-white/40 text-xs">
+                <div className="flex items-center gap-3 text-muted-foreground text-xs">
                   {req.start_date && <span>{req.start_date} → {req.end_date}</span>}
                   {req.adults != null && <span>{req.adults} adult{req.adults !== 1 ? 's' : ''}</span>}
                 </div>
                 {req.requirements && (
-                  <p className="text-white/40 text-xs line-clamp-2">{req.requirements}</p>
+                  <p className="text-muted-foreground text-xs line-clamp-2">{req.requirements}</p>
                 )}
               </div>
               <div className="flex items-center gap-2 shrink-0">
@@ -2505,7 +2505,7 @@ function MyTripRequestsView({ userId }) {
                   (!req.expires_at || new Date(req.expires_at).getTime() > Date.now()) && (
                   <button
                     onClick={() => handleCancel(req.id)}
-                    className="p-2 rounded-lg bg-white/[0.06] text-white/50 hover:text-red-400 hover:bg-red-500/10 transition"
+                    className="p-2 rounded-lg bg-muted text-muted-foreground hover:text-red-700 hover:bg-red-500/10 transition"
                     title="Cancel"
                   >
                     <X className="w-3.5 h-3.5" />
@@ -2683,10 +2683,10 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[hsl(222,55%,8%)] flex items-center justify-center">
+      <div className="min-h-screen bg-card flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-[hsl(178,85%,45%)] animate-spin" />
-          <p className="text-white/40 text-sm">Loading dashboard...</p>
+          <Loader2 className="w-8 h-8 text-accent animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -2694,7 +2694,7 @@ export default function Dashboard() {
 
   return (
     <BentoDashboardMotion>
-    <div className="bento-dashboard min-h-screen bg-[hsl(222,50%,10%)] flex" style={{ fontFamily: 'inherit' }}>
+    <div className="bento-dashboard min-h-screen bg-card flex" style={{ fontFamily: 'inherit' }}>
       <Sidebar
         section={section}
         onNavigate={nav}
@@ -2707,23 +2707,23 @@ export default function Dashboard() {
       />
 
       {/* Main content */}
-      <main className="bento-dashboard-main flex-1 overflow-y-auto">
-        <div className="bento-dashboard-surface max-w-5xl mx-auto px-6 py-8">
+      <main className="bento-dashboard-main flex-1 overflow-visible">
+        <div className="bento-dashboard-content max-w-5xl mx-auto px-6 py-8">
 
           {/* Profile completion banner */}
           {profileIncomplete && (
             <div className="mb-5 flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl px-4 py-3">
-              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-amber-300 font-semibold text-sm mb-0.5">{_t('profile_incomplete_banner')}</p>
-                <p className="text-amber-200/60 text-xs">
+                <p className="text-amber-700 font-semibold text-sm mb-0.5">{_t('profile_incomplete_banner')}</p>
+                <p className="text-amber-700/60 text-xs">
                   {profileCheck.passed}/{profileCheck.total}
                   {lang === 'fa' ? ' فیلد تکمیل شده' : lang === 'ar' ? ' حقلاً مكتملة' : ' fields completed'}
                 </p>
               </div>
               <button
                 onClick={() => nav('profile')}
-                className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 text-xs font-medium transition-colors"
+                className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 text-xs font-medium transition-colors"
               >
                 {_t('profile_incomplete_banner_link')}
               </button>
@@ -2733,12 +2733,12 @@ export default function Dashboard() {
           {/* Uploading a license automatically places the profile in the admin review queue. */}
           {isGuideOrAgency && profileCheck?.completed && !profile?.is_approved && (
             <div className="mb-5 flex items-start gap-3 bg-emerald-500/10 border border-emerald-500/30 rounded-2xl px-4 py-3">
-              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <CheckCircle2 className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-emerald-300 font-semibold text-sm mb-0.5">
+                <p className="text-emerald-700 font-semibold text-sm mb-0.5">
                   {_t('profile_review_requested')}
                 </p>
-                <p className="text-emerald-200/60 text-xs">
+                <p className="text-emerald-700/60 text-xs">
                   {lang === 'fa' ? 'پروفایل و لایسنس شما به‌صورت خودکار برای ادمین ارسال شده است.' : lang === 'ar' ? 'تم إرسال ملفك ورخصتك تلقائياً إلى المسؤول للمراجعة.' : 'Your completed profile and uploaded license were automatically sent for admin review.'}
                 </p>
               </div>

@@ -206,11 +206,11 @@
   }
 }
 
-/* Desktop Bento workspace: useLayouts' layered surface and moving sidebar
-   indicators, with the existing navy content palette kept for internal cards. */
+/* Desktop Bento navigation. Content remains in normal document flow. */
 .bento-content-deck {
-  position: relative;
   min-width: 0;
+  height: auto;
+  overflow: visible;
 }
 
 .bento-nav-highlight,
@@ -332,26 +332,10 @@
     overflow: visible;
   }
 
-  .bento-dashboard-surface {
-    position: relative;
-    isolation: isolate;
-    min-height: calc(100dvh - 4rem);
+  .bento-dashboard-content {
     max-width: 80rem;
     padding: 2rem;
-    border: 1px solid hsl(var(--border));
-    border-radius: 2rem;
-    background: hsl(222 50% 10%);
-    box-shadow: 0 20px 60px hsl(var(--foreground) / 0.12),
-      0 0 0 6px hsl(var(--card) / 0.8);
-  }
-
-  .bento-dashboard-surface::before {
-    content: '';
-    position: absolute;
-    inset: 0.5rem -0.5rem -0.5rem 0.5rem;
-    z-index: -1;
-    border: 1px solid hsl(var(--border));
-    border-radius: inherit;
-    background: transparent;
+    height: auto;
+    overflow: visible;
   }
 }

@@ -428,11 +428,11 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
     }
   };
 
-  const inputClass = 'w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition';
-  const labelClass = 'block text-white/50 text-xs mb-1.5 font-medium';
+  const inputClass = 'w-full px-3.5 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 transition';
+  const labelClass = 'block text-muted-foreground text-xs mb-1.5 font-medium';
   const tagBase    = 'rounded-full px-3 py-1.5 text-sm cursor-pointer flex items-center gap-1.5 border transition';
-  const tagOn      = `${tagBase} border-teal-400 bg-teal-400/20 text-white`;
-  const tagOff     = `${tagBase} border-white/20 text-white/70 hover:border-teal-400`;
+  const tagOn      = `${tagBase} border-teal-400 bg-teal-400/20 text-foreground`;
+  const tagOff     = `${tagBase} border-border text-foreground/80 hover:border-teal-400`;
   const customTransportationValues = included.transportation.filter(value =>
     !TRANSPORTATION_OPTIONS.some(option => option.value === value)
   );
@@ -442,26 +442,26 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-white font-bold text-lg">{editing ? t('dashboard_update_tour') : t('dashboard_add_tour')}</h2>
-          <p className="text-white/40 text-xs mt-0.5">{editing ? t('dashboard_update_tour') : t('dashboard_add_tour')}</p>
+          <h2 className="text-foreground font-bold text-lg">{editing ? t('dashboard_update_tour') : t('dashboard_add_tour')}</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">{editing ? t('dashboard_update_tour') : t('dashboard_add_tour')}</p>
         </div>
         {editing && (
-          <button onClick={onCancel} className="px-4 py-2 rounded-xl border border-white/15 text-white/50 text-xs hover:text-white hover:border-white/30 transition">
+          <button onClick={onCancel} className="px-4 py-2 rounded-xl border border-border text-muted-foreground text-xs hover:text-foreground hover:border-accent/30 transition">
             ✕ {t('dashboard_cancel')}
           </button>
         )}
       </div>
 
       {error && (
-        <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-400 text-sm">{error}</div>
+        <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/25 text-red-700 text-sm">{error}</div>
       )}
       {success && (
-        <div className="mb-5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-sm flex items-center gap-2">
+        <div className="mb-5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 text-sm flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Tour created successfully!
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-card border border-border rounded-2xl p-6 space-y-5">
 
         {/* Title */}
         <div>
@@ -478,7 +478,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           <datalist id="tour-title-examples">
             {TITLE_EXAMPLES.map(example => <option key={example} value={example} />)}
           </datalist>
-          <p className="text-white/30 text-[10px] mt-1.5">
+          <p className="text-muted-foreground text-[10px] mt-1.5">
             {lang === 'fa'
               ? 'نمونه‌ها: سفر میراث پارسی ۷ روزه · طبیعت‌گردی شمال ایران · تور خوراک ایران'
               : lang === 'ar'
@@ -502,7 +502,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               ? 'مثال: في هذه الرحلة التي تستغرق 7 أيام، يكتشف الضيوف العمارة والطعام والحياة المحلية من طهران إلى يزد. تشمل الجولة زيارات يومية ووقتاً حراً ودليلاً محلياً.'
               : 'Example: On this 7-day journey from Tehran to Yazd, guests discover Iran’s architecture, food, and local life. The plan includes guided daily visits, free time, and local support. Ideal for culture and history lovers.'}
           />
-          <p className="text-white/30 text-[10px] mt-1.5">
+          <p className="text-muted-foreground text-[10px] mt-1.5">
             {lang === 'fa' ? 'مسیر سفر، تجربه‌های اصلی، خدمات و مناسب‌بودن تور برای مخاطب را کوتاه و روشن توضیح دهید.' : 'Briefly cover the route, key experiences, included support, and who the tour is best for.'}
           </p>
         </div>
@@ -519,7 +519,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           </div>
           <div>
             <label className={labelClass}>Price basis</label>
-            <select name="price_basis" value={form.price_basis} onChange={handleChange} className={`${inputClass} [color-scheme:dark]`}>
+            <select name="price_basis" value={form.price_basis} onChange={handleChange} className={`${inputClass} [color-scheme:light]`}>
               <option value="per_person">Per person</option>
               <option value="per_day">Per day</option>
             </select>
@@ -529,17 +529,17 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
         {/* Cities — chip input. Press Enter or comma to add, X (or Backspace on empty) to remove. */}
         <div>
           <label className={labelClass}>Cities</label>
-          <div className="flex flex-wrap items-center gap-2 px-2 py-1.5 rounded-xl border border-white/10 bg-white/[0.05] focus-within:border-[hsl(178,85%,32%)] focus-within:ring-1 focus-within:ring-[hsl(178,85%,32%)]/50 transition">
+          <div className="flex flex-wrap items-center gap-2 px-2 py-1.5 rounded-xl border border-border bg-card focus-within:border-[hsl(178,85%,32%)] focus-within:ring-1 focus-within:ring-[hsl(178,85%,32%)]/50 transition">
             {cities.map(c => (
               <span
                 key={c}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-400/15 border border-teal-400/30 text-white text-xs"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-400/15 border border-teal-400/30 text-foreground text-xs"
               >
                 {c}
                 <button
                   type="button"
                   onClick={() => removeCity(c)}
-                  className="text-white/60 hover:text-white"
+                  className="text-muted-foreground hover:text-foreground"
                   aria-label={`Remove ${c}`}
                 >
                   <X className="w-3 h-3" />
@@ -553,11 +553,11 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               onChange={e => setCityInput(e.target.value)}
               onKeyDown={onCityKeyDown}
               onBlur={addCity}
-              className="flex-1 min-w-[140px] bg-transparent text-white text-sm placeholder:text-white/25 focus:outline-none px-1 py-1"
+              className="flex-1 min-w-[140px] bg-transparent text-foreground text-sm placeholder:text-muted-foreground focus:outline-none px-1 py-1"
               placeholder={cities.length === 0 ? 'Type a city and press Enter — e.g. Tehran' : 'Add another…'}
             />
           </div>
-          <p className="text-white/30 text-[10px] mt-1">Press Enter or comma to add. Click ✕ to remove.</p>
+          <p className="text-muted-foreground text-[10px] mt-1">Press Enter or comma to add. Click ✕ to remove.</p>
           <datalist id="iran-destinations">
             {iranianCities.map(city => <option key={city} value={city} />)}
           </datalist>
@@ -567,8 +567,8 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           {/* Tour Type (required) */}
           <div>
             <label htmlFor="tour-type" className={labelClass}>
-              {lang === 'fa' ? 'نوع تور' : lang === 'ar' ? 'نوع الرحلة' : 'Tour Type'} <span className="text-red-400">*</span>
-              <span className="ms-1 text-white/40 text-[10px] font-normal">
+              {lang === 'fa' ? 'نوع تور' : lang === 'ar' ? 'نوع الرحلة' : 'Tour Type'} <span className="text-red-700">*</span>
+              <span className="ms-1 text-muted-foreground text-[10px] font-normal">
                 {lang === 'fa' ? '(الزامی)' : lang === 'ar' ? '(مطلوب)' : '(Required)'}
               </span>
             </label>
@@ -580,7 +580,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               <SelectTrigger
                 id="tour-type"
                 aria-required="true"
-                className="w-full h-11 rounded-xl border-white/10 bg-white/[0.05] px-3.5 text-sm text-white shadow-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 data-[placeholder]:text-white/35"
+                className="w-full h-11 rounded-xl border-border bg-card px-3.5 text-sm text-foreground shadow-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 data-[placeholder]:text-muted-foreground"
               >
                 <SelectValue
                   placeholder={lang === 'fa'
@@ -590,19 +590,19 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                     : 'Select Private or Group…'}
                 />
               </SelectTrigger>
-              <SelectContent className="border-white/15 bg-[hsl(222,45%,14%)] text-white shadow-xl">
+              <SelectContent className="border-border bg-card text-foreground shadow-xl">
                 {TOUR_TYPE_OPTIONS.map(opt => (
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
-                    className="cursor-pointer focus:bg-teal-400/20 focus:text-white"
+                    className="cursor-pointer focus:bg-teal-400/20 focus:text-foreground"
                   >
                     {opt[lang] || opt.en}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-white/30 text-[10px] mt-1.5">
+            <p className="text-muted-foreground text-[10px] mt-1.5">
               {lang === 'fa'
                 ? 'خصوصی: رزرو برای همان مسافر/گروه اوست. گروهی: مسافران مختلف می‌توانند در یک تور شرکت کنند.'
                 : lang === 'ar'
@@ -614,8 +614,8 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           {/* Difficulty (required) */}
           <div>
             <label htmlFor="tour-difficulty" className={labelClass}>
-              {lang === 'fa' ? 'سطح دشواری' : lang === 'ar' ? 'مستوى الصعوبة' : 'Difficulty'} <span className="text-red-400">*</span>
-              <span className="ms-1 text-white/40 text-[10px] font-normal">
+              {lang === 'fa' ? 'سطح دشواری' : lang === 'ar' ? 'مستوى الصعوبة' : 'Difficulty'} <span className="text-red-700">*</span>
+              <span className="ms-1 text-muted-foreground text-[10px] font-normal">
                 {lang === 'fa' ? '(الزامی)' : lang === 'ar' ? '(مطلوب)' : '(Required)'}
               </span>
             </label>
@@ -627,7 +627,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               <SelectTrigger
                 id="tour-difficulty"
                 aria-required="true"
-                className="w-full h-11 rounded-xl border-white/10 bg-white/[0.05] px-3.5 text-sm text-white shadow-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 data-[placeholder]:text-white/35"
+                className="w-full h-11 rounded-xl border-border bg-card px-3.5 text-sm text-foreground shadow-none focus:border-[hsl(178,85%,32%)] focus:ring-1 focus:ring-[hsl(178,85%,32%)]/50 data-[placeholder]:text-muted-foreground"
               >
                 <SelectValue
                   placeholder={lang === 'fa'
@@ -637,12 +637,12 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                     : 'Select a difficulty level…'}
                 />
               </SelectTrigger>
-              <SelectContent className="border-white/15 bg-[hsl(222,45%,14%)] text-white shadow-xl">
+              <SelectContent className="border-border bg-card text-foreground shadow-xl">
                 {DIFFICULTY_OPTIONS.map(opt => (
                   <SelectItem
                     key={opt.value}
                     value={opt.value}
-                    className="cursor-pointer focus:bg-teal-400/20 focus:text-white"
+                    className="cursor-pointer focus:bg-teal-400/20 focus:text-foreground"
                   >
                     {opt[lang] || opt.en}
                   </SelectItem>
@@ -671,7 +671,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCustomTheme())}
               className={inputClass} placeholder="+ Add custom theme..." />
             <button type="button" onClick={addCustomTheme}
-              className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70 text-sm hover:border-teal-400 hover:text-white transition whitespace-nowrap">
+              className="px-4 py-2.5 rounded-xl border border-border text-foreground/80 text-sm hover:border-teal-400 hover:text-foreground transition whitespace-nowrap">
               Add
             </button>
           </div>
@@ -693,16 +693,16 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
             Anything NOT picked here is implicitly excluded. */}
         <div>
           <label className={labelClass}>What&#39;s Included</label>
-          <p className="text-white/40 text-[10px] mb-2">
+          <p className="text-muted-foreground text-[10px] mb-2">
             {lang === 'fa' ? 'هر آنچه انتخاب نشود، در تور لحاظ نشده محسوب می‌شود.'
               : lang === 'ar' ? 'كل ما لا تختاره يُعد غير مشمول تلقائياً.'
               : 'Anything you do not select is automatically considered "not included".'}
           </p>
-          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-6">
+          <div className="rounded-xl border border-border bg-card p-4 space-y-6">
 
             {/* ── Group 1: Accommodation ── */}
             <div>
-              <p className="text-white/70 text-xs font-semibold mb-3">
+              <p className="text-foreground/80 text-xs font-semibold mb-3">
                 {lang === 'fa' ? 'محل اقامت' : lang === 'ar' ? 'الإقامة' : 'Accommodation'}
               </p>
               <div className="flex items-center gap-3">
@@ -715,9 +715,9 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                     // Clear the sub-selection when toggling off.
                     accommodationType: v ? prev.accommodationType : '',
                   }))}
-                  className="border-white/40 data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
+                  className="border-border data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
                 />
-                <Label htmlFor="inc-accommodation" className="text-white text-sm cursor-pointer m-0">
+                <Label htmlFor="inc-accommodation" className="text-foreground text-sm cursor-pointer m-0">
                   {lang === 'fa' ? 'اقامت شامل شود'
                     : lang === 'ar' ? 'الإقامة مشمولة'
                     : 'Accommodation included'}
@@ -735,7 +735,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                   >
                     <div className="mt-3 ms-7 space-y-3">
                       <div>
-                        <Label className="text-white/50 text-xs mb-1.5 block">
+                        <Label className="text-muted-foreground text-xs mb-1.5 block">
                           {lang === 'fa' ? 'نوع اقامت' : lang === 'ar' ? 'نوع الإقامة' : 'Type'}
                         </Label>
                         <Select
@@ -743,7 +743,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                           onValueChange={(v) => setIncludedField('accommodationType', v)}
                           dir={dir}
                         >
-                          <SelectTrigger className="w-full md:w-80 bg-white/[0.05] border-white/10 text-white text-sm h-10 rounded-xl">
+                          <SelectTrigger className="w-full md:w-80 bg-card border-border text-foreground text-sm h-10 rounded-xl">
                             <SelectValue
                               placeholder={
                                 lang === 'fa' ? 'یک نوع را انتخاب کنید'
@@ -772,7 +772,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                             className="overflow-hidden"
                           >
                             <div>
-                              <Label className="text-white/50 text-xs mb-1.5 block">
+                              <Label className="text-muted-foreground text-xs mb-1.5 block">
                                 {included.accommodationType === 'traditional'
                                   ? (lang === 'fa' ? 'درجه خانه سنتی' : lang === 'ar' ? 'تصنيف المنزل التقليدي' : 'Traditional house rating')
                                   : (lang === 'fa' ? 'ستاره هتل' : lang === 'ar' ? 'تصنيف الفندق' : 'Hotel star rating')}
@@ -782,7 +782,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                                 onValueChange={(v) => setIncludedField('hotelStars', Number(v))}
                                 dir={dir}
                               >
-                                <SelectTrigger className="w-full md:w-40 bg-white/[0.05] border-white/10 text-white text-sm h-10 rounded-xl">
+                                <SelectTrigger className="w-full md:w-40 bg-card border-border text-foreground text-sm h-10 rounded-xl">
                                   <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -801,11 +801,11 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               </AnimatePresence>
             </div>
 
-            <div className="h-px bg-white/[0.06]" />
+            <div className="h-px bg-muted" />
 
             {/* ── Group 2: Transportation ── */}
             <div>
-              <p className="text-white/70 text-xs font-semibold mb-3">
+              <p className="text-foreground/80 text-xs font-semibold mb-3">
                 {lang === 'fa' ? 'حمل و نقل' : lang === 'ar' ? 'النقل' : 'Transportation'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -818,9 +818,9 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                         id={id}
                         checked={checked}
                         onCheckedChange={() => toggleTransport(opt.value)}
-                        className="border-white/40 data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
+                        className="border-border data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
                       />
-                      <Label htmlFor={id} className="text-white/85 text-sm cursor-pointer m-0">
+                      <Label htmlFor={id} className="text-foreground/80 text-sm cursor-pointer m-0">
                         {opt[lang] || opt.en}
                       </Label>
                     </div>
@@ -831,9 +831,9 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                     id="inc-t-other"
                     checked={customTransportationEnabled}
                     onCheckedChange={toggleCustomTransportation}
-                    className="border-white/40 data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
+                    className="border-border data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
                   />
-                  <Label htmlFor="inc-t-other" className="text-white/85 text-sm cursor-pointer m-0">
+                  <Label htmlFor="inc-t-other" className="text-foreground/80 text-sm cursor-pointer m-0">
                     {lang === 'fa' ? 'سایر' : lang === 'ar' ? 'أخرى' : 'Other'}
                   </Label>
                 </div>
@@ -845,7 +845,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                         key={value}
                         type="button"
                         onClick={() => toggleTransport(value)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-teal-400/40 bg-teal-400/15 text-white text-xs"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-teal-400/40 bg-teal-400/15 text-foreground text-xs"
                         title={lang === 'fa' ? 'حذف' : 'Remove'}
                       >
                         {value}<X className="w-3 h-3" />
@@ -882,7 +882,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                         type="button"
                         onClick={addCustomTransportation}
                         disabled={!customTransportation.trim()}
-                        className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70 text-sm hover:border-teal-400 hover:text-white transition whitespace-nowrap disabled:opacity-40"
+                        className="px-4 py-2.5 rounded-xl border border-border text-foreground/80 text-sm hover:border-teal-400 hover:text-foreground transition whitespace-nowrap disabled:opacity-40"
                       >
                         {lang === 'fa' ? 'افزودن' : lang === 'ar' ? 'إضافة' : 'Add'}
                       </button>
@@ -892,11 +892,11 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               </AnimatePresence>
             </div>
 
-            <div className="h-px bg-white/[0.06]" />
+            <div className="h-px bg-muted" />
 
             {/* ── Group 3: Meals ── */}
             <div>
-              <p className="text-white/70 text-xs font-semibold mb-3">
+              <p className="text-foreground/80 text-xs font-semibold mb-3">
                 {lang === 'fa' ? 'وعده‌های غذایی' : lang === 'ar' ? 'الوجبات' : 'Meals'}
               </p>
               <Select
@@ -904,7 +904,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                 onValueChange={(v) => setIncludedField('meals', v)}
                 dir={dir}
               >
-                <SelectTrigger className="w-full md:w-80 bg-white/[0.05] border-white/10 text-white text-sm h-10 rounded-xl">
+                <SelectTrigger className="w-full md:w-80 bg-card border-border text-foreground text-sm h-10 rounded-xl">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -917,11 +917,11 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               </Select>
             </div>
 
-            <div className="h-px bg-white/[0.06]" />
+            <div className="h-px bg-muted" />
 
             {/* ── Group 4: Other ── */}
             <div>
-              <p className="text-white/70 text-xs font-semibold mb-3">
+              <p className="text-foreground/80 text-xs font-semibold mb-3">
                 {lang === 'fa' ? 'دیگر' : lang === 'ar' ? 'أخرى' : 'Other'}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -934,9 +934,9 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                         id={id}
                         checked={checked}
                         onCheckedChange={() => toggleOther(opt.value)}
-                        className="border-white/40 data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
+                        className="border-border data-[state=checked]:bg-teal-400 data-[state=checked]:text-[hsl(222,45%,14%)] data-[state=checked]:border-teal-400"
                       />
-                      <Label htmlFor={id} className="text-white/85 text-sm cursor-pointer m-0">
+                      <Label htmlFor={id} className="text-foreground/80 text-sm cursor-pointer m-0">
                         {opt[lang] || opt.en}
                       </Label>
                     </div>
@@ -952,7 +952,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                         key={value}
                         type="button"
                         onClick={() => toggleOther(value)}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-teal-400/40 bg-teal-400/15 text-white text-xs"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-teal-400/40 bg-teal-400/15 text-foreground text-xs"
                         title={lang === 'fa' ? 'حذف' : 'Remove'}
                       >
                         {value}<X className="w-3 h-3" />
@@ -979,7 +979,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                   type="button"
                   onClick={addCustomOther}
                   disabled={!customOther.trim()}
-                  className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70 text-sm hover:border-teal-400 hover:text-white transition whitespace-nowrap disabled:opacity-40"
+                  className="px-4 py-2.5 rounded-xl border border-border text-foreground/80 text-sm hover:border-teal-400 hover:text-foreground transition whitespace-nowrap disabled:opacity-40"
                 >
                   {lang === 'fa' ? 'بیشتر اضافه کن' : lang === 'ar' ? 'إضافة المزيد' : 'Add More'}
                 </button>
@@ -995,10 +995,10 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
             onDrop={e => { e.preventDefault(); handleImageUpload(e.dataTransfer.files[0]); }}
             onDragOver={e => e.preventDefault()}
             onClick={() => fileRef.current?.click()}
-            className="border-2 border-dashed border-white/20 rounded-xl p-8 text-center cursor-pointer hover:border-teal-400 transition-all"
+            className="border-2 border-dashed border-border rounded-xl p-8 text-center cursor-pointer hover:border-teal-400 transition-all"
           >
             {uploadingMain ? (
-              <div className="flex flex-col items-center gap-2 text-white/50">
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="w-6 h-6 animate-spin" />
                 <p className="text-sm">Uploading...</p>
               </div>
@@ -1019,7 +1019,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col items-center gap-2 text-white/40">
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Upload className="w-8 h-8" />
                 <p className="text-sm">📷 Drop image here or click to browse</p>
                 <p className="text-xs">JPG, PNG, WEBP</p>
@@ -1029,7 +1029,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               onChange={e => handleImageUpload(e.target.files[0])} />
           </div>
           {mainPreviewError && (
-            <p role="status" className="mt-2 text-xs text-amber-400">{previewWarning}</p>
+            <p role="status" className="mt-2 text-xs text-amber-700">{previewWarning}</p>
           )}
           <div className="mt-3">
             <label className={labelClass}>
@@ -1055,12 +1055,12 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                 type="button"
                 onClick={handleApplyMainImageUrl}
                 disabled={!mainImageUrlDraft.trim()}
-                className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70 text-sm hover:border-teal-400 hover:text-white transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 rounded-xl border border-border text-foreground/80 text-sm hover:border-teal-400 hover:text-foreground transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {lang === 'fa' ? 'استفاده از لینک' : lang === 'ar' ? 'استخدام الرابط' : 'Use URL'}
               </button>
             </div>
-            <p className="mt-1.5 text-xs text-white/30">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               {lang === 'fa' ? 'لینک HTTPS پیشنهاد می‌شود؛ تصویر دانلود یا در سرور کپی نمی‌شود.' : lang === 'ar' ? 'يُفضّل رابط HTTPS؛ لن يتم تنزيل الصورة أو نسخها إلى الخادم.' : 'HTTPS is recommended. The image is not downloaded or copied to our server.'}
             </p>
           </div>
@@ -1082,7 +1082,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           {galleryUrls.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               {galleryUrls.map((url, i) => (
-                <div key={`${url}-${i}`} className="rounded-xl overflow-hidden border border-white/10 bg-white/[0.03]">
+                <div key={`${url}-${i}`} className="rounded-xl overflow-hidden border border-border bg-card">
                   <div className="relative aspect-video group">
                     <img
                       decoding="async"
@@ -1113,7 +1113,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                     </button>
                   </div>
                   {galleryPreviewErrors.has(url) && (
-                    <p role="status" className="px-3 py-2 text-[11px] text-amber-400 border-t border-amber-500/20 bg-amber-500/[0.06]">
+                    <p role="status" className="px-3 py-2 text-[11px] text-amber-700 border-t border-amber-500/20 bg-amber-500/[0.06]">
                       {previewWarning}
                     </p>
                   )}
@@ -1122,7 +1122,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                     maxLength={180}
                     value={galleryCaptions[i] || ''}
                     onChange={e => setGalleryCaptions(prev => galleryUrls.map((_, idx) => idx === i ? e.target.value : (prev[idx] || '')))}
-                    className="w-full px-3 py-2 bg-transparent text-white text-xs placeholder:text-white/25 outline-none border-t border-white/10"
+                    className="w-full px-3 py-2 bg-transparent text-foreground text-xs placeholder:text-muted-foreground outline-none border-t border-border"
                     placeholder={lang === 'fa' ? 'این تصویر کجاست و چیست؟' : lang === 'ar' ? 'أين التقطت هذه الصورة وما هي؟' : 'Where is this and what does it show?'}
                   />
                 </div>
@@ -1134,15 +1134,15 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               onDrop={e => { e.preventDefault(); handleGalleryUpload(e.dataTransfer.files); }}
               onDragOver={e => e.preventDefault()}
               onClick={() => galleryRef.current?.click()}
-              className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center cursor-pointer hover:border-teal-400 transition-all"
+              className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-teal-400 transition-all"
             >
               {uploadingGallery ? (
-                <div className="flex flex-col items-center gap-2 text-white/50">
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <Loader2 className="w-5 h-5 animate-spin" />
                   <p className="text-sm">Uploading...</p>
                 </div>
               ) : (
-                <div className="flex flex-col items-center gap-2 text-white/40">
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <Upload className="w-6 h-6" />
                   <p className="text-sm">Add up to {10 - galleryUrls.length} more images</p>
                 </div>
@@ -1178,7 +1178,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                 type="button"
                 onClick={handleAddGalleryUrl}
                 disabled={!pasteUrl.trim()}
-                className="px-4 py-2.5 rounded-xl border border-white/20 text-white/70 text-sm hover:border-teal-400 hover:text-white transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2.5 rounded-xl border border-border text-foreground/80 text-sm hover:border-teal-400 hover:text-foreground transition whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {lang === 'fa' ? 'افزودن' : lang === 'ar' ? 'إضافة' : 'Add'}
               </button>

@@ -143,12 +143,12 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
     <form
       dir={dir}
       onSubmit={handleSubmit}
-      className="space-y-5 bg-white/[0.03] border border-white/[0.07] rounded-2xl p-6"
+      className="space-y-5 bg-card border border-border rounded-2xl p-6"
     >
-      <h2 className="text-lg font-semibold text-white">{t('article_editor_title')}</h2>
+      <h2 className="text-lg font-semibold text-foreground">{t('article_editor_title')}</h2>
 
       {!isAdmin && (
-        <div className="flex items-start gap-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 px-4 py-3 text-yellow-300 text-sm">
+        <div className="flex items-start gap-2 rounded-xl bg-yellow-500/10 border border-yellow-500/30 px-4 py-3 text-yellow-700 text-sm">
           <span className="mt-0.5 shrink-0">⚠</span>
           <span>{t('article_pending_notice')}</span>
         </div>
@@ -157,8 +157,8 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
       {/* Image URL or local upload + preview */}
       <div className="space-y-2">
         <div className="flex items-center justify-between gap-3">
-          <label className="block text-xs text-white/60 font-medium">{t('article_field_image')}</label>
-          <span className="text-[11px] text-white/35">JPG, PNG, WebP · 5 MB</span>
+          <label className="block text-xs text-muted-foreground font-medium">{t('article_field_image')}</label>
+          <span className="text-[11px] text-muted-foreground">JPG, PNG, WebP · 5 MB</span>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row">
           <input
@@ -167,7 +167,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
             onChange={handleImageUrlChange}
             placeholder="https://..."
             dir="ltr"
-            className="min-w-0 flex-1 bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-teal-500/50"
+            className="min-w-0 flex-1 bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-teal-500/50"
           />
           <input
             ref={fileInputRef}
@@ -180,7 +180,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploadingImage || submitting}
-            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-teal-400/40 bg-teal-400/10 px-4 py-2.5 text-sm font-medium text-teal-300 transition hover:border-teal-300 hover:bg-teal-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+            className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl border border-teal-400/40 bg-teal-400/10 px-4 py-2.5 text-sm font-medium text-teal-700 transition hover:border-teal-300 hover:bg-teal-400/20 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {<IconSwap active={uploadingImage} a={<ImagePlus className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
             {uploadingImage
@@ -189,7 +189,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
           </button>
         </div>
         {form.image_url && (
-          <div className="relative mt-2 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
+          <div className="relative mt-2 overflow-hidden rounded-xl border border-border bg-card">
             <img decoding="async" loading="lazy"
               src={form.image_url}
               alt={t('article_img_preview_alt')}
@@ -210,8 +210,8 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
 
       {/* Title */}
       <div className="space-y-1">
-        <label className="block text-xs text-white/60 font-medium">
-          {t('article_field_title')} <span className="text-red-400">*</span>
+        <label className="block text-xs text-muted-foreground font-medium">
+          {t('article_field_title')} <span className="text-red-700">*</span>
         </label>
         <input
           type="text"
@@ -220,47 +220,47 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
           maxLength={120}
           required
           placeholder={t('article_title_placeholder')}
-          className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-teal-500/50"
+          className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-teal-500/50"
         />
-        <p className="text-xs text-white/30 text-left">{form.title.length}/120</p>
+        <p className="text-xs text-muted-foreground text-left">{form.title.length}/120</p>
       </div>
 
       {/* Excerpt */}
       <div className="space-y-1">
-        <label className="block text-xs text-white/60 font-medium">{t('article_field_excerpt')}</label>
+        <label className="block text-xs text-muted-foreground font-medium">{t('article_field_excerpt')}</label>
         <textarea
           value={form.excerpt}
           onChange={set('excerpt')}
           maxLength={500}
           rows={2}
           placeholder={t('article_excerpt_placeholder')}
-          className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-teal-500/50 resize-none"
+          className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-teal-500/50 resize-none"
         />
-        <p className="text-xs text-white/30 text-left">{form.excerpt.length}/500</p>
+        <p className="text-xs text-muted-foreground text-left">{form.excerpt.length}/500</p>
       </div>
 
       {/* Content */}
       <div className="space-y-1">
-        <label className="block text-xs text-white/60 font-medium">{t('article_field_content')}</label>
+        <label className="block text-xs text-muted-foreground font-medium">{t('article_field_content')}</label>
         <textarea
           value={form.content}
           onChange={set('content')}
           rows={10}
           placeholder={t('article_content_placeholder')}
-          className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-teal-500/50 resize-y"
+          className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-teal-500/50 resize-y"
         />
       </div>
 
       {/* Category */}
       <div className="space-y-1">
-        <label className="block text-xs text-white/60 font-medium">{t('article_field_category')}</label>
+        <label className="block text-xs text-muted-foreground font-medium">{t('article_field_category')}</label>
         <select
           value={form.category}
           onChange={set('category')}
-          className="w-full bg-white/[0.05] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-teal-500/50 appearance-none cursor-pointer"
+          className="w-full bg-card border border-border rounded-xl px-4 py-2.5 text-sm text-foreground focus:outline-none focus:border-teal-500/50 appearance-none cursor-pointer"
         >
           {CATEGORIES.map(c => (
-            <option key={c.value} value={c.value} className="bg-zinc-900">
+            <option key={c.value} value={c.value} className="bg-card text-foreground">
               {t(c.label)}
             </option>
           ))}
@@ -280,7 +280,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
           <button
             type="button"
             onClick={onCancel}
-            className="px-5 bg-white/[0.05] hover:bg-white/[0.09] text-white/70 text-sm py-2.5 rounded-xl transition-colors border border-white/10"
+            className="px-5 bg-card hover:bg-muted text-foreground/80 text-sm py-2.5 rounded-xl transition-colors border border-border"
           >
             {t('dashboard_cancel')}
           </button>

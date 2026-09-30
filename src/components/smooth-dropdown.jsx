@@ -17,11 +17,11 @@ const indicatorSpring = { type: /** @type {const} */ ("spring"), damping: 30, st
 // surface, staggered item reveal, shared indicator/bar, and original springs.
 // Native ResizeObserver replaces the demo's uninstalled react-use-measure.
 /**
- * @param {{ trigger: (open: boolean) => import('react').ReactNode, triggerLabel: string, triggerClassName?: string, triggerRef?: import('react').RefObject<HTMLButtonElement>, items: SmoothDropdownItem[], header?: import('react').ReactNode, activeId?: string, dir?: string }} props
+ * @param {{ trigger: (open: boolean) => import('react').ReactNode, triggerLabel: string, triggerClassName?: string, triggerRef?: import('react').RefObject<HTMLButtonElement>, items: SmoothDropdownItem[], header?: import('react').ReactNode, activeId?: string, dir?: string, contentWidth?: string }} props
  */
 export default function SmoothDropdown({
   trigger, triggerLabel, triggerClassName = "", triggerRef: externalTriggerRef,
-  items, header = null, activeId, dir = "ltr",
+  items, header = null, activeId, dir = "ltr", contentWidth = "min(18rem, calc(100vw - 2rem))",
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [visible, setVisible] = useState(false);
@@ -145,7 +145,7 @@ export default function SmoothDropdown({
           aria-hidden={!isOpen}
         >
           <div className="h-full overflow-y-auto overscroll-contain">
-            <div ref={contentRef} style={{ width: "min(18rem, calc(100vw - 2rem))" }}>
+            <div ref={contentRef} style={{ width: contentWidth }}>
               {header}
               <motion.div
                 initial={false}

@@ -71,15 +71,15 @@ const NAV = [
 ];
 
 const STATUS_CFG = {
-  approved:       { label: 'Approved',       dot: 'bg-emerald-400', wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' },
-  pending:        { label: 'Pending',        dot: 'bg-yellow-400',  wrap: 'bg-yellow-500/20  border-yellow-500/30  text-yellow-300'  },
-  published:      { label: 'Published',      dot: 'bg-emerald-400', wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300' },
-  pending_review: { label: 'Pending Review', dot: 'bg-yellow-400',  wrap: 'bg-yellow-500/20  border-yellow-500/30  text-yellow-300'  },
-  draft:          { label: 'Draft',          dot: 'bg-gray-400',    wrap: 'bg-gray-500/20    border-gray-500/30    text-gray-300'    },
-  rejected:       { label: 'Rejected',       dot: 'bg-red-400',     wrap: 'bg-red-500/20     border-red-500/30     text-red-300'     },
+  approved:       { label: 'Approved',       dot: 'bg-emerald-400', wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-700' },
+  pending:        { label: 'Pending',        dot: 'bg-yellow-400',  wrap: 'bg-yellow-500/20  border-yellow-500/30  text-yellow-700'  },
+  published:      { label: 'Published',      dot: 'bg-emerald-400', wrap: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-700' },
+  pending_review: { label: 'Pending Review', dot: 'bg-yellow-400',  wrap: 'bg-yellow-500/20  border-yellow-500/30  text-yellow-700'  },
+  draft:          { label: 'Draft',          dot: 'bg-gray-400',    wrap: 'bg-gray-500/20    border-gray-500/30    text-gray-700'    },
+  rejected:       { label: 'Rejected',       dot: 'bg-red-400',     wrap: 'bg-red-500/20     border-red-500/30     text-red-700'     },
 };
 
-const CARD = 'bg-[hsl(222,45%,14%)] border border-white/[0.08] rounded-2xl';
+const CARD = 'bg-card border border-border rounded-2xl';
 
 // ─── Shared atoms ────────────────────────────────────────────────────────────
 
@@ -99,7 +99,7 @@ function StarRating({ rating = 0 }) {
       {[1, 2, 3, 4, 5].map(n => (
         <Star
           key={n}
-          className={`w-3.5 h-3.5 ${n <= rating ? 'text-[hsl(38,62%,58%)] fill-[hsl(38,62%,58%)]' : 'text-white/20'}`}
+          className={`w-3.5 h-3.5 ${n <= rating ? 'text-amber-700 fill-[hsl(38,62%,58%)]' : 'text-muted-foreground'}`}
         />
       ))}
     </div>
@@ -109,11 +109,11 @@ function StarRating({ rating = 0 }) {
 function ErrorBox({ message, onClose }) {
   if (!message) return null;
   return (
-    <div className="flex items-start gap-2 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm mb-5">
+    <div className="flex items-start gap-2 p-3.5 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm mb-5">
       <AlertTriangle className="w-4 h-4 flex-shrink-0 mt-0.5" />
       <span className="flex-1 leading-relaxed">{message}</span>
       {onClose && (
-        <button onClick={onClose} className="text-red-300/60 hover:text-red-300">
+        <button onClick={onClose} className="text-red-700/60 hover:text-red-700">
           <X className="w-4 h-4" />
         </button>
       )}
@@ -124,7 +124,7 @@ function ErrorBox({ message, onClose }) {
 function SectionLoader() {
   return (
     <div className="flex items-center justify-center py-24">
-      <Loader2 className="w-8 h-8 text-[hsl(178,85%,45%)] animate-spin" />
+      <Loader2 className="w-8 h-8 text-accent animate-spin" />
     </div>
   );
 }
@@ -132,11 +132,11 @@ function SectionLoader() {
 function EmptyState({ Icon, title, desc }) {
   return (
     <div className={`${CARD} py-16 px-4 flex flex-col items-center text-center`}>
-      <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
-        <Icon className="w-7 h-7 text-white/25" />
+      <div className="w-14 h-14 rounded-2xl bg-card flex items-center justify-center mb-4">
+        <Icon className="w-7 h-7 text-muted-foreground" />
       </div>
-      <p className="text-white/60 font-medium text-sm mb-1">{title}</p>
-      {desc && <p className="text-white/35 text-xs max-w-xs">{desc}</p>}
+      <p className="text-muted-foreground font-medium text-sm mb-1">{title}</p>
+      {desc && <p className="text-muted-foreground text-xs max-w-xs">{desc}</p>}
     </div>
   );
 }
@@ -161,10 +161,10 @@ function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-lg font-bold text-white">Proposal Review</h2>
-          <p className="mt-1 text-[11px] text-white/35">Approved proposals stay here as read-only history.</p>
+          <h2 className="text-lg font-bold text-foreground">Proposal Review</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">Approved proposals stay here as read-only history.</p>
         </div>
-        <span className="text-xs text-white/40">{pendingCount} awaiting approval · {approvedCount} approved</span>
+        <span className="text-xs text-muted-foreground">{pendingCount} awaiting approval · {approvedCount} approved</span>
       </div>
 
       {ordered.map(proposal => {
@@ -172,32 +172,32 @@ function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
         return (
           <div
             key={proposal.id}
-            className={`${CARD} p-5 transition-all ${approved ? 'grayscale opacity-60 border-white/[0.05] bg-white/[0.025]' : ''}`}
+            className={`${CARD} p-5 transition-all ${approved ? 'grayscale border-border bg-card' : ''}`}
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-white">{proposal.provider?.full_name || 'Provider'}</p>
+                  <p className="text-sm font-semibold text-foreground">{proposal.provider?.full_name || 'Provider'}</p>
                   {approved && (
-                    <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.06] px-2.5 py-1 text-[10px] font-semibold text-white/60">
+                    <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
                       <CheckCircle2 className="h-3 w-3" /> Approved
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-white/45">{proposal.provider?.role || 'guide'} · Trip to {(proposal.request?.destination || []).join(', ') || 'Iran'}</p>
-                {proposal.price != null && <p className="mt-2 text-sm font-semibold text-[hsl(178,85%,55%)]">${Number(proposal.price).toLocaleString()} · {proposal.price_type?.replace('_', ' ')} · {proposal.price_period?.replace('_', ' ')}</p>}
-                {proposal.message && <p className="mt-2 max-w-2xl text-xs leading-relaxed text-white/60">{proposal.message}</p>}
+                <p className="mt-1 text-xs text-muted-foreground">{proposal.provider?.role || 'guide'} · Trip to {(proposal.request?.destination || []).join(', ') || 'Iran'}</p>
+                {proposal.price != null && <p className="mt-2 text-sm font-semibold text-accent">${Number(proposal.price).toLocaleString()} · {proposal.price_type?.replace('_', ' ')} · {proposal.price_period?.replace('_', ' ')}</p>}
+                {proposal.message && <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">{proposal.message}</p>}
               </div>
 
               {approved ? (
-                <span className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-semibold text-white/55">
+                <span className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Reviewed
                 </span>
               ) : (
                 <div className="flex gap-2">
-                  <button disabled={busyId === proposal.id} onClick={() => onEdit(proposal)} className="rounded-xl bg-white/[0.07] px-3 py-2 text-xs font-semibold text-white/75 hover:bg-white/[0.12] disabled:opacity-50">Edit</button>
-                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-50">Approve</button>
-                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/20 disabled:opacity-50">Reject</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onEdit(proposal)} className="rounded-xl bg-muted px-3 py-2 text-xs font-semibold text-foreground/80 hover:bg-muted disabled:opacity-50">Edit</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/25 disabled:opacity-50">Approve</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-500/20 disabled:opacity-50">Reject</button>
                 </div>
               )}
             </div>
@@ -306,10 +306,10 @@ function OverviewView({ tours, guides, reviews, loading }) {
   const pendingCount = tours.filter(t => t.status === 'pending_review' || t.status === 'draft').length;
 
   const stats = [
-    { label: 'Total Tours',     value: tours.length,    color: 'text-white',                Icon: Briefcase },
-    { label: 'Pending Review',  value: pendingCount,    color: 'text-yellow-400',           Icon: Clock },
-    { label: 'Total Guides',    value: guides.length,   color: 'text-[hsl(178,85%,50%)]',   Icon: Users },
-    { label: 'Total Comments',  value: reviews.length,  color: 'text-[hsl(38,62%,58%)]',    Icon: MessageSquare },
+    { label: 'Total Tours',     value: tours.length,    color: 'text-foreground',                Icon: Briefcase },
+    { label: 'Pending Review',  value: pendingCount,    color: 'text-yellow-700',           Icon: Clock },
+    { label: 'Total Guides',    value: guides.length,   color: 'text-accent',   Icon: Users },
+    { label: 'Total Comments',  value: reviews.length,  color: 'text-amber-700',    Icon: MessageSquare },
   ];
 
   const recentTours    = tours.slice(0, 5);
@@ -318,20 +318,20 @@ function OverviewView({ tours, guides, reviews, loading }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-white font-bold text-lg">Overview</h2>
-        <span className="text-white/40 text-xs">Platform statistics</span>
+        <h2 className="text-foreground font-bold text-lg">Overview</h2>
+        <span className="text-muted-foreground text-xs">Platform statistics</span>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {stats.map(stat => (
           <div key={stat.label} className={`${CARD} p-5 flex items-center gap-3`}>
-            <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
               <stat.Icon className={`w-4.5 h-4.5 ${stat.color}`} />
             </div>
             <div>
               <p className={`text-2xl font-bold ${stat.color}`}>{stat.value}</p>
-              <p className="text-white/40 text-[11px]">{stat.label}</p>
+              <p className="text-muted-foreground text-[11px]">{stat.label}</p>
             </div>
           </div>
         ))}
@@ -339,25 +339,25 @@ function OverviewView({ tours, guides, reviews, loading }) {
 
       {/* Recent tours */}
       <div className={`${CARD} p-5`}>
-        <p className="text-white/70 text-sm font-semibold mb-4">Recent Tours</p>
+        <p className="text-foreground/80 text-sm font-semibold mb-4">Recent Tours</p>
         {recentTours.length === 0 ? (
-          <p className="text-white/30 text-xs text-center py-8">No tours yet</p>
+          <p className="text-muted-foreground text-xs text-center py-8">No tours yet</p>
         ) : (
           <div className="space-y-3">
             {recentTours.map(tour => (
-              <div key={tour.id} className="flex items-center gap-3 pb-3 border-b border-white/[0.06] last:border-0 last:pb-0">
-                <div className="w-10 h-10 rounded-xl bg-white/5 overflow-hidden flex-shrink-0">
+              <div key={tour.id} className="flex items-center gap-3 pb-3 border-b border-border last:border-0 last:pb-0">
+                <div className="w-10 h-10 rounded-xl bg-card overflow-hidden flex-shrink-0">
                   {tour.image_url ? (
                     <img decoding="async" loading="lazy" src={tour.image_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon className="w-4 h-4 text-white/20" />
+                      <ImageIcon className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white text-xs font-medium truncate">{tour.title || 'Untitled'}</p>
-                  <p className="text-white/35 text-[10px] mt-0.5">{tour.profiles?.full_name || 'Unknown guide'}</p>
+                  <p className="text-foreground text-xs font-medium truncate">{tour.title || 'Untitled'}</p>
+                  <p className="text-muted-foreground text-[10px] mt-0.5">{tour.profiles?.full_name || 'Unknown guide'}</p>
                 </div>
                 <StatusPill status={tour.status} />
               </div>
@@ -368,23 +368,23 @@ function OverviewView({ tours, guides, reviews, loading }) {
 
       {/* Recent comments */}
       <div className={`${CARD} p-5`}>
-        <p className="text-white/70 text-sm font-semibold mb-4">Recent Comments</p>
+        <p className="text-foreground/80 text-sm font-semibold mb-4">Recent Comments</p>
         {recentComments.length === 0 ? (
-          <p className="text-white/30 text-xs text-center py-8">No comments yet</p>
+          <p className="text-muted-foreground text-xs text-center py-8">No comments yet</p>
         ) : (
           <div className="space-y-4">
             {recentComments.map(r => (
-              <div key={r.id} className="flex items-start gap-3 pb-3 border-b border-white/[0.06] last:border-0 last:pb-0">
-                <div className="w-8 h-8 rounded-full bg-[hsl(178,85%,32%)]/30 flex items-center justify-center flex-shrink-0 text-[hsl(178,85%,50%)] text-xs font-bold">
+              <div key={r.id} className="flex items-start gap-3 pb-3 border-b border-border last:border-0 last:pb-0">
+                <div className="w-8 h-8 rounded-full bg-[hsl(178,85%,32%)]/30 flex items-center justify-center flex-shrink-0 text-accent text-xs font-bold">
                   {(r.reviewer?.full_name || r.reviewer_name)?.[0]?.toUpperCase() || '?'}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-white text-xs font-medium">{r.reviewer?.full_name || r.reviewer_name || 'Anonymous'}</p>
+                    <p className="text-foreground text-xs font-medium">{r.reviewer?.full_name || r.reviewer_name || 'Anonymous'}</p>
                     <StarRating rating={r.rating || 0} />
                   </div>
                   {r.review_text && (
-                    <p className="text-white/45 text-[11px] leading-relaxed line-clamp-2">{r.review_text}</p>
+                    <p className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2">{r.review_text}</p>
                   )}
                 </div>
               </div>
@@ -409,7 +409,7 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
       <div className="space-y-4">
         <button
           onClick={() => { setCreating(false); setEditing(null); }}
-          className="text-white/40 text-xs hover:text-white transition"
+          className="text-muted-foreground text-xs hover:text-foreground transition"
         >
           ← Back to Platform Tours
         </button>
@@ -431,8 +431,8 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-white font-bold text-lg">Platform Tours</h2>
-          <p className="text-white/40 text-xs mt-0.5">Tours owned and curated by the platform itself</p>
+          <h2 className="text-foreground font-bold text-lg">Platform Tours</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">Tours owned and curated by the platform itself</p>
         </div>
         <button
           onClick={() => setCreating(true)}
@@ -455,15 +455,15 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
             const busy = busyId === tour.id;
             return (
               <div key={tour.id} className={`${CARD} overflow-hidden flex flex-col`}>
-                <div className="aspect-[16/9] bg-white/[0.04] relative overflow-hidden">
+                <div className="aspect-[16/9] bg-card relative overflow-hidden">
                   {tour.image_url ? (
                     <img decoding="async" loading="lazy" src={tour.image_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center">
-                      <ImageIcon className="w-8 h-8 text-white/15" />
+                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
                     </div>
                   )}
-                  <div className="absolute top-2 start-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-[hsl(38,62%,52%)]/20 border border-[hsl(38,62%,52%)]/30 text-[hsl(38,62%,75%)] text-[10px] font-semibold">
+                  <div className="absolute top-2 start-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-[hsl(38,62%,52%)]/20 border border-[hsl(38,62%,52%)]/30 text-amber-700 text-[10px] font-semibold">
                     <Sparkles className="w-3 h-3" />
                     Platform
                   </div>
@@ -472,21 +472,21 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
                   </div>
                 </div>
                 <div className="p-4 flex-1 flex flex-col">
-                  <p className="text-white font-semibold text-sm truncate">{tour.title || 'Untitled'}</p>
-                  <p className="text-white/40 text-[11px] truncate mt-0.5">
+                  <p className="text-foreground font-semibold text-sm truncate">{tour.title || 'Untitled'}</p>
+                  <p className="text-muted-foreground text-[11px] truncate mt-0.5">
                     {tour.location || '—'}
                     {tour.duration ? ` · ${tour.duration} days` : ''}
                   </p>
                   {tour.price != null && (
-                    <p className="text-[hsl(178,85%,55%)] text-xs font-semibold mt-2">
+                    <p className="text-accent text-xs font-semibold mt-2">
                       ${Number(tour.price).toLocaleString()}
                     </p>
                   )}
-                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/[0.06]">
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
                     <button
                       disabled={busy}
                       onClick={() => setEditing(tour)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white/[0.06] text-white/70 text-xs font-medium hover:bg-white/[0.12] hover:text-white transition disabled:opacity-50"
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-muted text-foreground/80 text-xs font-medium hover:bg-muted hover:text-foreground transition disabled:opacity-50"
                     >
                       <Edit2 className="w-3 h-3" />
                       Edit
@@ -494,7 +494,7 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
                     <button
                       disabled={busy}
                       onClick={() => onDelete(tour.id)}
-                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 text-red-400 text-xs font-medium hover:bg-red-500/20 transition disabled:opacity-50"
+                      className="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 text-red-700 text-xs font-medium hover:bg-red-500/20 transition disabled:opacity-50"
                     >
                       {<IconSwap active={busy} a={<Trash2 className="w-3 h-3" />} b={<Loader2 className="w-3 h-3 animate-spin" />} keepMounted={false} />}
                     </button>
@@ -522,8 +522,8 @@ function TourEditModal({ tour, onSave, onClose }) {
   const [saving, setSaving] = useState(false);
   const [error, setError]   = useState('');
 
-  const ic = 'w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)]/60 focus:ring-1 focus:ring-[hsl(178,85%,32%)]/30 transition';
-  const lc = 'block text-white/50 text-xs mb-1.5 font-medium';
+  const ic = 'w-full px-3 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)]/60 focus:ring-1 focus:ring-[hsl(178,85%,32%)]/30 transition';
+  const lc = 'block text-muted-foreground text-xs mb-1.5 font-medium';
 
   const handleSave = async () => {
     setSaving(true);
@@ -552,8 +552,8 @@ function TourEditModal({ tour, onSave, onClose }) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <TransitionSurface kind="modal" className={`relative w-full max-w-lg ${CARD} p-6 max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-white font-bold">Edit Tour</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/[0.06] hover:bg-white/[0.12] flex items-center justify-center text-white/50 hover:text-white transition">
+          <h3 className="text-foreground font-bold">Edit Tour</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-muted hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -585,10 +585,10 @@ function TourEditModal({ tour, onSave, onClose }) {
           </div>
           <div>
             <label className={lc}>Status</label>
-            <select className={`${ic} cursor-pointer [color-scheme:dark]`} value={form.status}
+            <select className={`${ic} cursor-pointer [color-scheme:light]`} value={form.status}
               onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
               {Object.entries(STATUS_CFG).map(([v, c]) => (
-                <option key={v} value={v} className="bg-[hsl(222,45%,14%)] text-white">{c.label}</option>
+                <option key={v} value={v} className="bg-card text-foreground">{c.label}</option>
               ))}
             </select>
           </div>
@@ -601,7 +601,7 @@ function TourEditModal({ tour, onSave, onClose }) {
             Save Changes
           </button>
           <button onClick={onClose}
-            className="px-5 py-2 rounded-xl border border-white/15 text-white/50 hover:text-white hover:border-white/30 text-sm transition">
+            className="px-5 py-2 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-accent/30 text-sm transition">
             Cancel
           </button>
         </div>
@@ -620,17 +620,17 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
         {tour.image_url ? (
           <img decoding="async" loading="lazy" src={tour.image_url} alt="" className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
         ) : (
-          <div className="w-16 h-16 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0">
-            <ImageIcon className="w-5 h-5 text-white/20" />
+          <div className="w-16 h-16 rounded-xl bg-card flex items-center justify-center flex-shrink-0">
+            <ImageIcon className="w-5 h-5 text-muted-foreground" />
           </div>
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1.5">
-            <h3 className="text-white font-semibold text-sm line-clamp-1">{tour.title || 'Untitled'}</h3>
+            <h3 className="text-foreground font-semibold text-sm line-clamp-1">{tour.title || 'Untitled'}</h3>
             <StatusPill status={tour.status} />
           </div>
 
-          <div className="flex flex-wrap gap-x-3 gap-y-1 text-white/40 text-[11px] mb-3">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 text-muted-foreground text-[11px] mb-3">
             {tour.profiles?.full_name && (
               <span className="flex items-center gap-1">
                 <Users className="w-3 h-3" />{tour.profiles.full_name}
@@ -658,7 +658,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
               <button
                 disabled={busy}
                 onClick={() => onApprove(tour.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 text-xs font-medium transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 text-xs font-medium transition disabled:opacity-50"
               >
                 {<IconSwap active={busy} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                 Approve
@@ -668,7 +668,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
               <button
                 disabled={busy}
                 onClick={() => onReject(tour.id)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium transition disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-700 text-xs font-medium transition disabled:opacity-50"
               >
                 {<IconSwap active={busy} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                 Reject
@@ -676,7 +676,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
             )}
             <button
               onClick={() => onEdit(tour)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[hsl(178,85%,32%)]/15 hover:bg-[hsl(178,85%,32%)]/25 text-[hsl(178,85%,55%)] text-xs font-medium transition"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[hsl(178,85%,32%)]/15 hover:bg-[hsl(178,85%,32%)]/25 text-accent text-xs font-medium transition"
             >
               <Edit2 className="w-3.5 h-3.5" /> Edit
             </button>
@@ -697,8 +697,8 @@ function PendingToursView({ tours, loading, onApprove, onReject, onEdit, busyId 
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-white font-bold text-lg">Pending Tours</h2>
-        <span className="text-white/40 text-xs">
+        <h2 className="text-foreground font-bold text-lg">Pending Tours</h2>
+        <span className="text-muted-foreground text-xs">
           {pending.length} awaiting review
         </span>
       </div>
@@ -740,17 +740,17 @@ function AllToursView({ tours, loading, onApprove, onReject, onEdit, busyId }) {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-white font-bold text-lg">All Tours</h2>
-          <span className="text-white/40 text-xs">{tours.length} total</span>
+          <h2 className="text-foreground font-bold text-lg">All Tours</h2>
+          <span className="text-muted-foreground text-xs">{tours.length} total</span>
         </div>
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
-          className="px-3 py-1.5 rounded-xl border border-white/10 bg-[hsl(222,45%,14%)] text-white text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 cursor-pointer [color-scheme:dark]"
+          className="px-3 py-1.5 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 cursor-pointer [color-scheme:light]"
         >
-          <option value="all" className="bg-[hsl(222,45%,14%)] text-white">All Statuses</option>
+          <option value="all" className="bg-card text-foreground">All Statuses</option>
           {Object.entries(STATUS_CFG).map(([v, c]) => (
-            <option key={v} value={v} className="bg-[hsl(222,45%,14%)] text-white">{c.label}</option>
+            <option key={v} value={v} className="bg-card text-foreground">{c.label}</option>
           ))}
         </select>
       </div>
@@ -798,21 +798,21 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-white font-bold text-lg">All Guides</h2>
-          <span className="text-white/40 text-xs">{guides.length} total</span>
+          <h2 className="text-foreground font-bold text-lg">All Guides</h2>
+          <span className="text-muted-foreground text-xs">{guides.length} total</span>
         </div>
         <select
           value={sortBy}
           onChange={event => setSortBy(event.target.value)}
           aria-label="Sort guides"
-          className="px-3 py-2 rounded-xl border border-white/10 bg-[hsl(222,45%,14%)] text-white text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 min-w-48 [color-scheme:dark]"
+          className="px-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 min-w-48 [color-scheme:light]"
         >
-          <option value="newest" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Newest</option>
-          <option value="oldest" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Oldest</option>
-          <option value="name" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Name A–Z</option>
-          <option value="city" className="bg-[hsl(222,45%,14%)] text-white">Sort by: City</option>
-          <option value="role" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Guide / Agency</option>
-          <option value="status" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Approval status</option>
+          <option value="newest" className="bg-card text-foreground">Sort by: Newest</option>
+          <option value="oldest" className="bg-card text-foreground">Sort by: Oldest</option>
+          <option value="name" className="bg-card text-foreground">Sort by: Name A–Z</option>
+          <option value="city" className="bg-card text-foreground">Sort by: City</option>
+          <option value="role" className="bg-card text-foreground">Sort by: Guide / Agency</option>
+          <option value="status" className="bg-card text-foreground">Sort by: Approval status</option>
         </select>
       </div>
 
@@ -830,15 +830,15 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                     <img decoding="async" loading="lazy" src={avatarFor(guide)} alt="" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold text-sm truncate">{guide.full_name || 'Unnamed'}</p>
-                    <p className="text-white/40 text-[11px] truncate">{guide.email}</p>
+                    <p className="text-foreground font-semibold text-sm truncate">{guide.full_name || 'Unnamed'}</p>
+                    <p className="text-muted-foreground text-[11px] truncate">{guide.email}</p>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border flex-shrink-0 ${
                     guide.is_approved
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
+                      ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/25'
                       : guide.is_rejected
-                        ? 'bg-red-500/15 text-red-400 border-red-500/25'
-                        : 'bg-gray-500/15 text-gray-400 border-gray-500/25'
+                        ? 'bg-red-500/15 text-red-700 border-red-500/25'
+                        : 'bg-gray-500/15 text-gray-700 border-gray-500/25'
                   }`}>
                     {guide.is_approved ? 'Approved' : guide.is_rejected ? 'Rejected' : 'Pending'}
                   </span>
@@ -847,26 +847,26 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                 <div className="flex flex-wrap items-center gap-2 mb-4 text-[11px]">
                   <span className={`px-2 py-0.5 rounded-full font-medium border capitalize ${
                     guide.role === 'agency'
-                      ? 'bg-[hsl(38,62%,58%)]/15 text-[hsl(38,62%,58%)] border-[hsl(38,62%,58%)]/25'
-                      : 'bg-[hsl(178,85%,32%)]/15 text-[hsl(178,85%,55%)] border-[hsl(178,85%,32%)]/25'
+                      ? 'bg-[hsl(38,62%,58%)]/15 text-amber-700 border-[hsl(38,62%,58%)]/25'
+                      : 'bg-[hsl(178,85%,32%)]/15 text-accent border-[hsl(178,85%,32%)]/25'
                   }`}>
                     {guide.role || 'guide'}
                   </span>
                   {guide.city && (
-                    <span className="flex items-center gap-1 text-white/40">
+                    <span className="flex items-center gap-1 text-muted-foreground">
                       <MapPin className="w-3 h-3" />{guide.city}
                     </span>
                   )}
                   {/* Profile completion badge */}
                   <span className={`px-2 py-0.5 rounded-full font-medium border ${
                     comp.completed
-                      ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/25'
-                      : 'bg-amber-500/15 text-amber-400 border-amber-500/25'
+                      ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/25'
+                      : 'bg-amber-500/15 text-amber-700 border-amber-500/25'
                   }`}>
                     {comp.completed ? 'Profile Complete' : `Incomplete — ${comp.passed}/${comp.total}`}
                   </span>
                   {guide.license_status === 'pending_review' && !guide.is_approved && !guide.is_rejected && (
-                    <span className="px-2 py-0.5 rounded-full font-medium border bg-blue-500/15 text-blue-400 border-blue-500/25">
+                    <span className="px-2 py-0.5 rounded-full font-medium border bg-blue-500/15 text-blue-700 border-blue-500/25">
                       Review Requested
                     </span>
                   )}
@@ -875,7 +875,7 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                 <button
                   onClick={() => onReviewProfile(guide)}
                   disabled={busy}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition border bg-[hsl(178,85%,32%)]/10 border-[hsl(178,85%,32%)]/25 text-[hsl(178,85%,55%)] hover:bg-[hsl(178,85%,32%)]/20 disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition border bg-[hsl(178,85%,32%)]/10 border-[hsl(178,85%,32%)]/25 text-accent hover:bg-[hsl(178,85%,32%)]/20 disabled:opacity-50"
                 >
                   {<IconSwap active={busy} a={<Edit2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                   View &amp; review profile
@@ -929,7 +929,7 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
     .filter(item => !item.ok)
     .map(item => missingRequirementLabels[item.label] || item.label.replaceAll('_', ' '));
   const profileHref = guide.role === 'agency' ? `/agencies/${guide.id}` : `/guides/${guide.id}`;
-  const inputClass = 'w-full px-3 py-2 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)]/60';
+  const inputClass = 'w-full px-3 py-2 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)]/60';
 
   const set = (field, value) => setForm(current => ({ ...current, [field]: value }));
   const viewLicense = async () => {
@@ -986,58 +986,58 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
 
   return (
     <TransitionSurface kind="backdrop" className="fixed inset-0 z-[100] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
-      <TransitionSurface kind="modal" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl bg-[hsl(222,45%,12%)] border border-white/10 shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-5 py-4 bg-[hsl(222,45%,12%)] border-b border-white/10">
+      <TransitionSurface kind="modal" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-2xl bg-card border border-border shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between gap-4 px-5 py-4 bg-card border-b border-border">
           <div className="flex items-center gap-3 min-w-0">
-            <img src={avatarFor(guide)} alt="" className="w-11 h-11 rounded-xl object-cover bg-white/5" />
+            <img src={avatarFor(guide)} alt="" className="w-11 h-11 rounded-xl object-cover bg-card" />
             <div className="min-w-0">
-              <h3 className="text-white font-semibold truncate">{form.full_name || 'Unnamed profile'}</h3>
-              <p className="text-white/40 text-xs capitalize">{guide.role}</p>
+              <h3 className="text-foreground font-semibold truncate">{form.full_name || 'Unnamed profile'}</h3>
+              <p className="text-muted-foreground text-xs capitalize">{guide.role}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-9 h-9 rounded-xl bg-white/5 text-white/50 hover:text-white flex items-center justify-center"><X className="w-4 h-4" /></button>
+          <button onClick={onClose} className="w-9 h-9 rounded-xl bg-card text-muted-foreground hover:text-foreground flex items-center justify-center"><X className="w-4 h-4" /></button>
         </div>
 
         <div className="p-5 space-y-5">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="text-xs text-white/50">Profile completion: <span className={completion.completed ? 'text-emerald-400' : 'text-amber-400'}>{completion.percentage}%</span></div>
-            <Link to={profileHref} target="_blank" rel="noreferrer" className="text-xs text-[hsl(178,85%,55%)] hover:underline">Open public profile</Link>
+            <div className="text-xs text-muted-foreground">Profile completion: <span className={completion.completed ? 'text-emerald-700' : 'text-amber-700'}>{completion.percentage}%</span></div>
+            <Link to={profileHref} target="_blank" rel="noreferrer" className="text-xs text-accent hover:underline">Open public profile</Link>
           </div>
 
           {!completion.completed && (
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-300">
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-700">
               Missing requirements: {missingRequirements.join(', ')}
             </div>
           )}
 
           <div className="grid sm:grid-cols-2 gap-4">
-            <label className="text-xs text-white/50">Full name<input value={form.full_name} onChange={e => set('full_name', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
-            <label className="text-xs text-white/50">Email<input value={form.email} onChange={e => set('email', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
-            <label className="text-xs text-white/50">Phone<input value={form.phone} onChange={e => set('phone', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
-            <label className="text-xs text-white/50">City<input value={form.city} onChange={e => set('city', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
-            <label className="text-xs text-white/50">Languages<input value={form.languages} onChange={e => set('languages', e.target.value)} className={`${inputClass} mt-1.5`} placeholder="English, Persian" /></label>
-            <label className="text-xs text-white/50">{guide.role === 'agency' ? 'Tour types' : 'Tour types / specialties'}<input value={form.tourTypes} onChange={e => set('tourTypes', e.target.value)} className={`${inputClass} mt-1.5`} placeholder="Cultural, Nature, Photography" /></label>
-            <label className="text-xs text-white/50">License status
-              <select value={form.license_status} onChange={e => set('license_status', e.target.value)} className={`${inputClass} mt-1.5 [color-scheme:dark]`}>
-                <option value="not_uploaded" className="bg-[hsl(222,45%,14%)] text-white">Not uploaded</option><option value="pending_review" className="bg-[hsl(222,45%,14%)] text-white">Pending review</option><option value="verified" disabled={!hasLicense} className="bg-[hsl(222,45%,14%)] text-white">Verified</option><option value="rejected" className="bg-[hsl(222,45%,14%)] text-white">Rejected</option>
+            <label className="text-xs text-muted-foreground">Full name<input value={form.full_name} onChange={e => set('full_name', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
+            <label className="text-xs text-muted-foreground">Email<input value={form.email} onChange={e => set('email', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
+            <label className="text-xs text-muted-foreground">Phone<input value={form.phone} onChange={e => set('phone', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
+            <label className="text-xs text-muted-foreground">City<input value={form.city} onChange={e => set('city', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
+            <label className="text-xs text-muted-foreground">Languages<input value={form.languages} onChange={e => set('languages', e.target.value)} className={`${inputClass} mt-1.5`} placeholder="English, Persian" /></label>
+            <label className="text-xs text-muted-foreground">{guide.role === 'agency' ? 'Tour types' : 'Tour types / specialties'}<input value={form.tourTypes} onChange={e => set('tourTypes', e.target.value)} className={`${inputClass} mt-1.5`} placeholder="Cultural, Nature, Photography" /></label>
+            <label className="text-xs text-muted-foreground">License status
+              <select value={form.license_status} onChange={e => set('license_status', e.target.value)} className={`${inputClass} mt-1.5 [color-scheme:light]`}>
+                <option value="not_uploaded" className="bg-card text-foreground">Not uploaded</option><option value="pending_review" className="bg-card text-foreground">Pending review</option><option value="verified" disabled={!hasLicense} className="bg-card text-foreground">Verified</option><option value="rejected" className="bg-card text-foreground">Rejected</option>
               </select>
             </label>
 
-            <div className={`sm:col-span-2 rounded-xl border p-4 ${hasLicense ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-white/[0.03] border-white/10'}`}>
+            <div className={`sm:col-span-2 rounded-xl border p-4 ${hasLicense ? 'bg-emerald-500/[0.06] border-emerald-500/20' : 'bg-card border-border'}`}>
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${hasLicense ? 'bg-emerald-500/15 text-emerald-400' : 'bg-white/[0.06] text-white/35'}`}>
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${hasLicense ? 'bg-emerald-500/15 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-white text-sm font-medium">License document</p>
-                    <p className={`text-xs mt-0.5 ${hasLicense ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    <p className="text-foreground text-sm font-medium">License document</p>
+                    <p className={`text-xs mt-0.5 ${hasLicense ? 'text-emerald-700' : 'text-amber-700'}`}>
                       {hasLicense ? 'Uploaded — ready for admin review' : 'No license document has been uploaded'}
                     </p>
                   </div>
                 </div>
                 {hasLicense && (
-                  <button type="button" onClick={viewLicense} disabled={openingLicense} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[hsl(178,85%,32%)]/15 border border-[hsl(178,85%,32%)]/30 text-[hsl(178,85%,55%)] text-xs font-medium hover:bg-[hsl(178,85%,32%)]/25 disabled:opacity-50">
+                  <button type="button" onClick={viewLicense} disabled={openingLicense} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[hsl(178,85%,32%)]/15 border border-[hsl(178,85%,32%)]/30 text-accent text-xs font-medium hover:bg-[hsl(178,85%,32%)]/25 disabled:opacity-50">
                     {<IconSwap active={openingLicense} a={<ExternalLink className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                     {openingLicense ? 'Opening…' : 'View uploaded license'}
                   </button>
@@ -1046,20 +1046,20 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
             </div>
           </div>
 
-          <label className="block text-xs text-white/50">Bio<textarea rows={5} value={form.bio} onChange={e => set('bio', e.target.value)} className={`${inputClass} mt-1.5 resize-y`} /></label>
+          <label className="block text-xs text-muted-foreground">Bio<textarea rows={5} value={form.bio} onChange={e => set('bio', e.target.value)} className={`${inputClass} mt-1.5 resize-y`} /></label>
 
           <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
-            <label className="block text-xs text-red-300">Rejection reason (required when rejecting)
+            <label className="block text-xs text-red-700">Rejection reason (required when rejecting)
               <textarea rows={3} value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className={`${inputClass} mt-1.5 border-red-500/20`} placeholder="Explain what must be corrected before resubmission…" />
             </label>
           </div>
-          {localError && <p className="text-red-400 text-xs">{localError}</p>}
+          {localError && <p className="text-red-700 text-xs">{localError}</p>}
 
-          <div className="flex items-center justify-end gap-2 flex-wrap pt-2 border-t border-white/10">
-            <button disabled={busy} onClick={() => submit('save')} className="px-4 py-2 rounded-xl bg-white/8 text-white/70 text-xs hover:bg-white/12 disabled:opacity-50">Save changes</button>
-            <button disabled={busy} onClick={() => submit('reject')} className="px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/25 text-red-400 text-xs hover:bg-red-500/25 disabled:opacity-50">Reject profile</button>
+          <div className="flex items-center justify-end gap-2 flex-wrap pt-2 border-t border-border">
+            <button disabled={busy} onClick={() => submit('save')} className="px-4 py-2 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted disabled:opacity-50">Save changes</button>
+            <button disabled={busy} onClick={() => submit('reject')} className="px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/25 text-red-700 text-xs hover:bg-red-500/25 disabled:opacity-50">Reject profile</button>
             {!guide.is_approved && (
-              <button disabled={!approvalEligibility.canApprove} onClick={() => submit('approve')} title={!completion.completed ? 'All required profile fields and an uploaded license are needed before approval.' : ''} className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-400 text-xs hover:bg-emerald-500/25 disabled:opacity-40">{busy ? 'Saving…' : 'Approve profile'}</button>
+              <button disabled={!approvalEligibility.canApprove} onClick={() => submit('approve')} title={!completion.completed ? 'All required profile fields and an uploaded license are needed before approval.' : ''} className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 text-xs hover:bg-emerald-500/25 disabled:opacity-40">{busy ? 'Saving…' : 'Approve profile'}</button>
             )}
           </div>
         </div>
@@ -1137,18 +1137,18 @@ function CommentCard({ review, onReply, onModerate, busy }) {
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex items-start gap-3 flex-1 min-w-0">
           <div className="w-9 h-9 rounded-xl bg-[hsl(178,85%,32%)]/20 flex items-center justify-center flex-shrink-0">
-            <span className="text-[hsl(178,85%,55%)] font-bold text-xs">
+            <span className="text-accent font-bold text-xs">
               {(review.reviewer?.full_name || review.reviewer_name)?.[0]?.toUpperCase() || '?'}
             </span>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-white font-semibold text-sm">{review.reviewer?.full_name || review.reviewer_name || 'Anonymous'}</p>
+              <p className="text-foreground font-semibold text-sm">{review.reviewer?.full_name || review.reviewer_name || 'Anonymous'}</p>
               <StarRating rating={review.rating || 0} />
               <StatusPill status={review.status || 'pending'} />
             </div>
-            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-white/35">
-              <span className="text-[hsl(38,62%,58%)]/80">{targetType}: {targetName}</span>
+            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-muted-foreground">
+              <span className="text-amber-700">{targetType}: {targetName}</span>
               {reviewerEmail && <span>· {reviewerEmail}</span>}
               {date && <span>· {date}</span>}
             </div>
@@ -1156,39 +1156,39 @@ function CommentCard({ review, onReply, onModerate, busy }) {
         </div>
       </div>
 
-      {review.title && <p className="mb-2 pl-12 text-sm font-semibold text-white/80">{review.title}</p>}
+      {review.title && <p className="mb-2 pl-12 text-sm font-semibold text-foreground/80">{review.title}</p>}
 
       <div className="mb-4 pl-12">
-        <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-white/40">
+        <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
           Review text
         </label>
         <textarea
           rows={4}
           value={reviewText}
           onChange={event => setReviewText(event.target.value)}
-          className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm leading-relaxed text-white/75 focus:border-[hsl(178,85%,32%)]/60 focus:outline-none focus:ring-1 focus:ring-[hsl(178,85%,32%)]/30"
+          className="w-full resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-relaxed text-foreground/80 focus:border-[hsl(178,85%,32%)]/60 focus:outline-none focus:ring-1 focus:ring-[hsl(178,85%,32%)]/30"
         />
       </div>
 
       {review.admin_reply && (
         <div className="mb-4 pl-12">
           <div className="p-3 rounded-xl bg-[hsl(178,85%,32%)]/10 border border-[hsl(178,85%,32%)]/20">
-            <p className="text-[hsl(178,85%,55%)] text-[10px] font-semibold mb-1 uppercase tracking-wider">
+            <p className="text-accent text-[10px] font-semibold mb-1 uppercase tracking-wider">
               Current Admin Reply
             </p>
-            <p className="text-white/70 text-xs leading-relaxed">{review.admin_reply}</p>
+            <p className="text-foreground/80 text-xs leading-relaxed">{review.admin_reply}</p>
           </div>
         </div>
       )}
 
       <ErrorBox message={error} onClose={() => setError('')} />
 
-      <div className="mb-4 flex flex-wrap justify-end gap-2 border-b border-white/[0.07] pb-4 pl-12">
+      <div className="mb-4 flex flex-wrap justify-end gap-2 border-b border-border pb-4 pl-12">
         <button
           type="button"
           onClick={() => handleModeration('save')}
           disabled={busy || !reviewText.trim()}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-white/[0.07] px-3.5 py-2 text-xs font-semibold text-white/70 hover:bg-white/[0.12] disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-3.5 py-2 text-xs font-semibold text-foreground/80 hover:bg-muted disabled:opacity-40"
         >
           {<IconSwap active={busy} a={<Edit2 className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
           Save edits
@@ -1197,7 +1197,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           type="button"
           onClick={() => handleModeration('reject')}
           disabled={busy || !reviewText.trim() || review.status === 'rejected'}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/25 bg-red-500/15 px-3.5 py-2 text-xs font-semibold text-red-300 hover:bg-red-500/25 disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/25 bg-red-500/15 px-3.5 py-2 text-xs font-semibold text-red-700 hover:bg-red-500/25 disabled:opacity-40"
         >
           <XCircle className="h-3.5 w-3.5" />
           Reject
@@ -1206,7 +1206,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           type="button"
           onClick={() => handleModeration('approve')}
           disabled={busy || !reviewText.trim() || review.status === 'approved'}
-          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/15 px-3.5 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/25 disabled:opacity-40"
+          className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/15 px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/25 disabled:opacity-40"
         >
           <CheckCircle2 className="h-3.5 w-3.5" />
           Approve
@@ -1219,7 +1219,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           value={reply}
           onChange={e => setReply(e.target.value)}
           placeholder="Write a reply as admin..."
-          className="w-full px-3 py-2.5 rounded-xl border border-white/10 bg-white/[0.05] text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,32%)]/60 focus:ring-1 focus:ring-[hsl(178,85%,32%)]/30 transition resize-none"
+          className="w-full px-3 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)]/60 focus:ring-1 focus:ring-[hsl(178,85%,32%)]/30 transition resize-none"
         />
         <button
           onClick={handleSaveReply}
@@ -1254,9 +1254,9 @@ function CommentsView({ reviews, loading, onReply, onModerate, busyId }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-3 flex-wrap mb-5">
-        <div className="flex items-center gap-3"><h2 className="text-white font-bold text-lg">Comments / Reviews</h2><span className="text-white/40 text-xs">{reviews.length} total</span></div>
-        <select value={sortBy} onChange={event => setSortBy(event.target.value)} aria-label="Sort comments" className="px-3 py-2 rounded-xl border border-white/10 bg-[hsl(222,45%,14%)] text-white text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 [color-scheme:dark]">
-          <option value="newest" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Newest</option><option value="oldest" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Oldest</option><option value="rating-high" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Highest rating</option><option value="rating-low" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Lowest rating</option><option value="unreplied" className="bg-[hsl(222,45%,14%)] text-white">Sort by: Unreplied first</option>
+        <div className="flex items-center gap-3"><h2 className="text-foreground font-bold text-lg">Comments / Reviews</h2><span className="text-muted-foreground text-xs">{reviews.length} total</span></div>
+        <select value={sortBy} onChange={event => setSortBy(event.target.value)} aria-label="Sort comments" className="px-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 [color-scheme:light]">
+          <option value="newest" className="bg-card text-foreground">Sort by: Newest</option><option value="oldest" className="bg-card text-foreground">Sort by: Oldest</option><option value="rating-high" className="bg-card text-foreground">Sort by: Highest rating</option><option value="rating-low" className="bg-card text-foreground">Sort by: Lowest rating</option><option value="unreplied" className="bg-card text-foreground">Sort by: Unreplied first</option>
         </select>
       </div>
 
@@ -1268,8 +1268,8 @@ function CommentsView({ reviews, loading, onReply, onModerate, busyId }) {
             onClick={() => setFilter(status)}
             className={`rounded-xl border px-3 py-1.5 text-xs font-semibold capitalize transition ${
               filter === status
-                ? 'border-[hsl(178,85%,32%)]/50 bg-[hsl(178,85%,32%)]/20 text-[hsl(178,85%,55%)]'
-                : 'border-white/10 bg-white/[0.04] text-white/45 hover:text-white/70'
+                ? 'border-[hsl(178,85%,32%)]/50 bg-[hsl(178,85%,32%)]/20 text-accent'
+                : 'border-border bg-card text-muted-foreground hover:text-foreground/80'
             }`}
           >
             {status}
@@ -1299,9 +1299,9 @@ function CommentsView({ reviews, loading, onReply, onModerate, busyId }) {
 // ─── Articles View ────────────────────────────────────────────────────────────
 
 const ART_STATUS = {
-  approved: { label: 'منتشر شده',      cls: 'bg-teal-500/20 text-teal-300 border-teal-500/30' },
-  pending:  { label: 'در انتظار',      cls: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
-  rejected: { label: 'رد شده',         cls: 'bg-red-500/20 text-red-300 border-red-500/30' },
+  approved: { label: 'منتشر شده',      cls: 'bg-teal-500/20 text-teal-700 border-teal-500/30' },
+  pending:  { label: 'در انتظار',      cls: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30' },
+  rejected: { label: 'رد شده',         cls: 'bg-red-500/20 text-red-700 border-red-500/30' },
 };
 
 function ArticlesView({ profile }) {
@@ -1405,16 +1405,16 @@ function ArticlesView({ profile }) {
     <div dir="rtl" className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-white font-bold text-lg">Articles</h2>
+          <h2 className="text-foreground font-bold text-lg">Articles</h2>
           {pendingCount > 0 && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/30">
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-700 border border-yellow-500/30">
               {pendingCount} در انتظار
             </span>
           )}
         </div>
         <button
           onClick={() => setShowEditor(v => !v)}
-          className="flex items-center gap-1.5 text-sm font-medium text-teal-400 hover:text-teal-300 transition-colors"
+          className="flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-700 transition-colors"
         >
           {showEditor ? 'بستن فرم' : '+ مقاله جدید'}
         </button>
@@ -1431,13 +1431,13 @@ function ArticlesView({ profile }) {
 
       <TransitionPresence>{editingArticle && articleDraft && (
         <TransitionSurface kind="backdrop" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/75 p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="article-review-title">
-          <TransitionSurface kind="modal" dir="rtl" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-white/10 bg-[hsl(222,45%,14%)] shadow-2xl">
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-white/[0.08] bg-[hsl(222,45%,14%)] px-5 py-4 sm:px-6">
+          <TransitionSurface kind="modal" dir="rtl" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-border bg-card shadow-2xl">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-card px-5 py-4 sm:px-6">
               <div>
-                <p className="text-[11px] font-medium text-teal-400">بررسی و ویرایش پیش از انتشار</p>
-                <h3 id="article-review-title" className="mt-1 text-base font-bold text-white">ویرایش مقاله</h3>
+                <p className="text-[11px] font-medium text-teal-700">بررسی و ویرایش پیش از انتشار</p>
+                <h3 id="article-review-title" className="mt-1 text-base font-bold text-foreground">ویرایش مقاله</h3>
               </div>
-              <button onClick={closeArticleEditor} className="rounded-lg p-2 text-white/60 transition hover:bg-white/[0.08] hover:text-white" aria-label="بستن">
+              <button onClick={closeArticleEditor} className="rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="بستن">
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1445,12 +1445,12 @@ function ArticlesView({ profile }) {
             <div className="space-y-4 p-5 sm:p-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1.5">
-                  <span className="text-xs font-medium text-white/60">عنوان مقاله</span>
-                  <input value={articleDraft.title_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, title_fa: e.target.value }))} maxLength={120} className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm text-white outline-none transition focus:border-teal-500/60" />
+                  <span className="text-xs font-medium text-muted-foreground">عنوان مقاله</span>
+                  <input value={articleDraft.title_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, title_fa: e.target.value }))} maxLength={120} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-teal-500/60" />
                 </label>
                 <label className="space-y-1.5">
-                  <span className="text-xs font-medium text-white/60">دسته‌بندی</span>
-                  <select value={articleDraft.category} onChange={(e) => setArticleDraft(draft => ({ ...draft, category: e.target.value }))} className="w-full rounded-xl border border-white/10 bg-[hsl(222,45%,14%)] px-3 py-2.5 text-sm text-white outline-none transition focus:border-teal-500/60">
+                  <span className="text-xs font-medium text-muted-foreground">دسته‌بندی</span>
+                  <select value={articleDraft.category} onChange={(e) => setArticleDraft(draft => ({ ...draft, category: e.target.value }))} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-teal-500/60">
                     <option value="architecture">معماری</option>
                     <option value="history">تاریخ</option>
                     <option value="culture">فرهنگ</option>
@@ -1463,23 +1463,23 @@ function ArticlesView({ profile }) {
               </div>
 
               <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-white/60">خلاصه</span>
-                <textarea value={articleDraft.excerpt_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, excerpt_fa: e.target.value }))} rows={3} maxLength={500} className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm leading-6 text-white outline-none transition focus:border-teal-500/60" />
+                <span className="text-xs font-medium text-muted-foreground">خلاصه</span>
+                <textarea value={articleDraft.excerpt_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, excerpt_fa: e.target.value }))} rows={3} maxLength={500} className="w-full resize-none rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-6 text-foreground outline-none transition focus:border-teal-500/60" />
               </label>
 
               <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-white/60">متن کامل مقاله</span>
-                <textarea value={articleDraft.content_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, content_fa: e.target.value }))} rows={12} className="w-full resize-y rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm leading-7 text-white outline-none transition focus:border-teal-500/60" placeholder="متن کامل مقاله..." />
+                <span className="text-xs font-medium text-muted-foreground">متن کامل مقاله</span>
+                <textarea value={articleDraft.content_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, content_fa: e.target.value }))} rows={12} className="w-full resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-7 text-foreground outline-none transition focus:border-teal-500/60" placeholder="متن کامل مقاله..." />
               </label>
 
               <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-white/60">آدرس تصویر</span>
-                <input type="url" dir="ltr" value={articleDraft.image_url} onChange={(e) => setArticleDraft(draft => ({ ...draft, image_url: e.target.value }))} placeholder="https://..." className="w-full rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2.5 text-sm text-white outline-none transition focus:border-teal-500/60" />
+                <span className="text-xs font-medium text-muted-foreground">آدرس تصویر</span>
+                <input type="url" dir="ltr" value={articleDraft.image_url} onChange={(e) => setArticleDraft(draft => ({ ...draft, image_url: e.target.value }))} placeholder="https://..." className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-teal-500/60" />
               </label>
             </div>
 
-            <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-white/[0.08] bg-[hsl(222,45%,14%)] px-5 py-4 sm:px-6">
-              <button onClick={closeArticleEditor} disabled={busyId === editingArticle.id} className="rounded-xl px-4 py-2 text-sm text-white/65 transition hover:bg-white/[0.08] hover:text-white disabled:opacity-50">انصراف</button>
+            <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-card px-5 py-4 sm:px-6">
+              <button onClick={closeArticleEditor} disabled={busyId === editingArticle.id} className="rounded-xl px-4 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50">انصراف</button>
               <button onClick={saveArticleEdits} disabled={busyId === editingArticle.id} className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500 disabled:opacity-50">
                 {<IconSwap active={busyId === editingArticle.id} a={<CheckCircle2 className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                 ذخیره تغییرات
@@ -1503,7 +1503,7 @@ function ArticlesView({ profile }) {
             className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all ${
               filter === tab.key
                 ? 'bg-teal-600 text-white border-teal-600'
-                : 'border-white/10 text-white/50 hover:text-white hover:border-white/30'
+                : 'border-border text-muted-foreground hover:text-foreground hover:border-accent/30'
             }`}
           >
             {tab.label}
@@ -1527,29 +1527,29 @@ function ArticlesView({ profile }) {
                     <img decoding="async" loading="lazy"
                       src={article.image_url}
                       alt=""
-                      className="w-20 h-16 rounded-xl object-cover shrink-0 border border-white/10"
+                      className="w-20 h-16 rounded-xl object-cover shrink-0 border border-border"
                     />
                   ) : (
-                    <div className="w-20 h-16 rounded-xl bg-white/[0.06] shrink-0 flex items-center justify-center border border-white/10">
-                      <BookOpen className="w-5 h-5 text-white/20" />
+                    <div className="w-20 h-16 rounded-xl bg-muted shrink-0 flex items-center justify-center border border-border">
+                      <BookOpen className="w-5 h-5 text-muted-foreground" />
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 flex-wrap">
-                      <p className="text-white font-semibold text-sm flex-1 truncate">{article.title_fa || 'بدون عنوان'}</p>
+                      <p className="text-foreground font-semibold text-sm flex-1 truncate">{article.title_fa || 'بدون عنوان'}</p>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium shrink-0 ${s.cls}`}>
                         {s.label}
                       </span>
                       {article.is_featured && (
-                        <span className="text-[10px] px-2 py-0.5 rounded-full border font-medium shrink-0 bg-yellow-500/20 text-yellow-300 border-yellow-500/30">
+                        <span className="text-[10px] px-2 py-0.5 rounded-full border font-medium shrink-0 bg-yellow-500/20 text-yellow-700 border-yellow-500/30">
                           ⭐ ویژه
                         </span>
                       )}
                     </div>
                     {article.excerpt_fa && (
-                      <p className="text-xs text-white/50 mt-1 line-clamp-2">{article.excerpt_fa}</p>
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{article.excerpt_fa}</p>
                     )}
-                    <p className="text-[10px] text-white/30 mt-1">
+                    <p className="text-[10px] text-muted-foreground mt-1">
                       {article.author_profile?.full_name || '—'} ·{' '}
                       {new Date(article.created_at).toLocaleDateString('fa-IR')}
                     </p>
@@ -1557,11 +1557,11 @@ function ArticlesView({ profile }) {
                 </div>
 
                 {/* Actions */}
-                <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-white/[0.06]">
+                <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-border">
                   <button
                     disabled={busy}
                     onClick={() => openArticleEditor(article)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-300 text-xs font-medium transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-700 text-xs font-medium transition disabled:opacity-50"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
                     ویرایش
@@ -1570,7 +1570,7 @@ function ArticlesView({ profile }) {
                     <button
                       disabled={busy}
                       onClick={() => setStatus(article.id, 'approved')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-400 text-xs font-medium transition disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-700 text-xs font-medium transition disabled:opacity-50"
                     >
                       {<IconSwap active={busy} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                       تایید
@@ -1580,7 +1580,7 @@ function ArticlesView({ profile }) {
                     <button
                       disabled={busy}
                       onClick={() => setStatus(article.id, 'rejected')}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-400 text-xs font-medium transition disabled:opacity-50"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-700 text-xs font-medium transition disabled:opacity-50"
                     >
                       {<IconSwap active={busy} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
                       رد
@@ -1589,7 +1589,7 @@ function ArticlesView({ profile }) {
                   <button
                     disabled={busy}
                     onClick={() => toggleFeatured(article)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-400 text-xs font-medium transition disabled:opacity-50"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-700 text-xs font-medium transition disabled:opacity-50"
                   >
                     <Star className={`w-3.5 h-3.5 ${article.is_featured ? 'fill-yellow-400' : ''}`} />
                     {article.is_featured ? 'حذف از ویژه' : 'افزودن به ویژه'}
@@ -1597,7 +1597,7 @@ function ArticlesView({ profile }) {
                   <button
                     disabled={busy}
                     onClick={() => handleDelete(article.id)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-medium transition disabled:opacity-50 ms-auto"
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-700 text-xs font-medium transition disabled:opacity-50 ms-auto"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     حذف
@@ -1889,10 +1889,10 @@ export default function AdminDashboard() {
   // ── Loading splash while auth verifies ──
   if (!authChecked || !profile) {
     return (
-      <div className="min-h-screen bg-[hsl(222,55%,8%)] flex items-center justify-center">
+      <div className="min-h-screen bg-card flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-8 h-8 text-[hsl(178,85%,45%)] animate-spin" />
-          <p className="text-white/40 text-sm">Verifying admin access...</p>
+          <Loader2 className="w-8 h-8 text-accent animate-spin" />
+          <p className="text-muted-foreground text-sm">Verifying admin access...</p>
         </div>
       </div>
     );
@@ -1978,7 +1978,7 @@ export default function AdminDashboard() {
 
   return (
     <BentoDashboardMotion>
-    <div className="bento-dashboard min-h-screen bg-[hsl(222,55%,8%)] flex">
+    <div className="bento-dashboard min-h-screen bg-card flex">
       <Sidebar
         section={section}
         onNavigate={setSection}
@@ -1987,8 +1987,8 @@ export default function AdminDashboard() {
         onLogout={handleLogout}
       />
 
-      <main className="bento-dashboard-main flex-1 overflow-y-auto">
-        <div className="bento-dashboard-surface max-w-5xl mx-auto px-6 py-8">
+      <main className="bento-dashboard-main flex-1 overflow-visible">
+        <div className="bento-dashboard-content max-w-5xl mx-auto px-6 py-8">
           <ErrorBox message={error} onClose={() => setError('')} />
           <BentoDashboardContent section={section} renderSection={renderSection} />
         </div>

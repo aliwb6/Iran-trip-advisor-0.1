@@ -38,23 +38,23 @@ function fmt(dateStr) {
 const cityList = (d) => (Array.isArray(d) ? d : d ? [d] : []);
 
 const SLOT_STATUS_LABEL = {
-  accepted:  { text: 'Waiting for tourist',       color: 'text-yellow-400',  bg: 'bg-yellow-400/10' },
-  selected:  { text: 'You were chosen! 🎉',       color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  rejected:  { text: 'Rejected by traveler',      color: 'text-red-300',     bg: 'bg-red-500/10' },
-  chatting:  { text: 'In discussion',             color: 'text-blue-400',    bg: 'bg-blue-400/10' },
-  finalized: { text: 'Booked',                    color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-  closed:    { text: 'Closed',                    color: 'text-white/30',    bg: 'bg-white/[0.04]' },
+  accepted:  { text: 'Waiting for tourist',       color: 'text-yellow-700',  bg: 'bg-yellow-400/10' },
+  selected:  { text: 'You were chosen! 🎉',       color: 'text-emerald-700', bg: 'bg-emerald-400/10' },
+  rejected:  { text: 'Rejected by traveler',      color: 'text-red-700',     bg: 'bg-red-500/10' },
+  chatting:  { text: 'In discussion',             color: 'text-blue-700',    bg: 'bg-blue-400/10' },
+  finalized: { text: 'Booked',                    color: 'text-emerald-700', bg: 'bg-emerald-400/10' },
+  closed:    { text: 'Closed',                    color: 'text-muted-foreground',    bg: 'bg-card' },
 };
 
 const FILLED_SLOT_INFO = {
   text: 'Expired',
-  color: 'text-white/55',
-  bg: 'bg-white/[0.07]',
+  color: 'text-muted-foreground',
+  bg: 'bg-muted',
 };
 
 function Tag({ children }) {
   return (
-    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-white/[0.07] text-white/60 text-[10px] font-medium">
+    <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-muted text-muted-foreground text-[10px] font-medium">
       {children}
     </span>
   );
@@ -64,7 +64,7 @@ function ProposalCountPill({ count, max }) {
   const full = count >= max;
   return (
     <span className={`text-xs px-3 py-1 rounded-full font-medium ${
-      full ? 'bg-red-500/10 text-red-400' : 'bg-white/10 text-white/70'
+      full ? 'bg-red-500/10 text-red-700' : 'bg-muted text-foreground/80'
     }`}>
       {count}/{max} proposals
     </span>
@@ -124,8 +124,8 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
         exit={{ opacity: 0, scale: 0.97 }}
         className={`border rounded-2xl p-5 transition-all ${
           isExpiredForProvider
-            ? 'bg-white/[0.035] border-white/[0.06] grayscale opacity-70'
-            : 'bg-[hsl(222,45%,14%)] border-white/[0.08] hover:border-white/[0.15]'
+            ? 'bg-card border-border grayscale opacity-70'
+            : 'bg-card border-border hover:border-accent/30'
         }`}
       >
         <div className="flex items-start justify-between gap-3 mb-3">
@@ -133,21 +133,21 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
             {packageRequestKind && (
               <span className={`mb-2 inline-flex rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ${
                 packageRequestKind === 'package_booking'
-                  ? 'border-amber-300/25 bg-amber-300/10 text-amber-200'
-                  : 'border-teal-300/25 bg-teal-300/10 text-teal-200'
+                  ? 'border-amber-300/25 bg-amber-300/10 text-amber-700'
+                  : 'border-teal-300/25 bg-teal-300/10 text-teal-700'
               }`}>
                 {packageRequestKind === 'package_booking' ? 'Booking Request' : 'Private Tour Invitation'}
               </span>
             )}
-            <h3 className="text-white font-semibold text-sm leading-snug">
+            <h3 className="text-foreground font-semibold text-sm leading-snug">
               {packageRequestKind === 'package_booking' && sourceTourTitle
                 ? sourceTourTitle
                 : `Trip to ${cityList(req.destination).join(', ') || 'Iran'}`}
             </h3>
-            <p className="text-white/40 text-[11px] mt-0.5">Submitted {fmt(req.created_at)}</p>
+            <p className="text-muted-foreground text-[11px] mt-0.5">Submitted {fmt(req.created_at)}</p>
           </div>
           {isExpiredForProvider ? (
-            <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-semibold bg-white/[0.08] text-white/55 border border-white/10">
+            <span className="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full font-semibold bg-muted text-muted-foreground border border-border">
               <Clock className="w-3 h-3" />
               Expired
             </span>
@@ -157,7 +157,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
         </div>
 
         {packageRequestKind && sourceTour && (
-          <div className="mb-3 flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-3">
+          <div className="mb-3 flex items-center gap-3 rounded-xl border border-border bg-card p-3">
             {(sourceTour.image_url || sourceTour.gallery?.[0]) && (
               <img
                 src={sourceTour.image_url || sourceTour.gallery[0]}
@@ -165,7 +165,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
                 className="h-12 w-16 rounded-lg object-cover"
               />
             )}
-            <p className="min-w-0 text-xs leading-relaxed text-white/55">
+            <p className="min-w-0 text-xs leading-relaxed text-muted-foreground">
               {packageRequestKind === 'package_booking'
                 ? 'A traveler requested this exact package. Review the pre-filled offer before sending.'
                 : 'The traveler selected you for a tour based on this reference package. You do not own the original tour.'}
@@ -194,18 +194,18 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
         </div>
 
         {req.requirements && (
-          <p className="text-white/50 text-xs leading-relaxed mb-4 line-clamp-2">
-            <FileText className="w-3 h-3 inline-block mr-1 text-white/30" />
+          <p className="text-muted-foreground text-xs leading-relaxed mb-4 line-clamp-2">
+            <FileText className="w-3 h-3 inline-block mr-1 text-muted-foreground" />
             {req.requirements}
           </p>
         )}
 
         {isExpiredForProvider ? (
-          <div className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/10 px-4 py-3">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-white/45" />
+          <div className="flex items-start gap-2.5 rounded-xl border border-border bg-muted px-4 py-3">
+            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
             <div>
-              <p className="text-xs font-semibold text-white/65">This request has expired for you.</p>
-              <p className="text-[11px] leading-relaxed text-white/40 mt-0.5">
+              <p className="text-xs font-semibold text-muted-foreground">This request has expired for you.</p>
+              <p className="text-[11px] leading-relaxed text-muted-foreground mt-0.5">
                 The traveler selected another guide or agency, so this tour request is no longer available.
               </p>
             </div>
@@ -222,7 +222,7 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
               disabled={isFull}
               className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 isFull
-                  ? 'bg-white/[0.05] text-white/30 cursor-not-allowed'
+                  ? 'bg-card text-muted-foreground cursor-not-allowed'
                   : 'bg-[hsl(178,85%,32%)] hover:bg-[hsl(178,85%,28%)] text-white shadow-lg shadow-[hsl(178,85%,32%)]/20'
               }`}
             >
@@ -237,14 +237,14 @@ function AvailableCard({ req, guideId, commissionRate, onApplied, onSkip }) {
                 <button
                   onClick={handleDecline}
                   disabled={declining}
-                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-red-200/70 hover:bg-red-500/10 hover:text-red-200 transition-colors disabled:opacity-50"
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-red-700/70 hover:bg-red-500/10 hover:text-red-700 transition-colors disabled:opacity-50"
                 >
                   {declining ? 'Declining…' : 'Decline'}
                 </button>
               ) : (
                 <button
                   onClick={() => onSkip(req.id)}
-                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-white/40 hover:text-white/70 hover:bg-white/[0.07] transition-colors"
+                  className="px-4 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground/80 hover:bg-muted transition-colors"
                 >
                   {t('skip')}
                 </button>
@@ -281,7 +281,7 @@ function ProposalCard({ entry, onChanged }) {
   const explicitlyRejected = entry.status === 'rejected' && !filledByAnother;
   const slotInfo = filledByAnother
     ? FILLED_SLOT_INFO
-    : (SLOT_STATUS_LABEL[entry.status] || { text: entry.status, color: 'text-white/40', bg: 'bg-white/[0.05]' });
+    : (SLOT_STATUS_LABEL[entry.status] || { text: entry.status, color: 'text-muted-foreground', bg: 'bg-card' });
   const start = fmt(req?.start_date);
   const end = fmt(req?.end_date);
   const dest = cityList(req?.destination).join(', ') || 'Iran';
@@ -318,13 +318,13 @@ function ProposalCard({ entry, onChanged }) {
   return (
     <div className={`border rounded-2xl p-5 transition-all ${
       entry.status === 'rejected'
-        ? 'bg-white/[0.035] border-white/[0.06] grayscale opacity-75'
-        : 'bg-[hsl(222,45%,14%)] border-white/[0.08]'
+        ? 'bg-card border-border grayscale opacity-75'
+        : 'bg-card border-border'
     }`}>
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0 flex-1">
-          <h3 className="text-white font-semibold text-sm">Trip to {dest}</h3>
-          <p className="text-white/40 text-[11px] mt-0.5">
+          <h3 className="text-foreground font-semibold text-sm">Trip to {dest}</h3>
+          <p className="text-muted-foreground text-[11px] mt-0.5">
             {t('submitted_on').replace('{date}', fmt(entry.accepted_at) || '—')}
           </p>
         </div>
@@ -334,9 +334,9 @@ function ProposalCard({ entry, onChanged }) {
       </div>
 
       {filledByAnother && (
-        <div className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-black/10 px-3.5 py-3 mb-3">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-white/45" />
-          <p className="text-xs leading-relaxed text-white/50">
+        <div className="flex items-start gap-2.5 rounded-xl border border-border bg-muted px-3.5 py-3 mb-3">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <p className="text-xs leading-relaxed text-muted-foreground">
             Expired — the traveler selected another guide or agency. You can no longer act on this request.
           </p>
         </div>
@@ -344,24 +344,24 @@ function ProposalCard({ entry, onChanged }) {
 
       {explicitlyRejected && (
         <div className="flex items-start gap-2.5 rounded-xl border border-red-400/15 bg-red-500/[0.06] px-3.5 py-3 mb-3">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-300/80" />
-          <p className="text-xs leading-relaxed text-red-100/70">
+          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-700/80" />
+          <p className="text-xs leading-relaxed text-red-700/70">
             The traveler rejected your proposal. This proposal is kept here for your records.
           </p>
         </div>
       )}
 
-      {priceLabel && <p className="text-[hsl(178,85%,55%)] font-semibold text-sm mb-2">{priceLabel}</p>}
+      {priceLabel && <p className="text-accent font-semibold text-sm mb-2">{priceLabel}</p>}
 
       {firstLineItinerary && (
-        <p className="text-white/40 text-xs mb-2 line-clamp-1">
-          <FileText className="w-3 h-3 inline-block mr-1 text-white/20" />
+        <p className="text-muted-foreground text-xs mb-2 line-clamp-1">
+          <FileText className="w-3 h-3 inline-block mr-1 text-muted-foreground" />
           {firstLineItinerary}
         </p>
       )}
 
       {(start || end) && (
-        <p className="text-white/40 text-xs flex items-center gap-1 mb-3">
+        <p className="text-muted-foreground text-xs flex items-center gap-1 mb-3">
           <Calendar className="w-3 h-3" />
           {start}{start && end ? ' → ' : ''}{end}
         </p>
@@ -371,7 +371,7 @@ function ProposalCard({ entry, onChanged }) {
         <button
           onClick={handleConfirmBooking}
           disabled={confirming}
-          className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 hover:bg-emerald-500/20 text-sm font-semibold transition disabled:opacity-50"
+          className="w-full mt-3 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-700 hover:bg-emerald-500/20 text-sm font-semibold transition disabled:opacity-50"
         >
           {<IconSwap active={confirming} a={<CheckCircle2 className="w-4 h-4" />} b={<Loader2 className="w-4 h-4 animate-spin" />} keepMounted={false} />}
           {confirming ? 'Confirming…' : 'Confirm booking'}
@@ -436,34 +436,34 @@ export default function GuideRequestsView({ userId }) {
     <div dir={dir}>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-white font-bold text-xl">Tour Requests</h2>
-          <p className="text-white/40 text-xs mt-0.5">
+          <h2 className="text-foreground font-bold text-xl">Tour Requests</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">
             Submit proposals to open requests and confirm bookings when a traveler selects you.
           </p>
         </div>
         <button
           onClick={load}
           disabled={loading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-white/10 text-white/50 hover:text-white hover:border-white/20 text-xs transition disabled:opacity-40"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-accent/30 text-xs transition disabled:opacity-40"
         >
           {<IconSwap active={loading} a={<RefreshCw className="w-3 h-3" />} b={<Loader2 className="w-3 h-3" label="Refreshing requests" />} keepMounted={false} />}
           Refresh
         </button>
       </div>
 
-      <div className="flex bg-white/[0.05] rounded-xl p-1 mb-6 w-fit gap-1">
+      <div className="flex bg-card rounded-xl p-1 mb-6 w-fit gap-1">
         {tabItems.map(item => (
           <button
             key={item.id}
             onClick={() => setTab(item.id)}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-medium transition-all ${
-              tab === item.id ? 'bg-[hsl(178,85%,32%)] text-white shadow' : 'text-white/50 hover:text-white'
+              tab === item.id ? 'bg-[hsl(178,85%,32%)] text-white shadow' : 'text-muted-foreground hover:text-foreground'
             }`}
           >
             {item.label}
             {item.count > 0 && (
               <span className={`min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                tab === item.id ? 'bg-white/20 text-white' : 'bg-white/10 text-white/60'
+                tab === item.id ? 'bg-white/20 text-white' : 'bg-muted text-muted-foreground'
               }`}>
                 {item.count}
               </span>
@@ -473,17 +473,17 @@ export default function GuideRequestsView({ userId }) {
       </div>
 
       {error ? (
-        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">{error}</div>
+        <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 text-sm">{error}</div>
       ) : loading ? (
         <LoadingState />
       ) : tab === 'available' ? (
         visibleAvailable.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4">
-              <Bell className="w-7 h-7 text-white/20" />
+            <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+              <Bell className="w-7 h-7 text-muted-foreground" />
             </div>
-            <p className="text-white/50 font-medium text-sm mb-1">No open trip requests</p>
-            <p className="text-white/30 text-xs max-w-xs">New requests from travelers will appear here. Check back soon!</p>
+            <p className="text-muted-foreground font-medium text-sm mb-1">No open trip requests</p>
+            <p className="text-muted-foreground text-xs max-w-xs">New requests from travelers will appear here. Check back soon!</p>
           </div>
         ) : (
           <AnimatePresence mode="popLayout">
@@ -503,11 +503,11 @@ export default function GuideRequestsView({ userId }) {
         )
       ) : proposals.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
-          <div className="w-14 h-14 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center mb-4">
-            <Clock className="w-7 h-7 text-white/20" />
+          <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
+            <Clock className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="text-white/50 font-medium text-sm mb-1">No proposals yet</p>
-          <p className="text-white/30 text-xs max-w-xs">Requests you apply to will show here with their status.</p>
+          <p className="text-muted-foreground font-medium text-sm mb-1">No proposals yet</p>
+          <p className="text-muted-foreground text-xs max-w-xs">Requests you apply to will show here with their status.</p>
         </div>
       ) : (
         <div className="space-y-3">

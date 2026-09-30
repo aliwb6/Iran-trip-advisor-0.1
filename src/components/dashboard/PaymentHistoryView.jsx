@@ -16,27 +16,27 @@ export default function PaymentHistoryView() {
     queryFn: fetchMyPayments,
   });
 
-  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-white/40" /></div>;
-  if (error) return <p className="rounded-xl bg-red-500/10 p-4 text-sm text-red-300">{error.message || 'Could not load payment history.'}</p>;
+  if (isLoading) return <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>;
+  if (error) return <p className="rounded-xl bg-red-500/10 p-4 text-sm text-red-700">{error.message || 'Could not load payment history.'}</p>;
 
   return (
     <section>
-      <h2 className="text-xl font-bold text-white">Payment History</h2>
-      <p className="mt-1 text-sm text-white/40">Server-recorded payment attempts and verified provider transactions only.</p>
+      <h2 className="text-xl font-bold text-foreground">Payment History</h2>
+      <p className="mt-1 text-sm text-muted-foreground">Server-recorded payment attempts and verified provider transactions only.</p>
       {payments.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.03] py-16 text-center">
-          <CreditCard className="mx-auto h-8 w-8 text-white/20" />
-          <p className="mt-3 text-sm text-white/50">No payment transactions have been recorded.</p>
+        <div className="mt-6 rounded-2xl border border-border bg-card py-16 text-center">
+          <CreditCard className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-3 text-sm text-muted-foreground">No payment transactions have been recorded.</p>
         </div>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-2xl border border-white/[0.08]">
+        <div className="mt-6 overflow-hidden rounded-2xl border border-border">
           {payments.map(payment => (
-            <div key={payment.id} className="grid grid-cols-2 gap-3 border-b border-white/[0.07] bg-[hsl(222,45%,14%)] p-4 text-xs last:border-b-0 sm:grid-cols-5">
-              <div><p className="text-white/35">Type</p><p className="mt-1 font-medium text-white">{payment.payment_type}</p></div>
-              <div><p className="text-white/35">Amount</p><p className="mt-1 font-medium text-white">{money(payment.total_amount, payment.currency)}</p></div>
-              <div><p className="text-white/35">Status</p><p className="mt-1 font-medium text-white">{payment.status}</p></div>
-              <div><p className="text-white/35">Provider</p><p className="mt-1 font-medium text-white">{payment.provider || 'Not assigned'}</p></div>
-              <div><p className="text-white/35">Recorded</p><p className="mt-1 font-medium text-white">{payment.created_at ? new Date(payment.created_at).toLocaleDateString() : '—'}</p></div>
+            <div key={payment.id} className="grid grid-cols-2 gap-3 border-b border-border bg-card p-4 text-xs last:border-b-0 sm:grid-cols-5">
+              <div><p className="text-muted-foreground">Type</p><p className="mt-1 font-medium text-foreground">{payment.payment_type}</p></div>
+              <div><p className="text-muted-foreground">Amount</p><p className="mt-1 font-medium text-foreground">{money(payment.total_amount, payment.currency)}</p></div>
+              <div><p className="text-muted-foreground">Status</p><p className="mt-1 font-medium text-foreground">{payment.status}</p></div>
+              <div><p className="text-muted-foreground">Provider</p><p className="mt-1 font-medium text-foreground">{payment.provider || 'Not assigned'}</p></div>
+              <div><p className="text-muted-foreground">Recorded</p><p className="mt-1 font-medium text-foreground">{payment.created_at ? new Date(payment.created_at).toLocaleDateString() : '—'}</p></div>
             </div>
           ))}
         </div>

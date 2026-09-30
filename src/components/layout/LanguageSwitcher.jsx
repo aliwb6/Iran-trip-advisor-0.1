@@ -1,9 +1,8 @@
-import { TransitionSurface, TransitionPresence } from '@/components/ui/TransitionSurface';
+import SmoothDropdown from '@/components/smooth-dropdown';
 import { useI18n } from '@/lib/i18n.jsx';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/supabaseClient';
-import { useState, useRef, useEffect } from 'react';
-import { Globe } from 'lucide-react';
+import { Globe, Languages } from 'lucide-react';
 
 const languages = [
   { code: 'en', label: 'EN', full: 'English' },
@@ -12,24 +11,13 @@ const languages = [
 ];
 
 export default function LanguageSwitcher() {
-  const { lang, switchLang } = useI18n();
+  const { lang, dir, switchLang } = useI18n();
   const { isAuthenticated } = useAuth();
-  const [open, setOpen] = useState(false);
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handler = (e) => {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
 
   const current = languages.find(l => l.code === lang);
 
   const handleLanguageChange = (code) => {
     switchLang(code);
-    setOpen(false);
 
     if (isAuthenticated) {
       void supabase.rpc('set_preferred_language', { language: code }).then(({ error }) => {
@@ -39,34 +27,24 @@ export default function LanguageSwitcher() {
   };
 
   return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen(!open)}
-        className="flex items-center gap-2 px-3 py-2 rounded-full border border-border/50 hover:border-accent/50 transition-all duration-300 bg-background/50 backdrop-blur-sm"
-        aria-label="Switch language"
-      >
-        <Globe className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm font-body font-medium">{current?.label}</span>
-      </button>
-
-      <TransitionPresence>{open && (
-          <TransitionSurface kind="dropdown" data-origin="top-end"
-            className="absolute top-full mt-2 end-0 bg-white dark:bg-gray-900 border border-border rounded-xl shadow-xl overflow-hidden min-w-[160px] z-50"
-          >
-            {languages.map((l) => (
-              <button
-                key={l.code}
-                onClick={() => handleLanguageChange(l.code)}
-                className={`w-full px-4 py-3 flex items-center justify-between text-sm font-body hover:bg-accent/5 transition-colors ${
-                  lang === l.code ? 'text-accent font-medium bg-accent/5' : 'text-gray-900 dark:text-gray-100'
-                }`}
-              >
-                <span>{l.full}</span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">{l.label}</span>
-              </button>
-            ))}
-          </TransitionSurface>
-      )}</TransitionPresence>
-    </div>
+    <SmoothDropdown
+      triggerLabel="Switch language"
+      dir={dir}
+      activeId={lang}
+      contentWidth="min(10rem, calc(100vw - 2rem))"
+      items={languages.map((language) => ({
+        id: language.code,
+        label: `${language.full} · ${language.label}`,
+        icon: Languages,
+        onSelect: () => handleLanguageChange(language.code),
+      }))}
+      triggerClassName="flex items-center gap-2 px-3 py-2 rounded-full border border-border/50 hover:border-accent/50 transition-all duration-300 bg-background/50 backdrop-blur-sm"
+      trigger={() => (
+        <>
+          <Globe className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm font-body font-medium text-foreground">{current?.label}</span>
+        </>
+      )}
+    />
   );
 }

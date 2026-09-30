@@ -30,28 +30,28 @@ export default function AdminNotificationsView({ onNavigate }) {
     <div>
       <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white">Notifications</h2>
-          <p className="mt-1 text-xs text-white/40">
+          <h2 className="text-xl font-bold text-foreground">Notifications</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
             {unreadCount ? `${unreadCount} unread events need your attention` : 'You are all caught up'}
           </p>
         </div>
         <div className="flex gap-2">
           {unreadCount > 0 && (
-            <button onClick={markAllRead} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-white/65 transition hover:border-white/20 hover:text-white">
+            <button onClick={markAllRead} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-accent/30 hover:text-foreground">
               <CheckCheck className="h-3.5 w-3.5" /> Mark all read
             </button>
           )}
-          <button onClick={refresh} disabled={loading} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 px-3 py-2 text-xs font-medium text-white/65 transition hover:border-white/20 hover:text-white disabled:opacity-40">
+          <button onClick={refresh} disabled={loading} className="inline-flex items-center gap-1.5 rounded-xl border border-border px-3 py-2 text-xs font-medium text-muted-foreground transition hover:border-accent/30 hover:text-foreground disabled:opacity-40">
             {<IconSwap active={loading} a={<RefreshCw className="h-3.5 w-3.5" />} b={<BreathingGlow className="h-3.5 w-3.5" label="Refreshing notifications" />} keepMounted={false} />} Refresh
           </button>
         </div>
       </div>
 
       {!notifications.length && !loading ? (
-        <div className="flex flex-col items-center rounded-2xl border border-white/[0.08] bg-[hsl(222,45%,14%)] px-4 py-20 text-center">
-          <Bell className="mb-4 h-8 w-8 text-white/20" />
-          <p className="text-sm font-medium text-white/55">No notifications yet</p>
-          <p className="mt-1 max-w-xs text-xs text-white/30">New activity across the platform will appear here in real time.</p>
+        <div className="flex flex-col items-center rounded-2xl border border-border bg-card px-4 py-20 text-center">
+          <Bell className="mb-4 h-8 w-8 text-muted-foreground" />
+          <p className="text-sm font-medium text-muted-foreground">No notifications yet</p>
+          <p className="mt-1 max-w-xs text-xs text-muted-foreground">New activity across the platform will appear here in real time.</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -67,20 +67,20 @@ export default function AdminNotificationsView({ onNavigate }) {
                 }}
                 className={`w-full rounded-2xl border p-4 text-left transition-colors ${
                   notification.is_read
-                    ? 'border-white/[0.06] bg-[hsl(222,45%,14%)] hover:border-white/[0.13]'
-                    : 'border-teal-400/25 bg-[hsl(222,45%,16%)] hover:border-teal-300/45'
+                    ? 'border-border bg-card hover:border-accent/30'
+                    : 'border-teal-400/25 bg-card hover:border-teal-300/45'
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${notification.is_read ? 'bg-white/[0.06] text-white/35' : 'bg-teal-400/10 text-teal-300'}`}>
+                  <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${notification.is_read ? 'bg-muted text-muted-foreground' : 'bg-teal-400/10 text-teal-700'}`}>
                     <Icon className="h-4 w-4" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-3">
-                      <span className={`text-[10px] font-semibold uppercase tracking-wider ${notification.is_read ? 'text-white/35' : 'text-teal-300'}`}>{config.label}</span>
-                      <span className="shrink-0 text-[10px] text-white/30">{timeAgo(notification.created_at)}</span>
+                      <span className={`text-[10px] font-semibold uppercase tracking-wider ${notification.is_read ? 'text-muted-foreground' : 'text-teal-700'}`}>{config.label}</span>
+                      <span className="shrink-0 text-[10px] text-muted-foreground">{timeAgo(notification.created_at)}</span>
                     </div>
-                    <p className="mt-1 text-sm leading-relaxed text-white/75">{notification.message}</p>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground/80">{notification.message}</p>
                   </div>
                 </div>
               </button>

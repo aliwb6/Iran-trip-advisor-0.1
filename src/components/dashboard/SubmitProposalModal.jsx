@@ -55,12 +55,12 @@ function DetailRow({ icon: Icon, label, children }) {
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center gap-1.5">
-        <Icon className="w-3.5 h-3.5 text-teal-400/70 shrink-0" />
-        <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium">
+        <Icon className="w-3.5 h-3.5 text-teal-700/70 shrink-0" />
+        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
           {label}
         </span>
       </div>
-      <div className="text-sm text-white pl-5">{children}</div>
+      <div className="text-sm text-foreground pl-5">{children}</div>
     </div>
   );
 }
@@ -91,8 +91,8 @@ function TripDetailsPanel({ request, t }) {
   })();
 
   return (
-    <div className="proposal-trip-pane rounded-2xl bg-white/[0.04] border border-white/[0.08] p-5 mb-6">
-      <h3 className="text-[11px] font-semibold text-white/60 uppercase tracking-wider mb-4">
+    <div className="proposal-trip-pane rounded-2xl bg-card border border-border p-5 mb-6">
+      <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-4">
         {t('traveler_request_details')}
       </h3>
 
@@ -111,7 +111,7 @@ function TripDetailsPanel({ request, t }) {
             <span>
               {startFmt}{startFmt && endFmt ? ' → ' : ''}{endFmt}
               {duration && (
-                <span className="ml-2 text-white/50">({duration} days)</span>
+                <span className="ml-2 text-muted-foreground">({duration} days)</span>
               )}
             </span>
           </DetailRow>
@@ -121,7 +121,7 @@ function TripDetailsPanel({ request, t }) {
         {(request?.timings_flexible || hasValue(request?.arrival_time) || hasValue(request?.departure_time)) && (
           <DetailRow icon={Clock} label={t('arrival_departure')}>
             {request?.timings_flexible
-              ? <span className="text-white/60 italic">{t('flexible_timings')}</span>
+              ? <span className="text-muted-foreground italic">{t('flexible_timings')}</span>
               : `${request?.arrival_time || '—'} → ${request?.departure_time || '—'}`
             }
           </DetailRow>
@@ -130,7 +130,7 @@ function TripDetailsPanel({ request, t }) {
         {/* ROW 4 — Travelers */}
         {hasValue(travelersStr) && (
           <DetailRow icon={Users} label={t('travelers')}>
-            {travelersStr} <span className="text-white/55">({maleAdults} men, {femaleAdults} women)</span>
+            {travelersStr} <span className="text-muted-foreground">({maleAdults} men, {femaleAdults} women)</span>
           </DetailRow>
         )}
 
@@ -148,7 +148,7 @@ function TripDetailsPanel({ request, t }) {
               {request.holiday_types.map(h => (
                 <span
                   key={h}
-                  className="bg-teal-400/15 text-teal-400 px-2.5 py-0.5 rounded-full text-xs"
+                  className="bg-teal-400/15 text-teal-700 px-2.5 py-0.5 rounded-full text-xs"
                 >
                   {cap(h)}
                 </span>
@@ -171,7 +171,7 @@ function TripDetailsPanel({ request, t }) {
               {request.additional_services.map(s => (
                 <span
                   key={s}
-                  className="bg-white/[0.08] text-white/70 px-2.5 py-0.5 rounded-full text-xs"
+                  className="bg-muted text-foreground/80 px-2.5 py-0.5 rounded-full text-xs"
                 >
                   {cap(s)}
                 </span>
@@ -191,8 +191,8 @@ function TripDetailsPanel({ request, t }) {
         {hasValue(request?.requirements) && (
           <div className="col-span-1 md:col-span-2">
             <DetailRow icon={MessageSquare} label={t('travelers_requirements')}>
-              <div className="bg-white/[0.03] rounded-lg p-3 mt-1">
-                <p className="text-white/80 italic text-sm leading-relaxed">
+              <div className="bg-card rounded-lg p-3 mt-1">
+                <p className="text-foreground/80 italic text-sm leading-relaxed">
                   {request.requirements}
                 </p>
               </div>
@@ -218,7 +218,7 @@ function SegmentedToggle({ options, value, onChange }) {
           className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-all ${
             value === opt.value
               ? 'bg-[hsl(178,85%,32%)] text-white shadow'
-              : 'bg-white/[0.05] text-white/60 hover:bg-white/[0.1]'
+              : 'bg-card text-muted-foreground hover:bg-muted'
           }`}
         >
           {opt.label}
@@ -230,10 +230,10 @@ function SegmentedToggle({ options, value, onChange }) {
 
 function FieldLabel({ children, optional }) {
   return (
-    <p className="text-xs font-semibold text-white/70 uppercase tracking-wider mb-2">
+    <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider mb-2">
       {children}
       {optional && (
-        <span className="ml-1 text-white/30 normal-case tracking-normal font-normal">
+        <span className="ml-1 text-muted-foreground normal-case tracking-normal font-normal">
           (optional)
         </span>
       )}
@@ -244,7 +244,7 @@ function FieldLabel({ children, optional }) {
 function InlineError({ show, message: msg }) {
   if (!show) return null;
   return (
-    <p className="mt-1.5 text-xs text-red-400 flex items-center gap-1">
+    <p className="mt-1.5 text-xs text-red-700 flex items-center gap-1">
       <AlertTriangle className="w-3 h-3 shrink-0" />
       {msg}
     </p>
@@ -388,7 +388,7 @@ export default function SubmitProposalModal({
   ];
 
   const inputCls =
-    'w-full bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-2.5 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-[hsl(178,85%,50%)] transition-colors resize-none';
+    'w-full bg-card border border-border rounded-xl px-4 py-2.5 text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,50%)] transition-colors resize-none';
 
   const handleSubmit = async () => {
     setAttempted(true);
@@ -473,18 +473,18 @@ export default function SubmitProposalModal({
           transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
           className="proposal-workspace flex flex-col rounded-2xl overflow-hidden"
           style={{
-            background: 'hsl(222,55%,8%)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'hsl(var(--card))',
+            border: '1px solid hsl(var(--border))',
             maxHeight: '92vh',
           }}
         >
           {/* ── Header ── */}
           <div
             className="shrink-0 px-6 pt-6 pb-5"
-            style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ borderBottom: '1px solid hsl(var(--border))' }}
           >
             <DialogHeader>
-              <DialogTitle className="text-white text-lg font-bold">
+              <DialogTitle className="text-foreground text-lg font-bold">
                 {isAdminReview
                   ? 'Review & Edit Proposal'
                   : packageRequestKind === 'package_booking'
@@ -494,10 +494,10 @@ export default function SubmitProposalModal({
                     : t('submit_proposal')}
               </DialogTitle>
             </DialogHeader>
-            <p className="text-white/50 text-sm mt-1">{subtitle}</p>
+            <p className="text-muted-foreground text-sm mt-1">{subtitle}</p>
             {packageRequestKind && sourceTourTitle && (
-              <div className="mt-3 rounded-xl border border-teal-300/20 bg-teal-300/[0.07] px-3 py-2 text-xs leading-relaxed text-teal-100/80">
-                <span className="font-semibold text-teal-200">
+              <div className="mt-3 rounded-xl border border-teal-300/20 bg-teal-300/[0.07] px-3 py-2 text-xs leading-relaxed text-teal-700/80">
+                <span className="font-semibold text-teal-700">
                   {packageRequestKind === 'package_booking' ? 'Package booking offer' : 'Reference tour'}:
                 </span>{' '}
                 {sourceTourTitle}. {packageRequestKind === 'package_booking'
@@ -543,11 +543,11 @@ export default function SubmitProposalModal({
             <TripDetailsPanel request={request} t={t} />
 
             {/* PRICING */}
-            <div className="rounded-xl p-4 space-y-4" style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div className="rounded-xl p-4 space-y-4" style={{ border: '1px solid hsl(var(--border))' }}>
               <FieldLabel>{t('pricing')}</FieldLabel>
 
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="number"
                   min="0"
@@ -572,18 +572,18 @@ export default function SubmitProposalModal({
                 onChange={setPricePeriod}
               />
 
-              <div className="rounded-lg bg-white/[0.04] p-3 text-xs text-white/50 space-y-1">
+              <div className="rounded-lg bg-card p-3 text-xs text-muted-foreground space-y-1">
                 <p>
-                  Estimated booking total: <span className="font-semibold text-white">${estimate.totalEstimate.toFixed(2)}</span>
+                  Estimated booking total: <span className="font-semibold text-foreground">${estimate.totalEstimate.toFixed(2)}</span>
                   {' '}(${estimate.quotedUnitPrice.toFixed(2)} × {estimate.peopleMultiplier} traveler multiplier × {estimate.durationMultiplier} duration multiplier)
                 </p>
                 <p>
                   Estimated commission ({pctDisplay}%): ${estimate.commissionEstimate.toFixed(2)}
                 </p>
                 <p>
-                  Estimated payout: <span className="font-semibold text-[hsl(178,85%,55%)]">${estimate.payoutEstimate.toFixed(2)}</span>
+                  Estimated payout: <span className="font-semibold text-accent">${estimate.payoutEstimate.toFixed(2)}</span>
                 </p>
-                <p className="pt-1 text-[10px] text-white/35">
+                <p className="pt-1 text-[10px] text-muted-foreground">
                   Estimate only. The server calculates and snapshots the authoritative booking total.
                 </p>
               </div>
@@ -628,7 +628,7 @@ export default function SubmitProposalModal({
 
             {/* ── Transportation ── */}
             <div>
-              <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-3">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                 Transportation
               </p>
 
@@ -639,8 +639,8 @@ export default function SubmitProposalModal({
                   onClick={() => { setHasTransportation(true); }}
                   className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
                     hasTransportation
-                      ? 'bg-[hsl(178,85%,32%)]/20 border-[hsl(178,85%,45%)] text-[hsl(178,85%,70%)]'
-                      : 'bg-white/[0.04] border-white/15 text-white/50 hover:border-white/30'
+                      ? 'bg-[hsl(178,85%,32%)]/20 border-[hsl(178,85%,45%)] text-accent'
+                      : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                   }`}
                 >
                   ✓ Included
@@ -650,8 +650,8 @@ export default function SubmitProposalModal({
                   onClick={() => { setHasTransportation(false); setTransportationItems([]); setCustomTransport(''); }}
                   className={`px-4 py-2 rounded-xl text-sm font-medium border transition ${
                     !hasTransportation
-                      ? 'bg-red-500/10 border-red-400/40 text-red-300'
-                      : 'bg-white/[0.04] border-white/15 text-white/50 hover:border-white/30'
+                      ? 'bg-red-500/10 border-red-400/40 text-red-700'
+                      : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                   }`}
                 >
                   ✕ Not included
@@ -661,7 +661,7 @@ export default function SubmitProposalModal({
               {/* Vehicle type chips — only visible when hasTransportation is true */}
               {hasTransportation && (
                 <div>
-                  <p className="text-[11px] text-white/35 mb-2">Select vehicle type(s):</p>
+                  <p className="text-[11px] text-muted-foreground mb-2">Select vehicle type(s):</p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {TRANSPORT_OPTIONS.map(opt => {
                       const active = transportationItems.includes(opt);
@@ -672,8 +672,8 @@ export default function SubmitProposalModal({
                           onClick={() => toggleTransport(opt)}
                           className={`px-3 py-1.5 rounded-full text-xs font-medium border transition ${
                             active
-                              ? 'bg-[hsl(178,85%,32%)]/25 border-[hsl(178,85%,45%)] text-white'
-                              : 'bg-white/[0.04] border-white/15 text-white/50 hover:border-white/30 hover:text-white/80'
+                              ? 'bg-[hsl(178,85%,32%)]/25 border-[hsl(178,85%,45%)] text-foreground'
+                              : 'bg-card border-border text-muted-foreground hover:border-accent/30 hover:text-foreground/80'
                           }`}
                         >
                           {active ? '✓ ' : ''}{opt}
@@ -688,7 +688,7 @@ export default function SubmitProposalModal({
                           key={v}
                           type="button"
                           onClick={() => toggleTransport(v)}
-                          className="px-3 py-1.5 rounded-full text-xs font-medium border bg-[hsl(178,85%,32%)]/25 border-[hsl(178,85%,45%)] text-white"
+                          className="px-3 py-1.5 rounded-full text-xs font-medium border bg-[hsl(178,85%,32%)]/25 border-[hsl(178,85%,45%)] text-foreground"
                         >
                           {v} ✕
                         </button>
@@ -703,12 +703,12 @@ export default function SubmitProposalModal({
                       onChange={e => setCustomTransport(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTransport(); } }}
                       placeholder="Add other transport..."
-                      className="flex-1 px-3 py-2 rounded-xl bg-white/[0.05] border border-white/15 text-white text-sm placeholder:text-white/25 focus:outline-none focus:border-[hsl(178,85%,45%)] transition"
+                      className="flex-1 px-3 py-2 rounded-xl bg-card border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,45%)] transition"
                     />
                     <button
                       type="button"
                       onClick={addCustomTransport}
-                      className="px-4 py-2 rounded-xl border border-white/20 text-white/60 text-sm hover:border-[hsl(178,85%,45%)] hover:text-white transition whitespace-nowrap"
+                      className="px-4 py-2 rounded-xl border border-border text-muted-foreground text-sm hover:border-[hsl(178,85%,45%)] hover:text-foreground transition whitespace-nowrap"
                     >
                       Add
                     </button>
@@ -729,15 +729,15 @@ export default function SubmitProposalModal({
               />
               <InlineError show={attempted && !messageValid} message={t('message_required')} />
               <div className="flex items-start gap-1.5 mt-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
-                <p className="text-[11px] text-amber-400/80">{t('do_not_share_contact')}</p>
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
+                <p className="text-[11px] text-amber-700/80">{t('do_not_share_contact')}</p>
               </div>
             </div>
 
             {/* IMAGES */}
             <div>
               <FieldLabel optional>{t('image_urls_optional')}</FieldLabel>
-              <p className="text-[11px] text-white/30 mb-2">Paste one image URL per line</p>
+              <p className="text-[11px] text-muted-foreground mb-2">Paste one image URL per line</p>
               <textarea
                 rows={3}
                 value={imagesText}
@@ -745,14 +745,14 @@ export default function SubmitProposalModal({
                 placeholder="https://example.com/photo1.jpg"
                 className={inputCls}
               />
-              <button type="button" onClick={openImagePicker} disabled={uploadingImages} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/[0.04] px-3 py-2 text-xs font-medium text-white/70 transition hover:border-teal-300/50 hover:text-white disabled:cursor-wait disabled:opacity-70">
+              <button type="button" onClick={openImagePicker} disabled={uploadingImages} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-foreground/80 transition hover:border-teal-300/50 hover:text-foreground disabled:cursor-wait disabled:opacity-70">
                 {<IconSwap active={uploadingImages} a={<Upload className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
                 {uploadingImages ? 'Uploading images…' : 'Upload images from device'}
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleImagePickerChange} />
               {parseLines(imagesText).length > 0 && (
                 <div className="mt-3 grid grid-cols-4 gap-2">
-                  {parseLines(imagesText).map((src, index) => <img key={`${src}-${index}`} src={src} alt="" className="aspect-square w-full rounded-lg border border-white/10 object-cover" />)}
+                  {parseLines(imagesText).map((src, index) => <img key={`${src}-${index}`} src={src} alt="" className="aspect-square w-full rounded-lg border border-border object-cover" />)}
                 </div>
               )}
             </div>
@@ -762,13 +762,13 @@ export default function SubmitProposalModal({
           <div
             className="proposal-workspace__footer shrink-0 px-6 py-4 flex items-center gap-3"
             data-mobile-pane={mobilePane}
-            style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}
+            style={{ borderTop: '1px solid hsl(var(--border))' }}
           >
             <button
               type="button"
               onClick={onClose}
               disabled={submitting}
-              className="px-5 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:text-white hover:bg-white/[0.07] transition-colors disabled:opacity-40"
+              className="px-5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40"
             >
               Cancel
             </button>

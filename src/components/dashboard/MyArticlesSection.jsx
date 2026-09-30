@@ -18,9 +18,9 @@ export default function MyArticlesSection({ user }) {
   const pending   = articles.filter(a => a.status === 'pending').length;
   const rejected  = articles.filter(a => a.status === 'rejected').length;
   const statusLabels = {
-    approved: { label: t('article_status_published'), cls: 'bg-teal-500/20 text-teal-300 border-teal-500/30' },
-    pending:  { label: t('article_status_pending'), cls: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30' },
-    rejected: { label: t('article_status_rejected'), cls: 'bg-red-500/20 text-red-300 border-red-500/30' },
+    approved: { label: t('article_status_published'), cls: 'bg-teal-500/20 text-teal-700 border-teal-500/30' },
+    pending:  { label: t('article_status_pending'), cls: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30' },
+    rejected: { label: t('article_status_rejected'), cls: 'bg-red-500/20 text-red-700 border-red-500/30' },
   };
   const writingTips = [t('article_tip_1'), t('article_tip_2'), t('article_tip_3')];
   const articleText = (article, field) =>
@@ -39,13 +39,13 @@ export default function MyArticlesSection({ user }) {
     <div dir={dir} className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-          <PenLine className="w-5 h-5 text-teal-400" />
+        <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
+          <PenLine className="w-5 h-5 text-teal-700" />
           {t('article_section_title')}
         </h2>
         <button
           onClick={() => setShowEditor(v => !v)}
-          className="flex items-center gap-1.5 text-sm font-medium text-teal-400 hover:text-teal-300 transition-colors"
+          className="flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-700 transition-colors"
         >
           {showEditor ? t('article_close_form') : t('article_new')}
         </button>
@@ -64,14 +64,14 @@ export default function MyArticlesSection({ user }) {
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { label: t('article_stat_total'), value: total,     cls: 'text-white' },
-          { label: t('article_stat_published'), value: published, cls: 'text-teal-400' },
-          { label: t('article_stat_pending'), value: pending,   cls: 'text-yellow-400' },
-          { label: t('article_stat_rejected'), value: rejected,  cls: 'text-red-400' },
+          { label: t('article_stat_total'), value: total,     cls: 'text-foreground' },
+          { label: t('article_stat_published'), value: published, cls: 'text-teal-700' },
+          { label: t('article_stat_pending'), value: pending,   cls: 'text-yellow-700' },
+          { label: t('article_stat_rejected'), value: rejected,  cls: 'text-red-700' },
         ].map(stat => (
-          <div key={stat.label} className="bg-white/[0.04] border border-white/[0.07] rounded-xl p-4 text-center">
+          <div key={stat.label} className="bg-card border border-border rounded-xl p-4 text-center">
             <p className={`text-2xl font-bold ${stat.cls}`}>{stat.value}</p>
-            <p className="text-xs text-white/50 mt-1">{stat.label}</p>
+            <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
           </div>
         ))}
       </div>
@@ -82,7 +82,7 @@ export default function MyArticlesSection({ user }) {
           <BreathingGlow label="Loading articles" />
         </div>
       ) : articles.length === 0 ? (
-        <div className="text-center py-16 text-white/40">
+        <div className="text-center py-16 text-muted-foreground">
           <PenLine className="w-10 h-10 mx-auto mb-3 opacity-30" />
           <p>{t('article_empty_desc')}</p>
         </div>
@@ -95,18 +95,18 @@ export default function MyArticlesSection({ user }) {
             return (
               <div
                 key={article.id}
-                className="flex gap-4 bg-white/[0.04] border border-white/[0.07] rounded-xl p-4"
+                className="flex gap-4 bg-card border border-border rounded-xl p-4"
               >
                 {/* Thumbnail */}
                 {article.image_url ? (
                   <img decoding="async" loading="lazy"
                     src={article.image_url}
                     alt=""
-                    className="w-20 h-16 object-cover rounded-lg shrink-0 border border-white/10"
+                    className="w-20 h-16 object-cover rounded-lg shrink-0 border border-border"
                     onError={(e) => { e.currentTarget.style.display = 'none'; }}
                   />
                 ) : (
-                  <div className="w-20 h-16 rounded-lg bg-white/[0.06] shrink-0 flex items-center justify-center text-white/20 border border-white/10">
+                  <div className="w-20 h-16 rounded-lg bg-muted shrink-0 flex items-center justify-center text-muted-foreground border border-border">
                     <PenLine className="w-5 h-5" />
                   </div>
                 )}
@@ -114,21 +114,21 @@ export default function MyArticlesSection({ user }) {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start gap-2 flex-wrap">
-                    <p className="text-sm font-medium text-white truncate flex-1">{title}</p>
+                    <p className="text-sm font-medium text-foreground truncate flex-1">{title}</p>
                     {article.is_featured && (
-                      <Star className="w-3.5 h-3.5 text-yellow-400 shrink-0 fill-yellow-400 mt-0.5" />
+                      <Star className="w-3.5 h-3.5 text-yellow-700 shrink-0 fill-yellow-400 mt-0.5" />
                     )}
                     <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium shrink-0 ${s.cls}`}>
                       {s.label}
                     </span>
                   </div>
                   {excerpt && (
-                    <p className="text-xs text-white/50 mt-1 line-clamp-2">{excerpt}</p>
+                    <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{excerpt}</p>
                   )}
                   {article.status === 'rejected' && article.admin_note && (
-                    <p className="text-xs text-red-400 mt-1">{t('article_rejected_reason')}{article.admin_note}</p>
+                    <p className="text-xs text-red-700 mt-1">{t('article_rejected_reason')}{article.admin_note}</p>
                   )}
-                  <p className="text-[10px] text-white/30 mt-2">
+                  <p className="text-[10px] text-muted-foreground mt-2">
                     {new Date(article.created_at).toLocaleDateString(dateLocale)}
                   </p>
                 </div>
@@ -137,7 +137,7 @@ export default function MyArticlesSection({ user }) {
                 {article.status === 'pending' && (
                   <button
                     onClick={() => handleDelete(article.id)}
-                    className="shrink-0 p-2 text-white/30 hover:text-red-400 transition-colors rounded-lg hover:bg-red-500/10"
+                    className="shrink-0 p-2 text-muted-foreground hover:text-red-700 transition-colors rounded-lg hover:bg-red-500/10"
                     title={t('article_delete_confirm')}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -150,15 +150,15 @@ export default function MyArticlesSection({ user }) {
       )}
 
       {/* Writing tips */}
-      <div className="bg-white/[0.03] border border-white/[0.07] rounded-xl p-5">
-        <p className="text-xs font-semibold text-teal-400 mb-3 flex items-center gap-1.5">
+      <div className="bg-card border border-border rounded-xl p-5">
+        <p className="text-xs font-semibold text-teal-700 mb-3 flex items-center gap-1.5">
           <ChevronRight className="w-3.5 h-3.5" />
           {t('article_writing_tips_title')}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {writingTips.map((tip, i) => (
-            <div key={i} className="flex items-start gap-2 text-xs text-white/50">
-              <span className="text-teal-500 shrink-0 mt-0.5">◆</span>
+            <div key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
+              <span className="text-teal-700 shrink-0 mt-0.5">◆</span>
               {tip}
             </div>
           ))}
