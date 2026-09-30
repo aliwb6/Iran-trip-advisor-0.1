@@ -1,3 +1,4 @@
+import { BentoDashboardMotion, BentoSidebarIndicator, BentoDashboardContent } from '@/components/dashboard/BentoDashboardMotion';
 import IconSwap from '@/components/ui/IconSwap';
 import { TransitionSurface } from '@/components/ui/TransitionSurface';
 import {
@@ -274,7 +275,7 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
   };
 
   return (
-    <aside className="w-[190px] flex-shrink-0 h-screen sticky top-0 bg-[hsl(222,55%,8%)] border-r border-white/[0.07] flex flex-col overflow-y-auto">
+    <aside className="bento-dashboard-sidebar w-[190px] flex-shrink-0 h-screen sticky top-0 bg-[hsl(222,55%,8%)] border-r border-white/[0.07] flex flex-col overflow-y-auto">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/[0.07]">
         <Link to="/" className="flex items-center gap-2.5 group">
@@ -315,7 +316,8 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
               }}
               disabled={isDisabled}
               title={isDisabled ? t('profile_completion_required_for_tour') : ''}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium transition-all duration-150 group ${
+              aria-current={isActive(item.id) ? 'page' : undefined}
+              className={`bento-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium transition-all duration-150 group ${
                 isDisabled
                   ? 'text-white/25 cursor-not-allowed opacity-50'
                   : isActive(item.id)
@@ -323,12 +325,13 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
                   : 'text-white/55 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <span className="flex items-center gap-2.5">
+              <BentoSidebarIndicator active={isActive(item.id) && !isDisabled} />
+              <span className="relative z-10 flex items-center gap-2.5">
                 <item.Icon className="w-3.5 h-3.5 flex-shrink-0" />
                 {NAV_LABELS[item.id] || item.label}
               </span>
               {item.sub && (
-                <IconSwap active={profileExpanded} a={<ChevronRight className="w-3 h-3 text-white/30" />} b={<ChevronDown className="w-3 h-3 text-white/30" />} />
+                <span className="relative z-10"><IconSwap active={profileExpanded} a={<ChevronRight className="w-3 h-3 text-white/30" />} b={<ChevronDown className="w-3 h-3 text-white/30" />} /></span>
               )}
             </button>
 
@@ -346,6 +349,7 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
                     <button
                       key={sub.id + sub.label}
                       onClick={() => onNavigate(sub.id)}
+                      aria-current={activeId === sub.id ? 'page' : undefined}
                       className={`w-full flex items-center gap-2 ps-9 pe-3 py-1.5 text-xs rounded-xl transition-all duration-150 ${
                         activeId === sub.id
                           ? 'text-[hsl(178,85%,50%)]'
@@ -2541,7 +2545,9 @@ export default function Dashboard() {
   const [tours, setTours] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [editingTour, setEditingTour] = useState(null);
+  // Editing drafts belong to their section, so navigation does not discard them.
+  const [editingTours, setEditingTours] = useState({});
+  const setEditingTour = (tour) => setEditingTours(previous => ({ ...previous, [section]: tour }));
   const [profileExpanded, setProfileExpanded] = useState(false);
 
   useEffect(() => {
@@ -2584,7 +2590,6 @@ export default function Dashboard() {
       toast.error(_t('profile_completion_required_for_tour'));
       return;
     }
-    setEditingTour(null);
     navigate(sec === 'home' ? '/dashboard' : `/dashboard/${sec}`);
   };
 
@@ -2613,8 +2618,9 @@ export default function Dashboard() {
     navigate('/');
   };
 
-  const renderContent = () => {
-    if (!editingTour && section === 'add-tour' && !canAddTour) {
+  const renderContent = (viewSection) => {
+    const sectionEditingTour = editingTours[viewSection] || null;
+    if (!sectionEditingTour && viewSection === 'add-tour' && !canAddTour) {
       return (
         <EmptyState
           Icon={AlertTriangle}
@@ -2623,17 +2629,17 @@ export default function Dashboard() {
         />
       );
     }
-    if (editingTour || section === 'add-tour') {
+    if (sectionEditingTour || viewSection === 'add-tour') {
       return (
         <TourForm
-          key={editingTour?.id || 'new'}
-          editing={editingTour}
+          key={sectionEditingTour?.id || 'new'}
+          editing={sectionEditingTour}
           onDone={handleTourSaved}
           onCancel={() => { setEditingTour(null); nav('my-tours'); }}
         />
       );
     }
-    switch (section) {
+    switch (viewSection) {
       case 'home':
         return (
           <HomeView
@@ -2671,7 +2677,7 @@ export default function Dashboard() {
       case 'articles':
         return <MyArticlesSection user={{ id: authUser?.id, profile }} />;
       default:
-        return <EmptySection section={section} />;
+        return <EmptySection section={viewSection} />;
     }
   };
 
@@ -2687,7 +2693,8 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(222,50%,10%)] flex" style={{ fontFamily: 'inherit' }}>
+    <BentoDashboardMotion>
+    <div className="bento-dashboard min-h-screen bg-[hsl(222,50%,10%)] flex" style={{ fontFamily: 'inherit' }}>
       <Sidebar
         section={section}
         onNavigate={nav}
@@ -2700,8 +2707,8 @@ export default function Dashboard() {
       />
 
       {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-6 py-8">
+      <main className="bento-dashboard-main flex-1 overflow-y-auto">
+        <div className="bento-dashboard-surface max-w-5xl mx-auto px-6 py-8">
 
           {/* Profile completion banner */}
           {profileIncomplete && (
@@ -2738,16 +2745,10 @@ export default function Dashboard() {
             </div>
           )}
 
-          <motion.div
-            key={section + (editingTour?.id || '')}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {renderContent()}
-          </motion.div>
+          <BentoDashboardContent section={section} renderSection={renderContent} />
         </div>
       </main>
     </div>
+    </BentoDashboardMotion>
   );
 }

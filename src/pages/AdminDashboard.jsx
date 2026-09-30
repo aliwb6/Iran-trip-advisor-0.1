@@ -1,3 +1,4 @@
+import { BentoDashboardMotion, BentoSidebarIndicator, BentoDashboardContent } from '@/components/dashboard/BentoDashboardMotion';
 import IconSwap from '@/components/ui/IconSwap';
 import { TransitionSurface, TransitionPresence } from '@/components/ui/TransitionSurface';
 import {
@@ -6,7 +7,7 @@ import {
 import { Link,
   useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabaseClient';
-import { motion } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   Clock,
@@ -225,7 +226,7 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
   };
 
   return (
-    <aside className="w-[210px] flex-shrink-0 h-screen sticky top-0 bg-[hsl(222,55%,8%)] border-r border-white/[0.07] flex flex-col overflow-y-auto">
+    <aside className="bento-dashboard-sidebar w-[210px] flex-shrink-0 h-screen sticky top-0 bg-[hsl(222,55%,8%)] border-r border-white/[0.07] flex flex-col overflow-y-auto">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/[0.07]">
         <Link to="/" className="flex items-center gap-2.5 group">
@@ -259,18 +260,20 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
             <button
               key={item.id}
               onClick={() => onNavigate(item.id)}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium transition-all duration-150 ${
+              aria-current={active ? 'page' : undefined}
+              className={`bento-nav-item w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs font-medium transition-all duration-150 ${
                 active
                   ? 'bg-[hsl(178,85%,32%)]/20 text-[hsl(178,85%,50%)]'
                   : 'text-white/55 hover:text-white hover:bg-white/[0.06]'
               }`}
             >
-              <span className="flex items-center gap-2.5">
+              <BentoSidebarIndicator active={active} />
+              <span className="relative z-10 flex items-center gap-2.5">
                 <item.Icon className="w-3.5 h-3.5 flex-shrink-0" />
                 {item.label}
               </span>
               {badge !== null && badge > 0 && (
-                <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
+                <span className={`relative z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
                   active ? 'bg-[hsl(178,85%,32%)]/30 text-[hsl(178,85%,60%)]' : 'bg-white/10 text-white/50'
                 }`}>
                   {badge}
@@ -1896,8 +1899,8 @@ export default function AdminDashboard() {
   }
 
   // ── Render ──
-  const renderSection = () => {
-    switch (section) {
+  const renderSection = (viewSection) => {
+    switch (viewSection) {
       case 'overview':
         return (
           <OverviewView
@@ -1974,7 +1977,8 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[hsl(222,55%,8%)] flex">
+    <BentoDashboardMotion>
+    <div className="bento-dashboard min-h-screen bg-[hsl(222,55%,8%)] flex">
       <Sidebar
         section={section}
         onNavigate={setSection}
@@ -1983,17 +1987,10 @@ export default function AdminDashboard() {
         onLogout={handleLogout}
       />
 
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-5xl mx-auto px-6 py-8">
+      <main className="bento-dashboard-main flex-1 overflow-y-auto">
+        <div className="bento-dashboard-surface max-w-5xl mx-auto px-6 py-8">
           <ErrorBox message={error} onClose={() => setError('')} />
-          <motion.div
-            key={section}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          >
-            {renderSection()}
-          </motion.div>
+          <BentoDashboardContent section={section} renderSection={renderSection} />
         </div>
       </main>
 
@@ -2024,5 +2021,6 @@ export default function AdminDashboard() {
         />
       )}
     </div>
+    </BentoDashboardMotion>
   );
 }
