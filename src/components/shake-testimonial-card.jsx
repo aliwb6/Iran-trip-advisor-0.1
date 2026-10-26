@@ -12,7 +12,6 @@ const SETTLE_MS = 450;
 export default function ShakeTestimonial({ testimonials, lang, t }) {
   const [cards, setCards] = useState(testimonials);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
   const [hasFocus, setHasFocus] = useState(false);
   const initialReducedMotion = useReducedMotion();
   const [reduceMotion, setReduceMotion] = useState(initialReducedMotion);
@@ -64,13 +63,13 @@ export default function ShakeTestimonial({ testimonials, lang, t }) {
   }, [reduceMotion]);
 
   useEffect(() => {
-    if (reduceMotion || isPaused || hasFocus) return undefined;
+    if (reduceMotion || hasFocus) return undefined;
     lastAdvance.current = Date.now();
     const interval = setInterval(() => {
       if (!document.hidden && Date.now() - lastAdvance.current >= AUTOPLAY_MS) handleNext();
     }, AUTOPLAY_MS);
     return () => clearInterval(interval);
-  }, [handleNext, reduceMotion, isPaused, hasFocus]);
+  }, [handleNext, reduceMotion, hasFocus]);
 
   return (
     <div
@@ -144,13 +143,6 @@ export default function ShakeTestimonial({ testimonials, lang, t }) {
           aria-disabled={isAnimating}
           className="absolute inset-0 z-10 cursor-pointer rounded-[2rem] outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-4 sm:rounded-[3rem]"
         />
-      </div>
-      <div className="mt-14 flex justify-center">
-        {!reduceMotion && (
-          <button type="button" onClick={() => setIsPaused((paused) => !paused)} aria-pressed={isPaused} className="rounded-lg px-3 py-2 font-body text-xs text-muted-foreground outline-none focus-visible:ring-2 focus-visible:ring-accent">
-            {t(isPaused ? 'testimonials_resume' : 'testimonials_pause')}
-          </button>
-        )}
       </div>
     </div>
   );

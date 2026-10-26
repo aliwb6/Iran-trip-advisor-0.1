@@ -15,6 +15,7 @@ import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { selectPublicTours } from '@/lib/publicTours';
 import { avatarFor } from '@/lib/avatar';
 import TripRequestForm from '@/components/profile/TripRequestForm';
+import { attractionImages } from '@/data/attractionImages';
 
 // ── City catalog ─────────────────────────────────────────────────────────────
 // Keys are the lowercase URL slugs. Each entry carries English copy from the
@@ -419,6 +420,7 @@ export default function CityPage() {
 
             {tab === 'attractions' && (
               <AttractionsGrid
+                citySlug={slug}
                 city={city}
                 tx={tx}
                 onRequest={requestAttractionTour}
@@ -601,7 +603,10 @@ function buildAttractionRequest(city, attraction, lang) {
   };
 }
 
-function AttractionsGrid({ city, tx, onRequest }) {
+function AttractionsGrid({ citySlug, city, tx, onRequest }) {
+  const { lang } = useI18n();
+  const photos = attractionImages[citySlug] || {};
+  const creditsLabel = lang === 'fa' ? 'منابع عکس‌ها' : lang === 'ar' ? 'مصادر الصور' : 'Photo credits';
   return (
     <section>
       <div className="mb-8 max-w-2xl">
@@ -624,7 +629,10 @@ function AttractionsGrid({ city, tx, onRequest }) {
             className="group relative isolate min-h-[290px] overflow-hidden rounded-3xl border border-white/10 bg-navy shadow-sm transition duration-500 hover:-translate-y-1 hover:shadow-xl"
           >
             <img
-              src={city.image}
+              src={photos[attraction]?.src || city.image}
+              srcSet={photos[attraction]?.srcSet}
+              sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+              style={{ objectPosition: photos[attraction]?.position || 'center' }}
               alt=""
               loading="lazy"
               decoding="async"
@@ -660,6 +668,28 @@ function AttractionsGrid({ city, tx, onRequest }) {
           </article>
         ))}
       </div>
+      {Object.keys(photos).length > 0 && (
+        <details className="mt-6 text-xs text-muted-foreground">
+          <summary className="cursor-pointer">{creditsLabel}</summary>
+          <ul className="mt-3 space-y-2">
+            {city.highlights.filter((attraction) => photos[attraction]).map((attraction) => {
+              const photo = photos[attraction];
+              return (
+                <li key={attraction}>
+                  <a href={photo.source} target="_blank" rel="noopener noreferrer" className="underline">
+                    {photo.caption || attraction} — {photo.author}
+                  </a>
+                  {' · '}
+                  <a href={photo.licenseUrl} target="_blank" rel="noopener noreferrer" className="underline">
+                    {photo.license}
+                  </a>
+                  {' · '}{lang === 'fa' ? 'تغییر اندازه، تبدیل به WebP و برش نمایشی' : lang === 'ar' ? 'تغيير الحجم والتحويل إلى WebP واقتصاص العرض' : 'Resized, converted to WebP and cropped for display'}
+                </li>
+              );
+            })}
+          </ul>
+        </details>
+      )}
     </section>
   );
 }

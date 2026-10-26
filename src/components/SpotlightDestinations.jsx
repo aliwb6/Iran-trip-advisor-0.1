@@ -164,6 +164,10 @@ export default function SpotlightDestinations() {
   }, [destinations.length]);
 
   const lastIndex = Math.max(0, destinations.length - 1);
+  const isRtl = dir === 'rtl';
+  // Reverse the visual order so advancing moves the track toward the right in RTL.
+  const orderedDestinations = isRtl ? [...destinations].reverse() : destinations;
+  const activeVisualIndex = isRtl ? lastIndex - activeIndex : activeIndex;
   const canGoPrevious = activeIndex > 0;
   const canGoNext = activeIndex < lastIndex;
   const goPrevious = () => setActiveIndex((current) => Math.max(0, current - 1));
@@ -200,18 +204,18 @@ export default function SpotlightDestinations() {
 
   const handleDragEnd = (_, info) => {
     const swipe = info.offset.x + info.velocity.x * 0.12;
-    if (swipe < -45) goNext();
-    if (swipe > 45) goPrevious();
+    if (swipe < -45) isRtl ? goPrevious() : goNext();
+    if (swipe > 45) isRtl ? goNext() : goPrevious();
   };
 
   const handleCarouselKeyDown = (event) => {
     if (event.key === 'ArrowLeft') {
       event.preventDefault();
-      dir === 'rtl' ? goNext() : goPrevious();
+      goPrevious();
     }
     if (event.key === 'ArrowRight') {
       event.preventDefault();
-      dir === 'rtl' ? goPrevious() : goNext();
+      goNext();
     }
   };
 
@@ -252,13 +256,17 @@ export default function SpotlightDestinations() {
           aria-roledescription="carousel"
           aria-label={heading.title}
         >
+          {/* Keep the animated track in one physical coordinate system in every language. */}
           <div
+            dir="ltr"
             className="relative flex touch-pan-y items-center justify-start overflow-visible"
             style={{ width: layout.slideWidth, height: layout.cardHeight + 52 }}
           >
             <motion.div
+              key={dir}
+              initial={false}
               className="flex w-fit items-center"
-              animate={{ x: -activeIndex * layout.slideWidth }}
+              animate={{ x: -activeVisualIndex * layout.slideWidth }}
               transition={reduceMotion ? { duration: 0 } : cardSpring}
               drag={destinations.length > 1 ? 'x' : false}
               dragConstraints={{ left: 0, right: 0 }}
@@ -267,9 +275,10 @@ export default function SpotlightDestinations() {
               onDragStart={() => setIsInteracting(true)}
               onDragEnd={handleDragEnd}
             >
-              {destinations.map((city, index) => {
+              {orderedDestinations.map((city, visualIndex) => {
+                const index = isRtl ? lastIndex - visualIndex : visualIndex;
                 const isActive = activeIndex === index;
-                const distance = index - activeIndex;
+                const distance = visualIndex - activeVisualIndex;
                 const visibleDistance = clamp(distance, -3, 3);
                 const cityName = city.name[lang] || city.name.en;
                 const cityCategory = city.category[lang] || city.category.en;
@@ -292,6 +301,7 @@ export default function SpotlightDestinations() {
                     aria-hidden={Math.abs(distance) > 2}
                   >
                     <Link
+                      dir={dir}
                       to={`/destinations/${city.slug}`}
                       onClick={(event) => handleCardClick(event, index)}
                       tabIndex={Math.abs(distance) <= 2 ? 0 : -1}
@@ -339,10 +349,10 @@ export default function SpotlightDestinations() {
           <div className="z-30 mt-2 flex items-center justify-center gap-2 rounded-full border border-border/60 bg-card/85 px-2 py-1.5 text-muted-foreground shadow-lg backdrop-blur-md sm:mt-4">
             <button
               type="button"
-              onClick={goPrevious}
-              disabled={!canGoPrevious}
+              onClick={isRtl ? goNext : goPrevious}
+              disabled={isRtl ? !canGoNext : !canGoPrevious}
               className="flex h-8 w-8 items-center justify-center rounded-full border-0 bg-transparent transition-colors hover:bg-gold/10 hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
-              aria-label={heading.previous}
+              aria-label={isRtl ? heading.next : heading.previous}
             >
               {<IconSwap active={dir === 'rtl'} a={<ChevronLeft className="h-4 w-4" />} b={<ChevronRight className="h-4 w-4" />} />}
             </button>
@@ -362,10 +372,10 @@ export default function SpotlightDestinations() {
 
             <button
               type="button"
-              onClick={goNext}
-              disabled={!canGoNext}
+              onClick={isRtl ? goPrevious : goNext}
+              disabled={isRtl ? !canGoPrevious : !canGoNext}
               className="flex h-8 w-8 items-center justify-center rounded-full border-0 bg-transparent transition-colors hover:bg-gold/10 hover:text-gold disabled:cursor-not-allowed disabled:opacity-30"
-              aria-label={heading.next}
+              aria-label={isRtl ? heading.previous : heading.next}
             >
               {<IconSwap active={dir === 'rtl'} a={<ChevronRight className="h-4 w-4" />} b={<ChevronLeft className="h-4 w-4" />} />}
             </button>
