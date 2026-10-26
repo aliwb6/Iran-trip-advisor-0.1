@@ -12,6 +12,9 @@ import { supabase } from '../supabaseClient';
 import { getAvailableTripRequests } from '../api/tripRequests';
 import SubmitProposalModal from '@/components/dashboard/SubmitProposalModal';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n.jsx';
+import { localize, localizeTripOption } from '@/lib/localize';
+import { iranianDestinations } from '@/data/iranianCities';
 
 const INTEREST_COLORS = {
   Architecture: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300',
@@ -29,9 +32,10 @@ const INTEREST_COLORS = {
 const ALL_INTERESTS = Object.keys(INTEREST_COLORS);
 const BUDGET_OPTIONS = ['', 'Budget', 'Mid-range', 'Luxury'];
 
-const destinationLabel = (destination) => {
-  if (Array.isArray(destination)) return destination.filter(Boolean).join(', ');
-  return destination || 'Iran';
+const cityLabels = Object.fromEntries(iranianDestinations.map(city => [city.en, city]));
+const destinationLabel = (destination, lang = 'en') => {
+  const values = Array.isArray(destination) ? destination.filter(Boolean) : destination ? [destination] : [];
+  return values.length ? values.map(city => cityLabels[city]?.[lang] || city).join(lang === 'en' ? ', ' : '، ') : localize(lang, 'Iran', 'ایران', 'إيران');
 };
 
 const requestInterests = (trip) => (
@@ -46,6 +50,7 @@ const requestPeople = (trip) => {
 };
 
 function SlotIndicator({ proposalsCount, maxProposals }) {
+  const { lang } = useI18n();
   const max = Math.max(1, Number(maxProposals) || 5);
   const taken = Math.max(0, Math.min(Number(proposalsCount) || 0, max));
   const available = Math.max(0, max - taken);
@@ -60,30 +65,32 @@ function SlotIndicator({ proposalsCount, maxProposals }) {
       <span className={`font-body text-xs font-medium whitespace-nowrap ${
         nearlyFull ? 'text-yellow-600 dark:text-yellow-400' : 'text-emerald-600 dark:text-emerald-400'
       }`}>
-        {available} spot{available !== 1 ? 's' : ''} left
+        {localize(lang, `${available} spot${available !== 1 ? 's' : ''} left`, `${available} جای خالی`, `المقاعد المتبقية: ${available}`)}
       </span>
     </div>
   );
 }
 
 function TripRequestCard({ trip, guideId, onAccepted }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [expanded, setExpanded] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
   const startDate = trip.start_date
-    ? new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    ? new Date(trip.start_date).toLocaleDateString(lang === 'fa' ? 'fa-IR-u-ca-gregory' : lang === 'ar' ? 'ar-u-ca-gregory' : 'en-US', { month: 'short', day: 'numeric' })
     : null;
   const endDate = trip.end_date
-    ? new Date(trip.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(trip.end_date).toLocaleDateString(lang === 'fa' ? 'fa-IR-u-ca-gregory' : lang === 'ar' ? 'ar-u-ca-gregory' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
-  const dateLabel = startDate && endDate ? `${startDate} – ${endDate}` : startDate || endDate || 'Dates flexible';
+  const dateLabel = startDate && endDate ? `${startDate} – ${endDate}` : startDate || endDate || l('Dates flexible', 'تاریخ‌ها انعطاف‌پذیرند', 'المواعيد مرنة');
   const interests = requestInterests(trip);
   const people = requestPeople(trip);
   const maxProposals = Math.max(1, Number(trip.max_proposals) || 5);
   const proposalsCount = Math.max(0, Number(trip.proposals_count) || 0);
   const isFull = proposalsCount >= maxProposals;
 
-  const travelerName = trip.traveler?.full_name?.split(' ')[0] || 'Traveler';
+  const travelerName = trip.traveler?.full_name?.split(' ')[0] || l('Traveler', 'مسافر', 'مسافر');
   const avatarUrl = trip.traveler?.avatar_url;
   const initials = (trip.traveler?.full_name || 'T')
     .split(' ')
@@ -104,11 +111,11 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-heading text-base font-semibold text-foreground leading-snug truncate">
-              {trip.title || 'Custom trip request'}
+              {trip.title || l('Custom trip request', 'درخواست سفر اختصاصی', 'طلب رحلة مخصّصة')}
             </h3>
             <div className="flex items-center gap-1.5 mt-1 text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 shrink-0 text-gold" />
-              <span className="font-body text-sm truncate">{destinationLabel(trip.destination)}</span>
+              <span className="font-body text-sm truncate">{destinationLabel(trip.destination, lang)}</span>
             </div>
           </div>
 
@@ -131,12 +138,12 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
           </span>
           <span className="flex items-center gap-1">
             <Users className="w-3.5 h-3.5 shrink-0" />
-            {people} {people === 1 ? 'person' : 'people'}
+            {l(`${people} ${people === 1 ? 'person' : 'people'}`, `${people} نفر`, `عدد المسافرين: ${people}`)}
           </span>
           {trip.budget_tier && (
             <span className="flex items-center gap-1">
               <Wallet className="w-3.5 h-3.5 shrink-0" />
-              {trip.budget_tier}
+              {localizeTripOption(trip.budget_tier, lang)}
             </span>
           )}
         </div>
@@ -150,7 +157,7 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
                   INTEREST_COLORS[interest] || 'bg-muted text-muted-foreground'
                 }`}
               >
-                {interest}
+                {localizeTripOption(interest, lang)}
               </span>
             ))}
           </div>
@@ -167,7 +174,7 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
             disabled={isFull}
             className="flex-1 bg-accent hover:bg-accent/90 text-white font-body font-semibold rounded-xl h-9 disabled:opacity-50"
           >
-            {isFull ? 'Proposal limit reached' : 'Accept & Propose'}
+            {isFull ? l('Proposal limit reached', 'ظرفیت پیشنهادها تکمیل شده است', 'اكتمل عدد العروض') : l('Accept & Propose', 'پذیرش و ارسال پیشنهاد', 'قبول الطلب وتقديم عرض')}
           </Button>
 
           {trip.requirements && (
@@ -177,7 +184,7 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
               onClick={() => setExpanded(value => !value)}
               className="font-body text-xs rounded-xl h-9 border-border/60"
             >
-              View Details
+              {l('View Details', 'مشاهدهٔ جزئیات', 'عرض التفاصيل')}
               {<IconSwap active={expanded} a={<ChevronDown className="w-3.5 h-3.5 ml-1" />} b={<ChevronUp className="w-3.5 h-3.5 ml-1" />} />}
             </Button>
           )}
@@ -195,7 +202,7 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
           >
             <div className="px-5 pb-5 pt-0 border-t border-border/30">
               <p className="font-body text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 pt-4">
-                Special Requirements
+                {l('Special Requirements', 'درخواست‌های ویژه', 'متطلبات خاصة')}
               </p>
               <p className="font-body text-sm text-foreground/80 leading-relaxed">
                 {trip.requirements}
@@ -217,14 +224,17 @@ function TripRequestCard({ trip, guideId, onAccepted }) {
 }
 
 function LoadingSkeleton() {
+  const { lang } = useI18n();
   return (
     <div className="flex min-h-[18rem] items-center justify-center">
-      <BreathingGlow label="Loading jobs" />
+      <BreathingGlow label={localize(lang, 'Loading jobs', 'در حال بارگذاری درخواست‌ها', 'جارٍ تحميل الطلبات')} />
     </div>
   );
 }
 
 export default function FindJobs() {
+  const { lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const { user, profile, isAuthenticated, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
 
@@ -253,11 +263,11 @@ export default function FindJobs() {
       const data = await getAvailableTripRequests(user.id);
       setTrips(data || []);
     } catch (err) {
-      setError(err.message || 'Failed to load trip requests.');
+      setError(l('Failed to load trip requests.', 'بارگذاری درخواست‌های سفر ممکن نشد.', 'تعذّر تحميل طلبات الرحلات.'));
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, lang]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -277,7 +287,7 @@ export default function FindJobs() {
   }, [user?.id, loadRequests]);
 
   const filtered = trips.filter(trip => {
-    const destinations = destinationLabel(trip.destination).toLowerCase();
+    const destinations = [destinationLabel(trip.destination, 'en'), destinationLabel(trip.destination, 'fa'), destinationLabel(trip.destination, 'ar')].join(' ').toLowerCase();
     const interests = requestInterests(trip);
     if (destFilter && !destinations.includes(destFilter.toLowerCase())) return false;
     if (interestFilter.length > 0 && !interestFilter.every(item => interests.includes(item))) return false;
@@ -310,18 +320,18 @@ export default function FindJobs() {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-20 pb-16">
+    <div dir={dir} className="min-h-screen bg-background pt-20 pb-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center">
               <Briefcase className="w-4 h-4 text-accent" />
             </div>
-            <p className="font-body text-xs uppercase tracking-widest text-gold">Guide Portal</p>
+            <p className="font-body text-xs uppercase tracking-widest text-gold">{l('Guide Portal', 'پنل راهنما', 'بوابة المرشدين')}</p>
           </div>
-          <h1 className="font-heading text-3xl font-bold text-foreground">Find Jobs</h1>
+          <h1 className="font-heading text-3xl font-bold text-foreground">{l('Find Jobs', 'یافتن درخواست‌های سفر', 'ابحث عن طلبات الرحلات')}</h1>
           <p className="font-body text-muted-foreground mt-1.5">
-            Review trip requests that have been matched to your services. Each request closes when its proposal limit is reached.
+            {l('Review trip requests that have been matched to your services. Each request closes when its proposal limit is reached.', 'درخواست‌های سفری را ببینید که با خدمات شما هماهنگ‌اند. هر درخواست پس از تکمیل ظرفیت پیشنهادها بسته می‌شود.', 'اطّلع على طلبات الرحلات المناسبة لخدماتك. يُغلق كل طلب عند اكتمال عدد العروض المسموح به.')}
           </p>
         </div>
 
@@ -331,7 +341,7 @@ export default function FindJobs() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
                 type="text"
-                placeholder="Filter by destination…"
+                placeholder={l('Filter by destination…', 'جست‌وجو بر اساس مقصد…', 'البحث حسب الوجهة…')}
                 value={destFilter}
                 onChange={event => setDestFilter(event.target.value)}
                 className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border/60 bg-background font-body text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition"
@@ -344,7 +354,7 @@ export default function FindJobs() {
               className="px-3 py-2.5 rounded-xl border border-border/60 bg-background font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/30 focus:border-accent/50 transition min-w-[140px]"
             >
               {BUDGET_OPTIONS.map(option => (
-                <option key={option} value={option}>{option || 'Any budget'}</option>
+                <option key={option} value={option}>{option ? localizeTripOption(option, lang) : l('Any budget', 'هر بودجه‌ای', 'أي ميزانية')}</option>
               ))}
             </select>
 
@@ -354,7 +364,7 @@ export default function FindJobs() {
                 className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl border border-border/60 bg-background font-body text-sm text-muted-foreground hover:text-foreground hover:border-border transition"
               >
                 <X className="w-3.5 h-3.5" />
-                Clear
+                {l('Clear', 'پاک کردن', 'مسح')}
               </button>
             )}
           </div>
@@ -370,7 +380,7 @@ export default function FindJobs() {
                     : 'border-border/50 text-muted-foreground hover:border-accent/40 hover:text-foreground'
                 }`}
               >
-                {interest}
+                {localizeTripOption(interest, lang)}
               </button>
             ))}
           </div>
@@ -379,9 +389,9 @@ export default function FindJobs() {
         {!loading && (
           <p className="font-body text-sm text-muted-foreground mb-4">
             {filtered.length === 0
-              ? 'No trip requests found'
-              : `${filtered.length} trip request${filtered.length !== 1 ? 's' : ''} available`}
-            {hasFilters && ' (filtered)'}
+              ? l('No trip requests found', 'درخواست سفری پیدا نشد', 'لم يُعثر على طلبات رحلات')
+              : l(`${filtered.length} trip request${filtered.length !== 1 ? 's' : ''} available`, `${filtered.length} درخواست سفر در دسترس است`, `الطلبات المتاحة: ${filtered.length}`)}
+            {hasFilters && l(' (filtered)', ' (فیلترشده)', ' (بعد التصفية)')}
           </p>
         )}
 
@@ -390,7 +400,7 @@ export default function FindJobs() {
             <p className="font-body text-sm text-destructive mb-4">{error}</p>
             <Button variant="outline" onClick={loadRequests} className="font-body">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              {l('Try Again', 'تلاش دوباره', 'حاول مجدداً')}
             </Button>
           </div>
         ) : loading ? (
@@ -401,19 +411,19 @@ export default function FindJobs() {
               <Briefcase className="w-8 h-8 text-muted-foreground/40" />
             </div>
             <h3 className="font-heading text-lg font-semibold text-foreground mb-1">
-              {hasFilters ? 'No matches found' : 'No open requests right now'}
+              {hasFilters ? l('No matches found', 'موردی با این فیلترها پیدا نشد', 'لا توجد نتائج مطابقة') : l('No open requests right now', 'اکنون درخواست بازی وجود ندارد', 'لا توجد طلبات متاحة الآن')}
             </h3>
             <p className="font-body text-sm text-muted-foreground max-w-sm mx-auto">
               {hasFilters
-                ? 'Try adjusting your filters to see more results.'
-                : 'New trip requests from travelers will appear here. Check back soon!'}
+                ? l('Try adjusting your filters to see more results.', 'فیلترها را تغییر دهید تا نتایج بیشتری ببینید.', 'جرّب تعديل عوامل التصفية لرؤية نتائج أكثر.')
+                : l('New trip requests from travelers will appear here. Check back soon!', 'درخواست‌های جدید مسافران اینجا نمایش داده می‌شوند. بعداً دوباره سر بزنید.', 'ستظهر هنا طلبات المسافرين الجديدة. عُد لاحقاً للاطلاع عليها.')}
             </p>
             {hasFilters && (
               <button
                 onClick={clearFilters}
                 className="mt-4 font-body text-sm text-accent hover:text-accent/80 transition"
               >
-                Clear all filters
+                {l('Clear all filters', 'پاک کردن همهٔ فیلترها', 'مسح جميع عوامل التصفية')}
               </button>
             )}
           </div>

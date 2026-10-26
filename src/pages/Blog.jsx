@@ -95,7 +95,7 @@ export default function Blog() {
                   <div className="flex flex-col justify-center">
                     <span className="font-body text-xs font-semibold text-accent uppercase tracking-wider mb-3">
                       ★ {lang === 'fa' ? 'ویژه' : lang === 'ar' ? 'مميز' : 'Featured'}
-                      {article.category && ` · ${article.category}`}
+                      {article.category && ` · ${t(`article_cat_${article.category}`)}`}
                     </span>
                     <h2 className="font-heading text-3xl lg:text-4xl font-medium text-foreground mb-4 group-hover:text-accent transition-colors">
                       {localized(article, 'title')}
@@ -150,7 +150,7 @@ export default function Blog() {
                 </div>
                 {article.category && (
                   <span className="font-body text-xs font-medium text-accent uppercase tracking-wider">
-                    {article.category}
+                    {t(`article_cat_${article.category}`)}
                   </span>
                 )}
                 <h3 className="font-heading text-xl font-medium text-foreground mt-2 mb-2 group-hover:text-accent transition-colors">

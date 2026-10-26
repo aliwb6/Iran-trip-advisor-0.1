@@ -13,6 +13,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
+import { useI18n } from '@/lib/i18n.jsx';
+import { localize, localizeTripOption } from '@/lib/localize';
 const INTERESTS = [
   'Architecture', 'History', 'Nature', 'Food', 'Photography',
   'Desert', 'Luxury', 'Culture', 'Research', 'Art',
@@ -38,7 +40,12 @@ const INTEREST_COLORS = {
 };
 
 function StepIndicator({ step, totalSteps }) {
-  const labels = ['Destination', 'Interests', 'Details'];
+  const { lang } = useI18n();
+  const labels = [
+    localize(lang, 'Destination', 'مقصد', 'الوجهة'),
+    localize(lang, 'Interests', 'علایق', 'الاهتمامات'),
+    localize(lang, 'Details', 'جزئیات', 'التفاصيل'),
+  ];
   return (
     <div className="flex items-center justify-center gap-0 mb-8">
       {labels.map((label, i) => {
@@ -74,19 +81,21 @@ function StepIndicator({ step, totalSteps }) {
 }
 
 function Step1({ form, setField, errors }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   return (
     <div className="space-y-5">
       <div>
         <label className="block font-body text-sm font-medium text-foreground mb-1.5">
           <span className="flex items-center gap-1.5">
             <MapPin className="w-3.5 h-3.5 text-gold" />
-            Destination in Iran
+            {l('Destination in Iran', 'مقصد در ایران', 'الوجهة في إيران')}
           </span>
         </label>
         <Input
           value={form.destination}
           onChange={e => setField('destination', e.target.value)}
-          placeholder="e.g. Isfahan, Shiraz, Yazd…"
+          placeholder={l('e.g. Isfahan, Shiraz, Yazd…', 'مثلاً اصفهان، شیراز، یزد…', 'مثلاً أصفهان، شيراز، يزد…')}
           className="font-body rounded-xl border-border/60 focus:border-accent/50 focus:ring-accent/20"
         />
         {errors.destination && (
@@ -98,7 +107,7 @@ function Step1({ form, setField, errors }) {
         <div>
           <label className="block font-body text-xs font-medium text-muted-foreground mb-1.5">
             <Calendar className="w-3.5 h-3.5 inline mr-1" />
-            Start Date
+            {l('Start Date', 'تاریخ شروع', 'تاريخ البداية')}
           </label>
           <Input
             type="date"
@@ -114,7 +123,7 @@ function Step1({ form, setField, errors }) {
         <div>
           <label className="block font-body text-xs font-medium text-muted-foreground mb-1.5">
             <Calendar className="w-3.5 h-3.5 inline mr-1" />
-            End Date
+            {l('End Date', 'تاریخ پایان', 'تاريخ النهاية')}
           </label>
           <Input
             type="date"
@@ -132,7 +141,7 @@ function Step1({ form, setField, errors }) {
       <div>
         <label className="block font-body text-sm font-medium text-foreground mb-1.5">
           <Users className="w-3.5 h-3.5 inline mr-1 text-gold" />
-          Group Size
+          {l('Group Size', 'تعداد همسفران', 'عدد المسافرين')}
         </label>
         <div className="flex items-center gap-3">
           <button
@@ -155,7 +164,7 @@ function Step1({ form, setField, errors }) {
             +
           </button>
           <span className="font-body text-sm text-muted-foreground">
-            {form.groupSize === 1 ? 'person' : 'people'}
+            {l(form.groupSize === 1 ? 'person' : 'people', 'نفر', 'شخص')}
           </span>
         </div>
       </div>
@@ -164,6 +173,8 @@ function Step1({ form, setField, errors }) {
 }
 
 function Step2({ form, setField }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const toggleInterest = (interest) => {
     setField(
       'interests',
@@ -177,7 +188,7 @@ function Step2({ form, setField }) {
     <div className="space-y-6">
       <div>
         <label className="block font-body text-sm font-medium text-foreground mb-3">
-          What are you interested in? <span className="text-muted-foreground font-normal">(select all that apply)</span>
+          {l('What are you interested in?', 'به چه چیزهایی علاقه دارید؟', 'ما الذي يثير اهتمامك؟')} <span className="text-muted-foreground font-normal">{l('(select all that apply)', '(هر تعداد که می‌خواهید انتخاب کنید)', '(اختر كل ما يناسبك)')}</span>
         </label>
         <div className="flex flex-wrap gap-2">
           {INTERESTS.map(interest => {
@@ -196,20 +207,20 @@ function Step2({ form, setField }) {
                 {selected && (
                   <Check className="w-3 h-3 inline mr-1 -mt-0.5" />
                 )}
-                {interest}
+                {localizeTripOption(interest, lang)}
               </button>
             );
           })}
         </div>
         {form.interests.length === 0 && (
-          <p className="font-body text-xs text-muted-foreground mt-2">Select at least one interest to help guides find you.</p>
+          <p className="font-body text-xs text-muted-foreground mt-2">{l('Select at least one interest to help guides find you.', 'برای کمک به راهنماها در یافتن شما، دست‌کم یک علاقه انتخاب کنید.', 'اختر اهتماماً واحداً على الأقل ليسهل على المرشدين العثور على طلبك.')}</p>
         )}
       </div>
 
       <div>
         <label className="block font-body text-sm font-medium text-foreground mb-3">
           <Wallet className="w-3.5 h-3.5 inline mr-1 text-gold" />
-          Budget Range
+          {l('Budget Range', 'محدوده بودجه', 'نطاق الميزانية')}
         </label>
         <div className="grid grid-cols-3 gap-3">
           {BUDGET_OPTIONS.map(opt => (
@@ -224,8 +235,8 @@ function Step2({ form, setField }) {
               }`}
             >
               <span className="text-xl">{opt.icon}</span>
-              <span className="font-body text-xs font-semibold">{opt.label}</span>
-              <span className="font-body text-[10px] text-center opacity-70">{opt.desc}</span>
+              <span className="font-body text-xs font-semibold">{localizeTripOption(opt.label, lang)}</span>
+              <span className="font-body text-[10px] text-center opacity-70">{({ Budget: l('Economical options', 'گزینه‌های کم‌هزینه', 'خيارات اقتصادية'), 'Mid-range': l('Comfort & value', 'آسایش با قیمت مناسب', 'راحة بسعر مناسب'), Luxury: l('Premium experience', 'تجربه ممتاز', 'تجربة فاخرة') })[opt.value]}</span>
             </button>
           ))}
         </div>
@@ -235,12 +246,14 @@ function Step2({ form, setField }) {
 }
 
 function Step3({ form, setField, errors }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const suggestTitle = () => {
     if (!form.destination) return;
-    const top = form.interests.slice(0, 2).join(' & ');
+    const top = form.interests.slice(0, 2).map(interest => localizeTripOption(interest, lang)).join(lang === 'fa' ? ' و ' : lang === 'ar' ? ' و' : ' & ');
     const suggestion = top
-      ? `${top} trip in ${form.destination}`
-      : `Custom trip to ${form.destination}`;
+      ? (lang === 'fa' ? `سفر ${top} در ${form.destination}` : lang === 'ar' ? `رحلة ${top} في ${form.destination}` : `${top} trip in ${form.destination}`)
+      : (lang === 'fa' ? `سفر اختصاصی به ${form.destination}` : lang === 'ar' ? `رحلة مخصصة إلى ${form.destination}` : `Custom trip to ${form.destination}`);
     setField('title', suggestion);
   };
 
@@ -249,23 +262,23 @@ function Step3({ form, setField, errors }) {
       <div>
         <label className="block font-body text-sm font-medium text-foreground mb-1.5">
           <FileText className="w-3.5 h-3.5 inline mr-1 text-gold" />
-          Trip Title
+          {l('Trip Title', 'عنوان سفر', 'عنوان الرحلة')}
         </label>
         <div className="flex gap-2">
           <Input
             value={form.title}
             onChange={e => setField('title', e.target.value)}
-            placeholder="Give your trip a name…"
+            placeholder={l('Give your trip a name…', 'برای سفرتان نامی بگذارید…', 'امنح رحلتك اسماً…')}
             className="font-body rounded-xl border-border/60 focus:border-accent/50 flex-1"
           />
           <button
             type="button"
             onClick={suggestTitle}
-            title="Auto-suggest title"
+            title={l('Auto-suggest title', 'پیشنهاد خودکار عنوان', 'اقتراح عنوان تلقائياً')}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-border/60 bg-muted/40 text-muted-foreground hover:text-foreground hover:border-accent/50 transition font-body text-xs whitespace-nowrap"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            Suggest
+            {l('Suggest', 'پیشنهاد عنوان', 'اقتراح')}
           </button>
         </div>
         {errors.title && (
@@ -275,12 +288,12 @@ function Step3({ form, setField, errors }) {
 
       <div>
         <label className="block font-body text-sm font-medium text-foreground mb-1.5">
-          Special Requirements <span className="text-muted-foreground font-normal">(optional)</span>
+          {l('Special Requirements', 'نیازهای ویژه', 'احتياجات خاصة')} <span className="text-muted-foreground font-normal">{l('(optional)', '(اختیاری)', '(اختياري)')}</span>
         </label>
         <Textarea
           value={form.notes}
           onChange={e => setField('notes', e.target.value)}
-          placeholder="Dietary needs, accessibility requirements, specific sites to visit, pace preferences…"
+          placeholder={l('Dietary needs, accessibility requirements, specific sites to visit, pace preferences…', 'نیازهای غذایی، دسترس‌پذیری، مکان‌های دلخواه یا سرعت سفر…', 'الاحتياجات الغذائية أو متطلبات سهولة الوصول أو الأماكن التي ترغب بزيارتها أو وتيرة الرحلة…')}
           rows={4}
           className="font-body rounded-xl border-border/60 focus:border-accent/50 resize-none"
         />
@@ -289,30 +302,30 @@ function Step3({ form, setField, errors }) {
       {/* Summary preview */}
       <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-2.5">
         <p className="font-body text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-          Trip Summary
+          {l('Trip Summary', 'خلاصه سفر', 'ملخص الرحلة')}
         </p>
         <div className="flex items-start gap-2 font-body text-sm">
           <MapPin className="w-4 h-4 text-gold mt-0.5 shrink-0" />
-          <span className="text-foreground">{form.destination || <span className="text-muted-foreground/50">No destination</span>}</span>
+          <span className="text-foreground">{form.destination || <span className="text-muted-foreground/50">{l('No destination', 'مقصد مشخص نشده', 'لم تُحدَّد الوجهة')}</span>}</span>
         </div>
         {(form.startDate || form.endDate) && (
           <div className="flex items-center gap-2 font-body text-sm">
             <Calendar className="w-4 h-4 text-gold shrink-0" />
             <span className="text-foreground">
-              {form.startDate && new Date(form.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {form.startDate && new Date(form.startDate).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
               {form.startDate && form.endDate && ' → '}
-              {form.endDate && new Date(form.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+              {form.endDate && new Date(form.endDate).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             </span>
           </div>
         )}
         <div className="flex items-center gap-2 font-body text-sm">
           <Users className="w-4 h-4 text-gold shrink-0" />
-          <span className="text-foreground">{form.groupSize} {form.groupSize === 1 ? 'person' : 'people'}</span>
+          <span className="text-foreground">{form.groupSize} {l(form.groupSize === 1 ? 'person' : 'people', 'نفر', 'شخص')}</span>
         </div>
         {form.budget && (
           <div className="flex items-center gap-2 font-body text-sm">
             <Wallet className="w-4 h-4 text-gold shrink-0" />
-            <span className="text-foreground">{form.budget}</span>
+            <span className="text-foreground">{localizeTripOption(form.budget, lang)}</span>
           </div>
         )}
         {form.interests.length > 0 && (
@@ -324,7 +337,7 @@ function Step3({ form, setField, errors }) {
                   INTEREST_COLORS[i] || 'bg-muted text-muted-foreground border-border'
                 }`}
               >
-                {i}
+                {localizeTripOption(i, lang)}
               </span>
             ))}
           </div>
@@ -347,6 +360,8 @@ const INITIAL_FORM = {
 
 export default function TripRequestForm({ onClose }) {
   const { user } = useAuth();
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [direction, setDirection] = useState(1);
@@ -358,16 +373,16 @@ export default function TripRequestForm({ onClose }) {
 
   const validateStep1 = () => {
     const errs = {};
-    if (!form.destination.trim()) errs.destination = 'Please enter a destination.';
+    if (!form.destination.trim()) errs.destination = l('Please enter a destination.', 'لطفاً مقصدی وارد کنید.', 'يُرجى إدخال وجهة.');
     if (form.startDate && form.endDate && form.endDate < form.startDate) {
-      errs.endDate = 'End date must be after start date.';
+      errs.endDate = l('End date must be after start date.', 'تاریخ پایان باید پس از تاریخ شروع باشد.', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية.');
     }
     return errs;
   };
 
   const validateStep3 = () => {
     const errs = {};
-    if (!form.title.trim()) errs.title = 'Please enter a trip title.';
+    if (!form.title.trim()) errs.title = l('Please enter a trip title.', 'لطفاً برای سفر عنوانی وارد کنید.', 'يُرجى إدخال عنوان للرحلة.');
     return errs;
   };
 
@@ -387,7 +402,7 @@ export default function TripRequestForm({ onClose }) {
 
   const handleSubmit = async () => {
     if (!user?.id) {
-      toast.error('Please sign in to submit a trip request.');
+      toast.error(l('Please sign in to submit a trip request.', 'برای ثبت درخواست سفر، ابتدا وارد حساب خود شوید.', 'يُرجى تسجيل الدخول لإرسال طلب الرحلة.'));
       return;
     }
     const errs = validateStep3();
@@ -407,11 +422,11 @@ export default function TripRequestForm({ onClose }) {
         notes: form.notes.trim() || null,
       });
 
-      toast.success('Your trip request has been sent to available guides!');
+      toast.success(l('Your trip request has been sent to available guides!', 'درخواست سفرتان برای راهنماهای در دسترس ارسال شد!', 'أُرسل طلب رحلتك إلى المرشدين المتاحين!'));
       if (onClose) onClose();
       navigate('/my-trips');
     } catch (err) {
-      toast.error(err.message || 'Failed to submit trip request. Please try again.');
+      toast.error(l('Failed to submit trip request. Please try again.', 'ثبت درخواست سفر انجام نشد. لطفاً دوباره تلاش کنید.', 'تعذر إرسال طلب الرحلة. يُرجى المحاولة مجدداً.'));
     } finally {
       setSubmitting(false);
     }
@@ -453,14 +468,14 @@ export default function TripRequestForm({ onClose }) {
             className="inline-flex items-center gap-1.5 font-body text-sm font-medium text-muted-foreground hover:text-foreground transition"
           >
             <ChevronLeft className="w-4 h-4" />
-            Back
+            {l('Back', 'بازگشت', 'رجوع')}
           </button>
         ) : (
           <button
             onClick={onClose}
             className="font-body text-sm text-muted-foreground hover:text-foreground transition"
           >
-            Cancel
+            {l('Cancel', 'انصراف', 'إلغاء')}
           </button>
         )}
 
@@ -469,7 +484,7 @@ export default function TripRequestForm({ onClose }) {
             onClick={goNext}
             className="inline-flex items-center gap-2 bg-accent hover:bg-accent/90 text-white font-body font-semibold rounded-xl px-5"
           >
-            Next
+            {l('Next', 'بعدی', 'التالي')}
             <ChevronRight className="w-4 h-4" />
           </Button>
         ) : (
@@ -479,9 +494,9 @@ export default function TripRequestForm({ onClose }) {
             className="inline-flex items-center gap-2 bg-gold hover:bg-gold/90 text-black font-body font-bold rounded-xl px-5 disabled:opacity-60"
           >
             {submitting ? (
-              <BreathingGlow className="w-4 h-4" label="Submitting request" />
+              <BreathingGlow className="w-4 h-4" label={l('Submitting request', 'در حال ارسال درخواست', 'جارٍ إرسال الطلب')} />
             ) : null}
-            {submitting ? 'Submitting…' : 'Send to Guides'}
+            {submitting ? l('Submitting…', 'در حال ارسال…', 'جارٍ الإرسال…') : l('Send to Guides', 'ارسال برای راهنماها', 'إرسال إلى المرشدين')}
           </Button>
         )}
       </div>

@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { fetchBookingContactMethods } from '@/api/providerContacts';
+import { useI18n } from '@/lib/i18n.jsx';
+import { localize } from '@/lib/localize';
 
 const iconFor = type => {
   if (type === 'phone') return Phone;
@@ -42,6 +44,8 @@ function externalHref(type, value) {
 }
 
 export default function BookingContactCard({ bookingId, released = false, dark = false, className = '' }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [copied, setCopied] = useState('');
   const { data: contacts = [], isLoading, error } = useQuery({
     queryKey: ['booking-contact-methods', bookingId],
@@ -65,21 +69,21 @@ export default function BookingContactCard({ bookingId, released = false, dark =
           <Contact className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-bold">Contact information</p>
+          <p className="text-sm font-bold">{l('Contact information', 'اطلاعات تماس', 'بيانات التواصل')}</p>
           <p className={`mt-1 text-xs leading-relaxed ${muted}`}>
-            Payment is confirmed. These private details are now available for booking coordination.
+            {l('Payment is confirmed. These private details are now available for booking coordination.', 'پرداخت تأیید شده است. اکنون می‌توانید از این اطلاعات خصوصی برای هماهنگی رزرو استفاده کنید.', 'تأكد الدفع. أصبحت بيانات التواصل الخاصة متاحة الآن لتنسيق الحجز.')}
           </p>
         </div>
       </div>
 
       {isLoading ? (
         <div className={`mt-4 flex items-center gap-2 text-xs ${muted}`}>
-          <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading contact details…
+          <Loader2 className="h-3.5 w-3.5 animate-spin" /> {l('Loading contact details…', 'در حال بارگذاری اطلاعات تماس…', 'جارٍ تحميل بيانات التواصل…')}
         </div>
       ) : error ? (
-        <p className="mt-4 text-xs text-red-400">{error.message || 'Could not load contact details.'}</p>
+        <p className="mt-4 text-xs text-red-400">{l('Could not load contact details.', 'بارگذاری اطلاعات تماس انجام نشد.', 'تعذر تحميل بيانات التواصل.')}</p>
       ) : contacts.length === 0 ? (
-        <p className={`mt-4 text-xs ${muted}`}>No contact methods have been added yet.</p>
+        <p className={`mt-4 text-xs ${muted}`}>{l('No contact methods have been added yet.', 'هنوز راه ارتباطی ثبت نشده است.', 'لم تُضف أي وسيلة تواصل بعد.')}</p>
       ) : (
         <div className="mt-4 grid gap-2 sm:grid-cols-2">
           {contacts.map(contact => {
@@ -90,7 +94,7 @@ export default function BookingContactCard({ bookingId, released = false, dark =
               <div key={key} className={`rounded-xl border p-3 ${dark ? 'border-white/10 bg-black/10' : 'border-emerald-500/15 bg-background/60'}`}>
                 <div className="flex items-center gap-2">
                   <Icon className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className={`text-[11px] font-semibold ${muted}`}>{contact.label}</span>
+                  <span className={`text-[11px] font-semibold ${muted}`}>{contact.contact_type === 'phone' ? l('Phone', 'تلفن', 'الهاتف') : contact.contact_type === 'email' ? l('Email', 'ایمیل', 'البريد الإلكتروني') : contact.label}</span>
                 </div>
                 <p className="mt-1.5 break-all text-xs font-medium">{contact.value}</p>
                 <div className="mt-2 flex items-center gap-2">
@@ -104,7 +108,7 @@ export default function BookingContactCard({ bookingId, released = false, dark =
                     className={`inline-flex items-center gap-1 rounded-lg border px-2 py-1 text-[10px] font-semibold transition ${dark ? 'border-white/10 text-white/60 hover:bg-white/5' : 'border-border text-muted-foreground hover:bg-muted'}`}
                   >
                     {<IconSwap active={copied === key} a={<Copy className="h-3 w-3" />} b={<Check className="h-3 w-3" />} />}
-                    {copied === key ? 'Copied' : 'Copy'}
+                    {copied === key ? l('Copied', 'کپی شد', 'نُسخ') : l('Copy', 'کپی', 'نسخ')}
                   </button>
                   {href && (
                     <a
@@ -113,7 +117,7 @@ export default function BookingContactCard({ bookingId, released = false, dark =
                       rel={href.startsWith('http') ? 'noreferrer' : undefined}
                       className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 px-2 py-1 text-[10px] font-semibold text-white transition hover:bg-emerald-500"
                     >
-                      <ExternalLink className="h-3 w-3" /> Open
+                      <ExternalLink className="h-3 w-3" /> {l('Open', 'باز کردن', 'فتح')}
                     </a>
                   )}
                 </div>

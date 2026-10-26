@@ -7,9 +7,11 @@ import {
 } from 'lucide-react';
 import { useI18n } from '@/lib/i18n.jsx';
 import { avatarFor } from '@/lib/avatar';
-import { allLanguages } from '@/data/languages';
+import { allLanguages, toLanguageOptions } from '@/data/languages';
+import { localize, localizeCountry } from '@/lib/localize';
 import { useSubmitTripRequest } from '@/hooks/useSupabase';
 import { useAuth } from '@/lib/AuthContext';
+import { iranianDestinations } from '@/data/iranianCities';
 
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
 const COUNTRIES = [
@@ -24,27 +26,37 @@ const COUNTRIES = [
 ];
 
 const LANGUAGES_ALL = ['English', 'Persian (Farsi)', 'Arabic', 'French', 'German', 'Spanish', 'Italian', 'Chinese', 'Russian', ...allLanguages];
+const languageLabel = (language, lang) => {
+  if (language === 'Persian (Farsi)') return localize(lang, language, 'فارسی', 'الفارسية');
+  if (language === 'Chinese') return localize(lang, language, 'چینی', 'الصينية');
+  return toLanguageOptions([language])[0]?.[lang] || language;
+};
 
 const ACCOMMODATION_TYPES = [
   { value: 'guesthouse',        emoji: '🏠', en: 'Guesthouse',           fa: 'مهمان‌پذیر',    ar: 'بيت ضيافة'    },
-  { value: 'hotel_1star',       emoji: '⭐', en: '1 Star Hotel',          fa: 'هتل ۱ ستاره',  ar: 'فندق نجمة'    },
-  { value: 'hotel_2star',       emoji: '⭐⭐', en: '2 Star Hotel',        fa: 'هتل ۲ ستاره',  ar: 'فندق نجمتان'  },
-  { value: 'hotel_3star',       emoji: '⭐⭐⭐', en: '3 Star Hotel',      fa: 'هتل ۳ ستاره',  ar: 'فندق 3 نجوم'  },
-  { value: 'hotel_4star',       emoji: '⭐⭐⭐⭐', en: '4 Star Hotel',    fa: 'هتل ۴ ستاره',  ar: 'فندق 4 نجوم'  },
-  { value: 'hotel_5star',       emoji: '⭐⭐⭐⭐⭐', en: '5 Star Hotel',  fa: 'هتل ۵ ستاره',  ar: 'فندق 5 نجوم'  },
-  { value: 'traditional_house', emoji: '🏡', en: 'Traditional House',    fa: 'خانه سنتی',    ar: 'بيت تقليدي'   },
+  { value: 'hotel_1star',       emoji: '⭐', en: '1 Star Hotel',          fa: 'هتل یک‌ستاره',  ar: 'فندق بنجمة واحدة' },
+  { value: 'hotel_2star',       emoji: '⭐⭐', en: '2 Star Hotel',        fa: 'هتل دوستاره',   ar: 'فندق بنجمتين' },
+  { value: 'hotel_3star',       emoji: '⭐⭐⭐', en: '3 Star Hotel',      fa: 'هتل سه‌ستاره',  ar: 'فندق بثلاث نجوم' },
+  { value: 'hotel_4star',       emoji: '⭐⭐⭐⭐', en: '4 Star Hotel',    fa: 'هتل چهارستاره',  ar: 'فندق بأربع نجوم' },
+  { value: 'hotel_5star',       emoji: '⭐⭐⭐⭐⭐', en: '5 Star Hotel',  fa: 'هتل پنج‌ستاره', ar: 'فندق بخمس نجوم' },
+  { value: 'traditional_house', emoji: '🏡', en: 'Traditional House',    fa: 'خانهٔ سنتی',    ar: 'بيت تقليدي'   },
 ];
 
-const STEP_LABELS = ['Customization', 'Traveler Details', 'Done'];
+const STEP_LABELS = {
+  en: ['Customization', 'Traveler Details', 'Done'],
+  fa: ['سفارشی‌سازی', 'اطلاعات مسافر', 'پایان'],
+  ar: ['تخصيص الرحلة', 'بيانات المسافر', 'اكتمال'],
+};
 
 // ── Sidebar Card ───────────────────────────────────────────────────────────────
 
 function TripSidebarCard({ guide, destination, date, adults, children, lang }) {
-  const name = guide?.full_name || 'Guide';
-  const city = destination || guide?.city || '—';
+  const name = guide?.full_name || localize(lang, 'Guide', 'راهنما', 'مرشد');
+  const rawCity = destination || guide?.city || '—';
+  const city = iranianDestinations.find(item => item.en === rawCity)?.[lang] || rawCity;
   const month = date
-    ? new Date(date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : (lang === 'fa' ? 'تاریخ نامشخص' : 'Date TBD');
+    ? new Date(date).toLocaleDateString(lang === 'fa' ? 'fa-IR-u-ca-gregory' : lang === 'ar' ? 'ar-u-ca-gregory' : 'en-US', { month: 'long', year: 'numeric' })
+    : localize(lang, 'Date TBD', 'تاریخ هنوز مشخص نشده', 'لم يُحدَّد التاريخ بعد');
   const total = (adults || 1) + (children || 0);
 
   return (
@@ -69,13 +81,13 @@ function TripSidebarCard({ guide, destination, date, adults, children, lang }) {
         <div className="flex items-center gap-2 text-foreground/70">
           <Users className="w-4 h-4 text-gold flex-shrink-0" />
           <span>
-            {total} {lang === 'fa' ? 'نفر' : lang === 'ar' ? 'أشخاص' : `traveller${total !== 1 ? 's' : ''}`}
+            {localize(lang, `${total} traveller${total !== 1 ? 's' : ''}`, `${total} نفر`, `عدد المسافرين: ${total}`)}
           </span>
         </div>
         {date && (
           <div className="flex items-center gap-2 text-foreground/70">
             <Calendar className="w-4 h-4 text-gold flex-shrink-0" />
-            <span>{new Date(date).toLocaleDateString()}</span>
+            <span>{new Date(date).toLocaleDateString(lang === 'fa' ? 'fa-IR-u-ca-gregory' : lang === 'ar' ? 'ar-u-ca-gregory' : undefined)}</span>
           </div>
         )}
       </div>
@@ -199,8 +211,8 @@ function Step1({ data, onChange, onNext, isLoggedIn, isSubmitting, lang }) {
               onChange={(e) => setLanguage(e.target.value)}
               className="w-full ps-10 pe-4 py-2.5 rounded-xl border border-border bg-background font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
             >
-              <option value="">{lang === 'fa' ? '-- زبان را انتخاب کنید --' : '-- Select language --'}</option>
-              {LANGUAGES_ALL.map((l) => <option key={l} value={l}>{l}</option>)}
+              <option value="">{localize(lang, '-- Select language --', '-- زبان را انتخاب کنید --', '-- اختر اللغة --')}</option>
+              {LANGUAGES_ALL.map((language) => <option key={language} value={language}>{languageLabel(language, lang)}</option>)}
             </select>
             <ChevronDown className="absolute end-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
           </div>
@@ -323,7 +335,7 @@ function Step1({ data, onChange, onNext, isLoggedIn, isSubmitting, lang }) {
           className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 active:scale-[0.98] transition-all shadow-md disabled:opacity-70"
         >
           {isSubmitting
-            ? <BreathingGlow className="w-4 h-4" label="Submitting request" />
+            ? <BreathingGlow className="w-4 h-4" label={localize(lang, 'Submitting request', 'در حال ارسال درخواست', 'جارٍ إرسال الطلب')} />
             : null}
           {isLoggedIn
             ? (lang === 'fa' ? 'ارسال درخواست' : lang === 'ar' ? 'إرسال الطلب' : 'Submit Request')
@@ -391,30 +403,30 @@ function Step2({ data, onBack, onSubmit, isSubmitting, lang }) {
         <div className="text-center py-10">
           <User className="w-12 h-12 text-gold/40 mx-auto mb-3" />
           <p className="font-body text-sm text-muted-foreground mb-4">
-            {lang === 'fa' ? 'برای ادامه وارد شوید' : 'Sign in to continue with your account details'}
+            {localize(lang, 'Sign in to continue with your account details', 'برای ادامه با اطلاعات حسابتان وارد شوید.', 'سجّل الدخول للمتابعة باستخدام معلومات حسابك.')}
           </p>
           <Link
             to="/login"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 transition"
           >
-            {lang === 'fa' ? 'ورود به حساب' : 'Sign In'}
+            {localize(lang, 'Sign In', 'ورود به حساب', 'تسجيل الدخول')}
           </Link>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>{lang === 'fa' ? 'نام' : 'First Name'}</label>
-              <input type="text" value={form.firstName} onChange={(e) => set('firstName', e.target.value)} placeholder={lang === 'fa' ? 'علی' : 'John'} className={inputClass} />
+              <label className={labelClass}>{localize(lang, 'First Name', 'نام', 'الاسم الأول')}</label>
+              <input type="text" value={form.firstName} onChange={(e) => set('firstName', e.target.value)} placeholder={localize(lang, 'John', 'علی', 'أحمد')} className={inputClass} />
             </div>
             <div>
-              <label className={labelClass}>{lang === 'fa' ? 'نام‌خانوادگی' : 'Last Name'}</label>
-              <input type="text" value={form.lastName} onChange={(e) => set('lastName', e.target.value)} placeholder={lang === 'fa' ? 'رضایی' : 'Doe'} className={inputClass} />
+              <label className={labelClass}>{localize(lang, 'Last Name', 'نام خانوادگی', 'اسم العائلة')}</label>
+              <input type="text" value={form.lastName} onChange={(e) => set('lastName', e.target.value)} placeholder={localize(lang, 'Doe', 'رضایی', 'الحسن')} className={inputClass} />
             </div>
           </div>
 
           <div>
-            <label className={labelClass}>{lang === 'fa' ? 'کشور' : 'Country'}</label>
+            <label className={labelClass}>{localize(lang, 'Country', 'کشور', 'البلد')}</label>
             <div className="relative">
               <Globe className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <select
@@ -422,14 +434,14 @@ function Step2({ data, onBack, onSubmit, isSubmitting, lang }) {
                 onChange={(e) => set('country', e.target.value)}
                 className={`${inputClass} ps-10`}
               >
-                <option value="">{lang === 'fa' ? '-- کشور خود را انتخاب کنید --' : '-- Select country --'}</option>
-                {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                <option value="">{localize(lang, '-- Select country --', '-- کشور خود را انتخاب کنید --', '-- اختر بلدك --')}</option>
+                {COUNTRIES.map((c) => <option key={c} value={c}>{localizeCountry(c, lang)}</option>)}
               </select>
             </div>
           </div>
 
           <div>
-            <label className={labelClass}>{lang === 'fa' ? 'شماره تلفن' : 'Phone Number'}</label>
+            <label className={labelClass}>{localize(lang, 'Phone Number', 'شمارهٔ تلفن', 'رقم الهاتف')}</label>
             <div className="relative">
               <Phone className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
@@ -444,7 +456,7 @@ function Step2({ data, onBack, onSubmit, isSubmitting, lang }) {
           </div>
 
           <div>
-            <label className={labelClass}>{lang === 'fa' ? 'ایمیل' : 'Email'}</label>
+            <label className={labelClass}>{localize(lang, 'Email', 'ایمیل', 'البريد الإلكتروني')}</label>
             <div className="relative">
               <Mail className="absolute start-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
@@ -466,7 +478,7 @@ function Step2({ data, onBack, onSubmit, isSubmitting, lang }) {
             className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-border text-foreground font-body font-semibold text-sm hover:border-gold/40 hover:text-gold transition"
           >
             <ArrowLeft className="w-4 h-4" />
-            {lang === 'fa' ? 'بازگشت' : 'Back'}
+            {localize(lang, 'Back', 'بازگشت', 'رجوع')}
           </button>
           <button
             onClick={handleSubmit}
@@ -474,7 +486,7 @@ function Step2({ data, onBack, onSubmit, isSubmitting, lang }) {
             className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 active:scale-[0.98] transition-all disabled:opacity-60"
           >
             {isSubmitting ? (
-              <BreathingGlow className="w-4 h-4" label="Submitting request" />
+              <BreathingGlow className="w-4 h-4" label={localize(lang, 'Submitting request', 'در حال ارسال درخواست', 'جارٍ إرسال الطلب')} />
             ) : null}
             {lang === 'fa' ? 'ارسال درخواست سفارشی' : lang === 'ar' ? 'إرسال طلب التخصيص' : 'Send Customization Request'}
             {!isSubmitting && <ArrowRight className="w-4 h-4" />}
@@ -491,10 +503,10 @@ function Step3({ lang }) {
   const navigate = useNavigate();
 
   const bullets = [
-    lang === 'fa' ? 'به زودی پیشنهادات سفر شخصی دریافت خواهید کرد' : 'You will receive personalized travel proposals shortly',
-    lang === 'fa' ? 'ممکن است یک نماینده ایران تور ادوایزر با شما تماس بگیرد' : 'An Iran Trip Advisor representative may contact you',
-    lang === 'fa' ? 'برای کمک فوری از دستیار هوش مصنوعی ما استفاده کنید' : 'For immediate assistance, use our AI Assistant',
-    lang === 'fa' ? '#آیا می‌دانستید با رزرو راهنمای محلی از جوامع ایرانی حمایت می‌کنید' : '#didyouknow By booking a local guide you support Iranian communities',
+    localize(lang, 'You will receive personalized travel proposals shortly', 'به‌زودی پیشنهادهای متناسب با سفر خود دریافت می‌کنید.', 'ستتلقى قريباً عروض سفر تناسب تفضيلاتك.'),
+    localize(lang, 'An Iran Trip Advisor representative may contact you', 'ممکن است یکی از کارشناسان Iran Trip Advisor با شما تماس بگیرد.', 'قد يتواصل معك أحد ممثلي Iran Trip Advisor.'),
+    localize(lang, 'For immediate assistance, use our AI Assistant', 'برای راهنمایی فوری، از دستیار هوش مصنوعی ما کمک بگیرید.', 'للحصول على مساعدة فورية، استخدم مساعدنا الذكي.'),
+    localize(lang, '#didyouknow By booking a local guide you support Iranian communities', 'با رزرو راهنمای محلی، از جوامع ایرانی پشتیبانی می‌کنید.', 'بحجز مرشد محلي، فإنك تدعم المجتمعات الإيرانية.'),
   ];
 
   return (
@@ -537,13 +549,13 @@ function Step3({ lang }) {
           onClick={() => navigate('/')}
           className="px-6 py-3 rounded-xl border-2 border-gold/30 text-gold font-body font-semibold text-sm hover:bg-gold/5 transition"
         >
-          {lang === 'fa' ? 'بازگشت به صفحه اصلی' : 'Back to Home'}
+          {localize(lang, 'Back to Home', 'بازگشت به صفحهٔ اصلی', 'العودة إلى الصفحة الرئيسية')}
         </button>
         <button
           onClick={() => navigate('/profile/requests')}
           className="px-6 py-3 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 transition"
         >
-          {lang === 'fa' ? 'مشاهده درخواست‌های من' : 'View My Requests'}
+          {localize(lang, 'View My Requests', 'مشاهدهٔ درخواست‌های من', 'عرض طلباتي')}
         </button>
       </div>
     </motion.div>
@@ -633,7 +645,7 @@ export default function TripRequest() {
             </div>
 
             {step < 2 && (
-              <StepIndicator current={step} total={STEP_LABELS.length} labels={STEP_LABELS} loggedIn={!!user} />
+              <StepIndicator current={step} total={STEP_LABELS.en.length} labels={STEP_LABELS[lang] || STEP_LABELS.en} loggedIn={!!user} />
             )}
 
             <div className="bg-card rounded-2xl border border-border/50 shadow-sm p-6 sm:p-8">

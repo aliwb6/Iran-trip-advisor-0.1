@@ -330,10 +330,10 @@ export default function ProfilePage() {
             <Clock className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
             <div>
               <p className="font-heading text-sm font-semibold text-red-700 dark:text-red-400">
-                Profile Incomplete
+                {lang === 'fa' ? 'پروفایل ناقص است' : lang === 'ar' ? 'الملف الشخصي غير مكتمل' : 'Profile Incomplete'}
               </p>
               <p className="font-body text-sm text-red-700/80 dark:text-red-400/80 mt-0.5">
-                Your profile is not publicly visible because required fields are missing. Please complete your profile from the dashboard.
+                {lang === 'fa' ? 'پروفایل شما به‌دلیل تکمیل نبودن اطلاعات ضروری برای دیگران نمایش داده نمی‌شود. لطفاً آن را از داشبورد کامل کنید.' : lang === 'ar' ? 'ملفك الشخصي غير ظاهر للآخرين لأن بعض المعلومات المطلوبة ناقصة. يُرجى إكماله من لوحة التحكم.' : 'Your profile is not publicly visible because required fields are missing. Please complete your profile from the dashboard.'}
               </p>
             </div>
           </div>

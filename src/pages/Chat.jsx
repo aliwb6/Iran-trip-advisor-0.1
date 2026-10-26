@@ -26,6 +26,7 @@ import { fetchParticipantProfile } from '@/api/participantProfiles';
 import { selectPublicProfiles } from '@/lib/publicProfiles';
 import { canShareContactWithUser } from '@/api/chatAccess';
 import { detectContactSharing } from '@/lib/contactSharing';
+import { localize } from '@/lib/localize';
 
 const C = {
   turq: '#0D8B85',
@@ -72,6 +73,7 @@ export default function Chat() {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const { lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const BackArrow = dir === 'rtl' ? ArrowRight : ArrowLeft;
 
   const [participant, setParticipant] = useState(null);
@@ -143,7 +145,7 @@ export default function Chat() {
           await supabase.from('messages').update({ is_read: true }).in('id', unreadIds);
         }
       } catch (loadError) {
-        if (!cancelled) setError(loadError.message || 'Could not load this conversation.');
+        if (!cancelled) setError(l('Could not load this conversation.', 'بارگذاری گفتگو ممکن نشد.', 'تعذّر تحميل المحادثة.'));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -280,7 +282,7 @@ export default function Chat() {
             {lang === 'fa' ? 'گفتگو یافت نشد' : lang === 'ar' ? 'المحادثة غير موجودة' : 'Conversation not found'}
           </h1>
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
-          <Link to="/profile/requests" className="mt-5 inline-block text-sm font-semibold" style={{ color: C.turq }}>View requests</Link>
+          <Link to="/profile/requests" className="mt-5 inline-block text-sm font-semibold" style={{ color: C.turq }}>{l('View requests', 'مشاهدهٔ درخواست‌ها', 'عرض الطلبات')}</Link>
         </div>
       </div>
     );
@@ -293,18 +295,18 @@ export default function Chat() {
           <header className="shrink-0 border-b px-4 py-4 sm:px-8" style={{ borderColor: `${C.muted}25`, background: C.white }}>
             <div className="flex items-center justify-between gap-4">
               <div className="flex min-w-0 items-center gap-3">
-                <button type="button" onClick={() => navigate(-1)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.mist, color: C.teal }} aria-label="Back">
+                <button type="button" onClick={() => navigate(-1)} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: C.mist, color: C.teal }} aria-label={l('Back', 'بازگشت', 'رجوع')}>
                   <BackArrow className="h-5 w-5" />
                 </button>
                 <img src={avatarFor(participant)} alt="" className="h-11 w-11 shrink-0 rounded-xl object-cover" />
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.turq }}>Iran Trip Advisor chat</p>
-                  <h1 className="truncate text-lg font-bold sm:text-xl" style={{ color: C.teal }}>{participant.full_name || 'User'}</h1>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: C.turq }}>{l('Iran Trip Advisor chat', 'گفتگو در Iran Trip Advisor', 'محادثة Iran Trip Advisor')}</p>
+                  <h1 className="truncate text-lg font-bold sm:text-xl" style={{ color: C.teal }}>{participant.full_name || l('User', 'کاربر', 'مستخدم')}</h1>
                   {participant.city && <p className="truncate text-xs" style={{ color: C.muted }}>{participant.city}</p>}
                 </div>
               </div>
               <div className="hidden rounded-full px-3 py-1.5 text-[11px] font-semibold sm:flex sm:items-center sm:gap-1.5" style={{ background: `${C.turq}12`, color: C.turq }}>
-                <ShieldCheck className="h-3.5 w-3.5" /> In-platform messaging
+                <ShieldCheck className="h-3.5 w-3.5" /> {l('In-platform messaging', 'پیام‌رسانی در سایت', 'المراسلة داخل المنصة')}
               </div>
             </div>
           </header>
@@ -345,7 +347,7 @@ export default function Chat() {
               ) : (
                 <AnimatePresence initial={false}>
                   {messages.map(message => (
-                    <MessageBubble key={message.id} message={message} mine={message.sender_id === user.id} senderName={participant.full_name || 'User'} lang={lang} />
+                    <MessageBubble key={message.id} message={message} mine={message.sender_id === user.id} senderName={participant.full_name || l('User', 'کاربر', 'مستخدم')} lang={lang} />
                   ))}
                 </AnimatePresence>
               )}
@@ -372,7 +374,7 @@ export default function Chat() {
                   dir="auto"
                   disabled={sending || moderation?.is_closed}
                 />
-                <button type="submit" disabled={sending || moderation?.is_closed || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label="Send message">
+                <button type="submit" disabled={sending || moderation?.is_closed || !input.trim()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white transition disabled:cursor-not-allowed disabled:opacity-40" style={{ background: C.turq }} aria-label={l('Send message', 'ارسال پیام', 'إرسال الرسالة')}>
                   {<IconSwap active={sending} a={<Send className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                 </button>
               </div>
@@ -380,7 +382,7 @@ export default function Chat() {
               {moderation?.is_closed && <p className="mt-2 text-xs font-medium text-red-600">{lang === 'fa' ? 'ارسال پیام تا زمان بازگشایی گفتگو غیرفعال است.' : lang === 'ar' ? 'تم تعطيل إرسال الرسائل حتى إعادة فتح المحادثة.' : 'Sending messages is disabled until this conversation is reopened.'}</p>}
               {!contactSharingAllowed && (
                 <p className="mt-2 text-[10px]" style={{ color: C.muted }}>
-                  Contact details are automatically blocked until booking payment is confirmed.
+                  {l('Contact details are automatically blocked until booking payment is confirmed.', 'تا زمان تأیید پرداخت رزرو، ارسال اطلاعات تماس به‌طور خودکار مسدود می‌شود.', 'تُحجب معلومات الاتصال تلقائياً إلى أن يُؤكَّد دفع الحجز.')}
                 </p>
               )}
             </div>
@@ -389,13 +391,13 @@ export default function Chat() {
 
         <aside className="hidden w-[34%] shrink-0 flex-col overflow-y-auto bg-[#F7FBFA] p-8 lg:flex">
           <img src={avatarFor(participant)} alt={participant.full_name || ''} className="h-24 w-24 rounded-2xl object-cover shadow-sm" />
-          <h2 className="mt-4 text-2xl font-bold" style={{ color: C.teal }}>{participant.full_name || 'User'}</h2>
-          {participant.role && <p className="mt-1 text-xs font-semibold capitalize" style={{ color: C.turq }}>{participant.role}</p>}
+          <h2 className="mt-4 text-2xl font-bold" style={{ color: C.teal }}>{participant.full_name || l('User', 'کاربر', 'مستخدم')}</h2>
+          {participant.role && <p className="mt-1 text-xs font-semibold capitalize" style={{ color: C.turq }}>{({ guide: l('guide', 'راهنما', 'مرشد'), agency: l('agency', 'آژانس', 'وكالة'), traveler: l('traveler', 'مسافر', 'مسافر') })[participant.role] || participant.role}</p>}
           {participant.city && <p className="mt-2 text-sm" style={{ color: C.muted }}>{participant.city}</p>}
           {participant.bio && <p className="mt-5 text-sm leading-7" style={{ color: C.ink }}>{participant.bio}</p>}
           <div className="mt-6 rounded-2xl border border-[#DCEBE8] bg-white p-4">
-            <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: C.teal }}><ShieldCheck className="h-4 w-4" /> Safer booking communication</div>
-            <p className="mt-2 text-xs leading-relaxed" style={{ color: C.muted }}>Keep itinerary and price decisions in this chat. Verified payment unlocks private contact details automatically.</p>
+            <div className="flex items-center gap-2 text-sm font-semibold" style={{ color: C.teal }}><ShieldCheck className="h-4 w-4" /> {l('Safer booking communication', 'هماهنگی امن‌تر برای رزرو', 'تواصل أكثر أماناً للحجز')}</div>
+            <p className="mt-2 text-xs leading-relaxed" style={{ color: C.muted }}>{l('Keep itinerary and price decisions in this chat. Verified payment unlocks private contact details automatically.', 'برنامهٔ سفر و قیمت را در همین گفتگو نهایی کنید. پس از تأیید پرداخت، اطلاعات تماس خصوصی به‌طور خودکار در دسترس قرار می‌گیرد.', 'ناقش برنامج الرحلة والسعر في هذه المحادثة. ستتاح معلومات الاتصال الخاصة تلقائياً بعد تأكيد الدفع.')}</p>
           </div>
         </aside>
       </div>

@@ -6,8 +6,8 @@ import { Sparkles, ArrowRight, ArrowLeft, MessageSquare } from 'lucide-react';
 const BG = "https://media.base44.com/images/public/69fddcfab0730c36bda3631e/cce446b52_generated_d017c773.png";
 
 const chips = [
-  { en: "Best time to visit Isfahan?", fa: "بهترین زمان برای اصفهان؟", ar: "أفضل وقت لزيارة أصفهان؟" },
-  { en: "7-day desert adventure", fa: "ماجراجویی ۷ روزه کویر", ar: "مغامرة صحراوية 7 أيام" },
+  { en: "Best time to visit Isfahan?", fa: "بهترین زمان سفر به اصفهان چه موقع است؟", ar: "ما أفضل وقت لزيارة أصفهان؟" },
+  { en: "7-day desert adventure", fa: "ماجراجویی هفت‌روزه در کویر", ar: "مغامرة صحراوية لمدة ٧ أيام" },
   { en: "Family trip to Iran", fa: "سفر خانوادگی به ایران", ar: "رحلة عائلية إلى إيران" },
 ];
 

@@ -87,7 +87,7 @@ export default function SearchPage() {
           <p className="font-body text-sm text-muted-foreground">
             {loading 
               ? (lang === 'fa' ? 'در حال جستجو...' : lang === 'ar' ? 'جار البحث...' : 'Searching...')
-              : `${results.length} ${lang === 'fa' ? 'نتیجه یافت شد' : lang === 'ar' ? 'نتائج found' : 'results found'}`
+              : lang === 'ar' ? `عدد النتائج: ${results.length}` : `${results.length} ${lang === 'fa' ? 'نتیجه یافت شد' : 'results found'}`
             }
           </p>
         </div>
@@ -173,19 +173,19 @@ export default function SearchPage() {
           </h2>
           <div className="flex flex-wrap gap-3">
             {[
-              { label: 'Isfahan', labelFa: ' اصفهان' },
-              { label: 'Shiraz', labelFa: 'شیراز' },
-              { label: 'Yazd', labelFa: 'یزد' },
-              { label: 'Tehran', labelFa: 'تهران' },
-              { label: 'Desert', labelFa: 'کویر' },
-              { label: 'Historical', labelFa: 'تاریخی' },
+              { label: 'Isfahan', labelFa: 'اصفهان', labelAr: 'أصفهان' },
+              { label: 'Shiraz', labelFa: 'شیراز', labelAr: 'شيراز' },
+              { label: 'Yazd', labelFa: 'یزد', labelAr: 'يزد' },
+              { label: 'Tehran', labelFa: 'تهران', labelAr: 'طهران' },
+              { label: 'Desert', labelFa: 'کویر', labelAr: 'الصحراء' },
+              { label: 'Historical', labelFa: 'تاریخی', labelAr: 'تاريخي' },
             ].map((filter) => (
               <button
                 key={filter.label}
                 onClick={() => handleCityClick(filter.label)}
                 className="px-4 py-2 rounded-full border border-border/50 bg-card text-sm font-body hover:border-accent/50 hover:text-accent transition-colors"
               >
-                {lang === 'fa' ? filter.labelFa : filter.label}
+                {lang === 'fa' ? filter.labelFa : lang === 'ar' ? filter.labelAr : filter.label}
               </button>
             ))}
           </div>

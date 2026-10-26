@@ -32,6 +32,7 @@ import {
 } from 'lucide-react';
 import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { iranianDestinations as IRAN_CITIES, popularIranianDestinations as POPULAR_CITIES } from '@/data/iranianCities';
+import { localize } from '@/lib/localize';
 
 const BENEFITS = [
   { icon: Compass, titleKey: 'login_benefit1_title', descKey: 'login_benefit1_desc' },
@@ -41,6 +42,7 @@ const BENEFITS = [
 
 export default function Signup() {
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const navigate = useNavigate();
   const isRtl = dir === 'rtl';
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
@@ -172,7 +174,7 @@ export default function Signup() {
 
       setStep('verify');
     } catch (err) {
-      setError(err.message || t('signup_err_failed'));
+      setError(l(err.message || t('signup_err_failed'), t('signup_err_failed'), t('signup_err_failed')));
     } finally {
       setLoading(false);
     }
@@ -212,11 +214,7 @@ export default function Signup() {
       }, 900);
     } catch (err) {
       setOtpStatus('error');
-      setError(
-        lang === 'fa'
-          ? 'کد وارد شده اشتباه یا منقضی شده است'
-          : 'Invalid or expired code. Please try again.'
-      );
+      setError(l('Invalid or expired code. Please try again.', 'کد واردشده نادرست یا منقضی شده است. دوباره تلاش کنید.', 'الرمز غير صحيح أو انتهت صلاحيته. يُرجى المحاولة مجدداً.'));
     } finally {
       setLoading(false);
     }
@@ -241,7 +239,7 @@ export default function Signup() {
         });
       }, 1000);
     } catch (err) {
-      setError(lang === 'fa' ? 'خطا در ارسال مجدد کد' : 'Failed to resend code');
+      setError(l('Failed to resend code', 'ارسال دوبارهٔ کد ممکن نشد.', 'تعذّر إعادة إرسال الرمز.'));
     } finally {
       setResendLoading(false);
     }
@@ -369,12 +367,10 @@ export default function Signup() {
               </AnimatePresence>
 
               <h2 className="font-heading text-2xl font-bold text-foreground mb-2">
-                {lang === 'fa' ? 'کد تأیید ایمیل' : 'Verify Your Email'}
+                {l('Verify Your Email', 'تأیید ایمیل', 'تأكيد بريدك الإلكتروني')}
               </h2>
               <p className="font-body text-muted-foreground text-sm mb-2">
-                {lang === 'fa'
-                  ? 'یک کد ۶ رقمی به ایمیل زیر ارسال شد:'
-                  : 'A 6-digit code was sent to:'}
+                {l('A 6-digit code was sent to:', 'یک کد ۶ رقمی به ایمیل زیر فرستاده شد:', 'أُرسل رمز مكوّن من 6 أرقام إلى:')}
               </p>
               <p className="font-body text-accent font-semibold mb-6 text-sm">{formData.email}</p>
 
@@ -403,7 +399,7 @@ export default function Signup() {
                   }}
                   onComplete={handleVerifyOtp}
                   disabled={loading || otpStatus === 'success'}
-                  aria-label={lang === 'fa' ? 'کد تأیید شش رقمی' : 'Six digit verification code'}
+                  aria-label={l('Six digit verification code', 'کد تأیید شش‌رقمی', 'رمز تأكيد من ستة أرقام')}
                   containerClassName="gap-2"
                 >
                   <InputOTPGroup className="gap-2">
@@ -437,20 +433,20 @@ export default function Signup() {
                 className="w-full py-3 rounded-xl bg-accent text-white font-heading font-semibold text-base hover:bg-accent/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
               >
                 {otpStatus === 'success' ? (
-                  <><CircleCheck className="w-4 h-4" />{lang === 'fa' ? 'تأیید شد' : 'Verified'}</>
+                  <><CircleCheck className="w-4 h-4" />{l('Verified', 'تأیید شد', 'تم التأكيد')}</>
                 ) : loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  lang === 'fa' ? 'تأیید و ورود' : 'Verify & Sign In'
+                  l('Verify & Sign In', 'تأیید و ورود', 'تأكيد وتسجيل الدخول')
                 )}
               </button>
 
               {/* Resend */}
               <p className="font-body text-sm text-muted-foreground">
-                {lang === 'fa' ? 'کد دریافت نکردید؟' : "Didn't receive the code?"}{' '}
+                {l("Didn't receive the code?", 'کد را دریافت نکردید؟', 'لم يصلك الرمز؟')}{' '}
                 {resendCooldown > 0 ? (
                   <span className="text-muted-foreground">
-                    {lang === 'fa' ? `ارسال مجدد در ${resendCooldown} ثانیه` : `Resend in ${resendCooldown}s`}
+                    {l(`Resend in ${resendCooldown}s`, `ارسال دوباره تا ${resendCooldown} ثانیهٔ دیگر`, `إعادة الإرسال بعد ${resendCooldown} ثانية`)}
                   </span>
                 ) : (
                   <button
@@ -459,8 +455,8 @@ export default function Signup() {
                     className="text-accent hover:underline font-semibold disabled:opacity-50"
                   >
                     {resendLoading
-                      ? (lang === 'fa' ? 'در حال ارسال...' : 'Sending...')
-                      : (lang === 'fa' ? 'ارسال مجدد' : 'Resend')}
+                      ? l('Sending...', 'در حال ارسال…', 'جارٍ الإرسال…')
+                      : l('Resend', 'ارسال دوباره', 'إعادة الإرسال')}
                   </button>
                 )}
               </p>
@@ -470,7 +466,7 @@ export default function Signup() {
                 onClick={() => { setStep('form'); setOtpValue(''); setError(''); setOtpStatus('idle'); }}
                 className="mt-4 font-body text-sm text-muted-foreground hover:text-foreground transition-colors"
               >
-                {lang === 'fa' ? '← بازگشت به فرم' : '← Back to form'}
+                ← {l('Back to form', 'بازگشت به فرم', 'العودة إلى النموذج')}
               </button>
             </motion.div>
           ) : (

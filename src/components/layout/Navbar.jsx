@@ -190,7 +190,7 @@ export default function Navbar() {
                           : 'bg-accent/10 text-accent hover:bg-accent/20 border border-accent/20'
                     }`}
                   >
-                    Find Jobs
+                    {lang === 'fa' ? 'پیداکردن درخواست‌ها' : lang === 'ar' ? 'البحث عن طلبات الرحلات' : 'Find Jobs'}
                   </Link>
                   {openRequestCount > 0 && (
                     <span

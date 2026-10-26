@@ -19,6 +19,7 @@ import { toast } from 'sonner';
 import { touristSelectGuide } from '@/api/tourRequestFlow';
 import { fetchParticipantProfiles } from '@/api/participantProfiles';
 import SharedImageLightbox from '@/components/ui/SharedImageLightbox';
+import { localizePriceBasis } from '@/lib/localize';
 
 const PROPOSAL_TONES = [
   {
@@ -49,10 +50,6 @@ function profilePath(guide) {
     : `/guides/${guide.id}`;
 }
 
-function humanizeEnum(str) {
-  return str ? str.replace(/_/g, ' ') : '';
-}
-
 function proposalImages(value) {
   if (Array.isArray(value)) return value.filter(Boolean);
   if (typeof value !== 'string') return [];
@@ -67,12 +64,12 @@ function proposalImages(value) {
   return raw.split(/\n|,/).map(item => item.trim()).filter(Boolean);
 }
 
-function formatPrice(slot, t) {
+function formatPrice(slot, t, lang) {
   if (slot.price == null) return t('proposal_no_price');
   const num = Number(slot.price).toLocaleString('en-US');
   const currency = slot.currency ? ` ${slot.currency}` : '';
-  const type = slot.price_type ? ` · ${humanizeEnum(slot.price_type)}` : '';
-  const period = slot.price_period ? ` · ${humanizeEnum(slot.price_period)}` : '';
+  const type = slot.price_type ? ` · ${localizePriceBasis(slot.price_type, lang)}` : '';
+  const period = slot.price_period ? ` · ${localizePriceBasis(slot.price_period, lang)}` : '';
   return `${num}${currency}${type}${period}`;
 }
 
@@ -157,9 +154,9 @@ function ProposalDetailContent({ slot }) {
       {pending && (
         <div className="rounded-xl border border-amber-300/70 bg-amber-50/80 px-4 py-3 text-sm text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
           {lang === 'fa'
-            ? 'این پیشنهاد در حالت Pending است. همچنان فعال می‌ماند و می‌توانید بعداً آن را تأیید کنید.'
+            ? 'این پیشنهاد را برای بررسی بعدی نگه داشته‌اید. همچنان فعال است و می‌توانید بعداً آن را تأیید کنید.'
             : lang === 'ar'
-            ? 'هذا العرض في حالة Pending. يبقى فعالاً ويمكنك الموافقة عليه لاحقاً.'
+            ? 'احتفظت بهذا العرض لمراجعته لاحقاً. سيظل فعالاً ويمكنك الموافقة عليه بعد ذلك.'
             : 'This proposal is Pending. It stays active and you can approve it later.'}
         </div>
       )}
@@ -198,7 +195,7 @@ function ProposalDetailContent({ slot }) {
       ) : (
         <>
           <DetailBlock label={t('proposal_price_label')}>
-            <p className="text-sm font-semibold text-foreground">{formatPrice(slot, t)}</p>
+            <p className="text-sm font-semibold text-foreground">{formatPrice(slot, t, lang)}</p>
           </DetailBlock>
 
           {slot.itinerary?.trim() && (
@@ -316,8 +313,8 @@ function ProposalRow({
 
   const approveLabel = lang === 'fa' ? 'تأیید' : lang === 'ar' ? 'موافقة' : 'Approve';
   const pendingLabel = pending
-    ? (lang === 'fa' ? 'خروج از Pending' : lang === 'ar' ? 'إلغاء Pending' : 'Remove Pending')
-    : 'Pending';
+    ? (lang === 'fa' ? 'برداشتن از فهرست بررسی بعدی' : lang === 'ar' ? 'إزالة من قائمة المراجعة لاحقاً' : 'Remove Pending')
+    : (lang === 'fa' ? 'نگه‌داشتن برای بررسی بعدی' : lang === 'ar' ? 'الاحتفاظ للمراجعة لاحقاً' : 'Pending');
   const rejectLabel = lang === 'fa' ? 'رد' : lang === 'ar' ? 'رفض' : 'Reject';
 
   return (
@@ -349,7 +346,7 @@ function ProposalRow({
               )}
               {pending && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-amber-300 bg-amber-100 text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-300 text-[10px] font-bold">
-                  <Clock3 className="w-3 h-3" /> Pending
+                  <Clock3 className="w-3 h-3" /> {lang === 'fa' ? 'در انتظار' : lang === 'ar' ? 'قيد الانتظار' : 'Pending'}
                 </span>
               )}
               {approved && !rejected && (
@@ -407,7 +404,7 @@ function ProposalRow({
               className="shrink-0 inline-flex items-center gap-1 rounded-xl bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50 transition-colors"
             >
               {<IconSwap active={selecting} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-              {selecting ? (lang === 'fa' ? 'در حال تأیید…' : 'Approving…') : approveLabel}
+              {selecting ? (lang === 'fa' ? 'در حال تأیید…' : lang === 'ar' ? 'جارٍ الموافقة…' : 'Approving…') : approveLabel}
             </button>
           )}
 
@@ -424,7 +421,7 @@ function ProposalRow({
               }`}
             >
               {<IconSwap active={pendingBusy} a={<Clock3 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-              {pendingBusy ? (lang === 'fa' ? 'در حال ذخیره…' : 'Saving…') : pendingLabel}
+              {pendingBusy ? (lang === 'fa' ? 'در حال ذخیره…' : lang === 'ar' ? 'جارٍ الحفظ…' : 'Saving…') : pendingLabel}
             </button>
           )}
 
@@ -561,17 +558,17 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
       if (moveToPending) {
         toast.success(
           lang === 'fa'
-            ? 'پروپوزال Pending شد. راهنما/آژانس با نوتیفیکیشن و ایمیل مطلع می‌شود و پیشنهاد بعدیِ آماده می‌تواند نمایش داده شود.'
+            ? 'پیشنهاد برای بررسی بعدی نگه داشته شد. به راهنما یا آژانس اطلاع داده می‌شود و اکنون می‌توانید پیشنهاد آماده بعدی را ببینید.'
             : lang === 'ar'
-            ? 'تم وضع العرض في حالة Pending وإبلاغ مقدم الخدمة. يمكن الآن إظهار العرض التالي الجاهز.'
+            ? 'احتُفظ بالعرض للمراجعة لاحقاً وأُبلغ مقدم الخدمة. يمكنك الآن الاطلاع على العرض التالي الجاهز.'
             : 'Proposal moved to Pending. The provider is notified, and the next ready proposal can now be shown.',
         );
       } else {
         toast.success(
           lang === 'fa'
-            ? 'پروپوزال از Pending خارج شد و همچنان می‌توانید آن را تأیید یا رد کنید.'
+            ? 'پیشنهاد از فهرست بررسی بعدی برداشته شد. همچنان می‌توانید آن را تأیید یا رد کنید.'
             : lang === 'ar'
-            ? 'تمت إزالة حالة Pending. لا يزال بإمكانك الموافقة على العرض أو رفضه.'
+            ? 'أُزيل العرض من قائمة المراجعة لاحقاً. ما زال بإمكانك الموافقة عليه أو رفضه.'
             : 'Pending removed. You can still approve or reject this proposal.',
         );
       }
@@ -610,9 +607,9 @@ export default function ProposalsPanel({ requestId, proposalRound = 1, requestSt
   };
 
   const panelSubtitle = lang === 'fa'
-    ? 'فقط پروپوزال‌های تأییدشده توسط ادمین نمایش داده می‌شوند. Pending به شما اجازه می‌دهد پیشنهاد را نگه دارید و گزینه بعدی را هم ببینید.'
+    ? 'فقط پیشنهادهای تأییدشدهٔ مدیر نمایش داده می‌شوند. می‌توانید پیشنهادی را برای بررسی بعدی نگه دارید و گزینه بعدی را هم ببینید.'
     : lang === 'ar'
-    ? 'تظهر فقط العروض المعتمدة من الإدارة. استخدم Pending للاحتفاظ بالعرض ومقارنته بالعرض التالي.'
+    ? 'تظهر العروض التي وافقت عليها الإدارة فقط. يمكنك الاحتفاظ بعرض لمراجعته لاحقاً ومقارنته بالعرض التالي.'
     : 'Only admin-approved proposals appear here. Use Pending to keep an offer active while comparing the next available proposal.';
 
   return (

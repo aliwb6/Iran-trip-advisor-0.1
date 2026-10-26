@@ -162,7 +162,7 @@ export default function SettingsPage() {
             <path strokeLinecap="round" strokeLinejoin="round"
                   strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          Back
+          {lang === 'fa' ? 'بازگشت' : lang === 'ar' ? 'رجوع' : 'Back'}
         </button>
 
         {/* Header */}

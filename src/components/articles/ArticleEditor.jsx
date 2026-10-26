@@ -85,7 +85,7 @@ export default function ArticleEditor({ userId, authorType, onSuccess, onCancel 
       setUploadedImage({ bucket, objectPath });
       setForm(current => ({ ...current, image_url: data.publicUrl }));
     } catch (error) {
-      toast.error(error.message || (lang === 'fa' ? 'آپلود تصویر ناموفق بود.' : 'Image upload failed.'));
+      toast.error(error.message || (lang === 'fa' ? 'بارگذاری تصویر ناموفق بود.' : lang === 'ar' ? 'تعذّر رفع الصورة.' : 'Image upload failed.'));
     } finally {
       setUploadingImage(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

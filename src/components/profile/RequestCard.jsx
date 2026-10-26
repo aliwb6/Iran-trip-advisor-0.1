@@ -132,7 +132,7 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
           )}
           {(request.male_adults != null || request.female_adults != null) && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-background/60 border border-border/40 text-xs text-foreground">
-              <Users className="w-3 h-3 text-accent" /> {request.male_adults || 0} {lang === 'fa' ? 'آقا' : 'men'} · {request.female_adults || 0} {lang === 'fa' ? 'خانم' : 'women'}
+              <Users className="w-3 h-3 text-accent" /> {request.male_adults || 0} {lang === 'fa' ? 'مرد' : lang === 'ar' ? 'رجال' : 'men'} · {request.female_adults || 0} {lang === 'fa' ? 'زن' : lang === 'ar' ? 'نساء' : 'women'}
             </span>
           )}
           {request.children != null && request.children > 0 && (
@@ -200,7 +200,7 @@ export default function RequestCard({ request, onOpen, slotCount = 0 }) {
           </div>
           <div className="mt-3 flex flex-wrap gap-2">
             {dispatchedProviders.map(provider => {
-              const name = provider.full_name || (lang === 'fa' ? 'راهنمای محلی' : 'Local guide');
+              const name = provider.full_name || (lang === 'fa' ? 'راهنمای محلی' : lang === 'ar' ? 'مرشد محلي' : 'Local guide');
               const initials = name.split(' ').filter(Boolean).map(part => part[0]).join('').slice(0, 2).toUpperCase();
               const href = provider.role === 'agency' ? `/agencies/${provider.provider_id}` : `/guides/${provider.provider_id}`;
               return (

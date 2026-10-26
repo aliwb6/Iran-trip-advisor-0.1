@@ -302,7 +302,7 @@ function ConversationSidebar({ conversations, activeId, onNew, onSwitch, onDelet
             onClick={onClose}
             className="lg:hidden h-7 w-7 flex items-center justify-center rounded-lg transition-colors hover:bg-black/10"
             style={{ color: C.muted }}
-            aria-label="Close sidebar"
+            aria-label={lang === 'fa' ? 'بستن فهرست گفت‌وگوها' : lang === 'ar' ? 'إغلاق قائمة المحادثات' : 'Close sidebar'}
           >
             <X className="h-4 w-4" />
           </button>
@@ -745,9 +745,9 @@ export default function AIAssistant() {
 
     if (!import.meta.env.VITE_OPENROUTER_API_KEY) {
       const missing = lang === 'fa'
-        ? 'کلید API موجود نیست. لطفاً فایل .env را بررسی کنید.'
+        ? 'دستیار هوشمند در حال حاضر در دسترس نیست. لطفاً کمی بعد دوباره تلاش کنید.'
         : lang === 'ar'
-        ? 'مفتاح API مفقود. يرجى التحقق من ملف .env.'
+        ? 'المساعد الذكي غير متاح حالياً. يُرجى المحاولة لاحقاً.'
         : 'API key is missing. Please check your .env file.';
       const errId = activeId || createConversation(null, lang);
       appendMessage(errId, { role: 'assistant', content: missing });
@@ -923,7 +923,7 @@ export default function AIAssistant() {
                   onClick={() => setSidebarOpen(true)}
                   className="flex h-10 w-10 items-center justify-center rounded-2xl transition-colors shrink-0"
                   style={{ background: `${C.muted}10`, color: C.teal }}
-                  aria-label="Open conversation history"
+                  aria-label={lang === 'fa' ? 'باز کردن سابقهٔ گفت‌وگوها' : lang === 'ar' ? 'فتح سجلّ المحادثات' : 'Open conversation history'}
                 >
                   <Menu className="h-4 w-4" />
                 </button>
@@ -934,7 +934,7 @@ export default function AIAssistant() {
                   onClick={() => navigate(-1)}
                   className="flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-95 shrink-0"
                   style={{ background: `${C.muted}10`, color: C.teal, border: `1px solid ${C.muted}12` }}
-                  aria-label="Go back"
+                  aria-label={lang === 'fa' ? 'بازگشت' : lang === 'ar' ? 'رجوع' : 'Go back'}
                   title={lang === 'fa' ? 'بازگشت' : lang === 'ar' ? 'رجوع' : 'Go back'}
                 >
                   <ArrowLeft className="h-4 w-4" />
@@ -969,7 +969,7 @@ export default function AIAssistant() {
                     onClick={() => setRecsSheetOpen(true)}
                     className="lg:hidden flex h-10 w-10 items-center justify-center rounded-2xl transition-all active:scale-95"
                     style={{ background: `${C.teal}0D`, color: C.teal, border: `1px solid ${C.teal}20` }}
-                    aria-label="Open recommendations"
+                    aria-label={lang === 'fa' ? 'باز کردن پیشنهادهای سفر' : lang === 'ar' ? 'فتح توصيات السفر' : 'Open recommendations'}
                     title={lang === 'fa' ? 'پیشنهادات سفر' : lang === 'ar' ? 'توصيات السفر' : 'Travel recommendations'}
                   >
                     <Sparkles className="h-4 w-4" />
@@ -1036,7 +1036,7 @@ export default function AIAssistant() {
                     <div key={key} className="group relative">
                       {msg.role === 'user' && msg.image && (
                         <div className="flex justify-end mb-1">
-                          <img decoding="async" loading="lazy" src={msg.image} alt="uploaded" className="max-w-xs rounded-xl max-h-48 object-cover" />
+                          <img decoding="async" loading="lazy" src={msg.image} alt={lang === 'fa' ? 'تصویر بارگذاری‌شده' : lang === 'ar' ? 'صورة مرفوعة' : 'Uploaded image'} className="max-w-xs rounded-xl max-h-48 object-cover" />
                         </div>
                       )}
                       {msg.role === 'user' && msg.fileName && (
@@ -1077,7 +1077,7 @@ export default function AIAssistant() {
                           msg.role === 'user' ? 'bottom-1 left-0' : 'bottom-1 right-0'
                         }`}
                         style={{ background: `${C.muted}15` }}
-                        title="Copy message"
+                        title={lang === 'fa' ? 'رونوشت از پیام' : lang === 'ar' ? 'نسخ الرسالة' : 'Copy message'}
                       >
                         {copiedId === i ? (
                           <Check className="w-3.5 h-3.5 text-green-500" />
@@ -1118,7 +1118,7 @@ export default function AIAssistant() {
               {attachedFile && (
                 <div className="flex items-center gap-2 rounded-xl px-3 py-2" style={{ background: `${C.muted}12`, border: `1px solid ${C.muted}25` }}>
                   {attachedFile.type === 'image' ? (
-                    <img decoding="async" loading="lazy" src={attachedFile.preview} alt="preview" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                    <img decoding="async" loading="lazy" src={attachedFile.preview} alt={lang === 'fa' ? 'پیش‌نمایش تصویر' : lang === 'ar' ? 'معاينة الصورة' : 'Image preview'} className="w-10 h-10 rounded-lg object-cover shrink-0" />
                   ) : (
                     <div className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${C.turq}20` }}>
                       <FileText className="w-5 h-5" style={{ color: C.turq }} />
@@ -1149,7 +1149,7 @@ export default function AIAssistant() {
                   onClick={() => fileInputRef.current?.click()}
                   className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl transition-all active:scale-95"
                   style={{ background: `${C.muted}12`, color: C.muted }}
-                  title="Attach image or file"
+                  title={lang === 'fa' ? 'پیوست کردن تصویر یا فایل' : lang === 'ar' ? 'إرفاق صورة أو ملف' : 'Attach image or file'}
                 >
                   <Paperclip className="h-4 w-4" />
                 </button>
@@ -1171,7 +1171,7 @@ export default function AIAssistant() {
                   disabled={(!input.trim() && !attachedFile) || loading}
                   className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl transition-all active:scale-95 disabled:opacity-50"
                   style={{ background: `linear-gradient(135deg, ${C.turq}, ${C.turqDeep})`, color: '#FFFFFF', boxShadow: `0 6px 18px ${C.turq}40` }}
-                  aria-label="Send"
+                  aria-label={lang === 'fa' ? 'ارسال' : lang === 'ar' ? 'إرسال' : 'Send'}
                 >
                   {<IconSwap active={loading} a={<Send className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                 </button>

@@ -12,8 +12,12 @@ import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/supabaseClient';
+import { useI18n } from '@/lib/i18n.jsx';
+import { localize } from '@/lib/localize';
 
 export default function DirectTripRequestPage() {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const { guideId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -36,7 +40,7 @@ export default function DirectTripRequestPage() {
     }
 
     if (!guideId) {
-      setError('Guide or agency not found.');
+      setError(l('Guide or agency not found.', 'راهنما یا آژانس پیدا نشد.', 'لم يُعثر على المرشد أو الوكالة.'));
       setStarting(false);
       return;
     }
@@ -54,7 +58,7 @@ export default function DirectTripRequestPage() {
       if (!mounted) return;
 
       if (rpcError) {
-        setError(rpcError.message || 'Could not start this trip request.');
+        setError(l('Could not start this trip request.', 'شروع ثبت درخواست سفر ممکن نشد.', 'تعذّر بدء طلب الرحلة هذا.'));
         setStarting(false);
         return;
       }
@@ -97,7 +101,7 @@ export default function DirectTripRequestPage() {
       <div className="min-h-[70vh] flex items-center justify-center">
         <div className="flex items-center gap-3 text-muted-foreground">
           <Loader2 className="w-5 h-5 animate-spin text-accent" />
-          <span className="text-sm">Preparing your trip request…</span>
+          <span className="text-sm">{l('Preparing your trip request…', 'در حال آماده‌سازی درخواست سفر شما…', 'جارٍ إعداد طلب رحلتك…')}</span>
         </div>
       </div>
     );
@@ -110,7 +114,7 @@ export default function DirectTripRequestPage() {
           <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-full bg-destructive/10">
             <AlertCircle className="h-5 w-5 text-destructive" />
           </div>
-          <h1 className="font-heading text-xl font-semibold text-foreground">Unable to start request</h1>
+          <h1 className="font-heading text-xl font-semibold text-foreground">{l('Unable to start request', 'شروع درخواست ممکن نشد', 'تعذّر بدء الطلب')}</h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{error}</p>
           <button
             type="button"
@@ -118,7 +122,7 @@ export default function DirectTripRequestPage() {
             className="mt-5 inline-flex items-center gap-2 rounded-xl border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-muted/50 transition"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            {l('Back', 'بازگشت', 'رجوع')}
           </button>
         </div>
       </div>

@@ -31,28 +31,28 @@ export function useCustomTrip() {
     {
       id: 'duration',
       question: (lang) => lang === 'fa' ? 'چند روز می‌خواهید سفر کنید؟' : lang === 'ar' ? 'كم يوم تود السفر؟' : 'How many days would you like to travel?',
-      placeholder: (lang) => lang === 'fa' ? 'مثال: 7' : 'e.g., 7',
+      placeholder: (lang) => lang === 'fa' ? 'مثلاً: ۷' : lang === 'ar' ? 'مثلاً: 7' : 'e.g., 7',
       type: 'number',
       required: true
     },
     {
       id: 'budget',
       question: (lang) => lang === 'fa' ? 'بودجه شما برای هر نفر چقدر است؟' : lang === 'ar' ? 'ما ميزانيتك لكل شخص؟' : 'What\'s your budget per person?',
-      placeholder: (lang) => lang === 'fa' ? 'مثال: 1000 دلار' : 'e.g., $1000',
+      placeholder: (lang) => lang === 'fa' ? 'مثلاً: ۱۰۰۰ دلار' : lang === 'ar' ? 'مثلاً: 1000 دولار' : 'e.g., $1000',
       type: 'text',
       required: true
     },
     {
       id: 'groupSize',
       question: (lang) => lang === 'fa' ? 'چند نفر سفر خواهید کرد؟' : lang === 'ar' ? 'كم عدد الأشخاص في المجموعة؟' : 'How many people will be traveling?',
-      placeholder: (lang) => lang === 'fa' ? 'مثال: 4' : 'e.g., 4',
+      placeholder: (lang) => lang === 'fa' ? 'مثلاً: ۴' : lang === 'ar' ? 'مثلاً: 4' : 'e.g., 4',
       type: 'number',
       required: true
     },
     {
       id: 'children',
       question: (lang) => lang === 'fa' ? 'آیا کودکان (زیر 12 سال) در گروه شما وجود دارد؟' : lang === 'ar' ? 'هل هناك أطفال (أقل من 12 سنة) في المجموعة؟' : 'Will there be children (under 12) in your group?',
-      placeholder: (lang) => lang === 'fa' ? 'بله/خیر، و اگر بله، تعداد و سن آن‌ها' : 'Yes/No, and if yes, how many and their ages?',
+      placeholder: (lang) => lang === 'fa' ? 'بله یا خیر؛ اگر بله، تعداد و سنشان را بنویسید.' : lang === 'ar' ? 'نعم أم لا؛ إذا كانت الإجابة نعم، فاذكر العدد والأعمار.' : 'Yes/No, and if yes, how many and their ages?',
       type: 'text',
       required: false
     },
@@ -66,7 +66,7 @@ export function useCustomTrip() {
     {
       id: 'healthConsiderations',
       question: (lang) => lang === 'fa' ? 'آیا مسائل سلامتی یا نیازهای خاصی وجود دارد؟' : lang === 'ar' ? 'هل هناك أي مخاوف صحية أو احتياجات خاصة؟' : 'Are there any medical conditions or health concerns we should know about?',
-      placeholder: (lang) => lang === 'fa' ? 'مثال: آلرژی، محدودیت حرکتی، شرایط مزمن' : 'e.g., allergies, mobility issues, chronic conditions',
+      placeholder: (lang) => lang === 'fa' ? 'مثلاً: حساسیت، محدودیت حرکتی یا بیماری مزمن' : lang === 'ar' ? 'مثلاً: الحساسية أو صعوبات الحركة أو الأمراض المزمنة' : 'e.g., allergies, mobility issues, chronic conditions',
       type: 'text',
       required: false
     },
@@ -101,7 +101,7 @@ export function useCustomTrip() {
     {
       id: 'notes',
       question: (lang) => lang === 'fa' ? 'آیا چیز دیگری می‌خواهید ما بدانیم؟' : lang === 'ar' ? 'هل هناك أي شيء آخر تود أن تخبرنا به؟' : 'Is there anything else you\'d like us to know?',
-      placeholder: (lang) => lang === 'fa' ? 'درخواست‌های ویژه یا نگرانی‌ها' : 'Special requests or concerns',
+      placeholder: (lang) => lang === 'fa' ? 'درخواست‌های ویژه یا مواردی که باید بدانیم' : lang === 'ar' ? 'طلبات خاصة أو أمور تود أن نعرفها' : 'Special requests or concerns',
       type: 'text',
       required: false
     }

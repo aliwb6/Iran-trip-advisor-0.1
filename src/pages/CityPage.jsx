@@ -16,6 +16,9 @@ import { selectPublicTours } from '@/lib/publicTours';
 import { avatarFor } from '@/lib/avatar';
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { attractionImages } from '@/data/attractionImages';
+import { cityTranslations } from '@/data/cityTranslations';
+import { iranianDestinations } from '@/data/iranianCities';
+import { toLanguageOptions } from '@/data/languages';
 
 // ── City catalog ─────────────────────────────────────────────────────────────
 // Keys are the lowercase URL slugs. Each entry carries English copy from the
@@ -124,7 +127,7 @@ const cityData = {
   },
   'kish-island': {
     name: 'Kish Island',
-    nameI18n: { fa: 'جزیره کیش', ar: 'جزيرة كيش' },
+    nameI18n: { fa: 'جزیرهٔ کیش', ar: 'جزيرة كيش' },
     category: 'Nature & Leisure',
     image: '/images/optimized/kish-island-1600.webp',
     description:
@@ -134,7 +137,7 @@ const cityData = {
   },
   'qeshm-island': {
     name: 'Qeshm Island',
-    nameI18n: { fa: 'جزیره قشم', ar: 'جزيرة قشم' },
+    nameI18n: { fa: 'جزیرهٔ قشم', ar: 'جزيرة قشم' },
     category: 'Nature',
     image: '/images/optimized/qeshm-island-1600.webp',
     description:
@@ -144,7 +147,7 @@ const cityData = {
   },
   'hormuz-island': {
     name: 'Hormuz Island',
-    nameI18n: { fa: 'جزیره هرمز', ar: 'جزيرة هرمز' },
+    nameI18n: { fa: 'جزیرهٔ هرمز', ar: 'جزيرة هرمز' },
     category: 'Nature & Art',
     image: '/images/optimized/hormuz-island-1600.webp',
     description:
@@ -184,6 +187,7 @@ export default function CityPage() {
 
   const slug = String(citySlug || '').toLowerCase();
   const city = cityData[slug];
+  const translatedCity = cityTranslations[slug]?.[lang];
 
   const [tab, setTab] = useState('tours');
   const [tours, setTours] = useState([]);
@@ -241,19 +245,24 @@ export default function CityPage() {
     tabGuides:   lang === 'fa' ? 'راهنماها' : lang === 'ar' ? 'المرشدون' : 'Guides',
     tabAttract:  lang === 'fa' ? 'دیدنی‌ها' : lang === 'ar' ? 'الأماكن' : 'Attractions',
     tabAbout:    lang === 'fa' ? 'درباره' : lang === 'ar' ? 'حول' : 'About',
-    viewPackage: lang === 'fa' ? 'مشاهده پکیج' : lang === 'ar' ? 'عرض الباقة' : 'View Package',
-    viewGuide:   lang === 'fa' ? 'مشاهده پروفایل راهنما' : lang === 'ar' ? 'عرض ملف المرشد' : 'View Guide Profile',
+    viewPackage: lang === 'fa' ? 'مشاهدهٔ تور' : lang === 'ar' ? 'عرض الجولة' : 'View Package',
+    viewGuide:   lang === 'fa' ? 'مشاهدهٔ پروفایل راهنما' : lang === 'ar' ? 'عرض ملف المرشد' : 'View Guide Profile',
     fromPrice:   lang === 'fa' ? 'از' : lang === 'ar' ? 'من' : 'from',
-    days:        lang === 'fa' ? 'روز' : lang === 'ar' ? 'أيام' : 'days',
+    duration:    days => lang === 'fa' ? `${days} روز` : lang === 'ar' ? `المدة بالأيام: ${days}` : `${days} days`,
+    tour:        lang === 'fa' ? 'تور' : lang === 'ar' ? 'جولة' : 'Tour',
+    localGuide:  lang === 'fa' ? 'راهنمای محلی' : lang === 'ar' ? 'مرشد محلي' : 'Local guide',
+    viewAgency:  lang === 'fa' ? 'مشاهدهٔ پروفایل آژانس' : lang === 'ar' ? 'عرض ملف الوكالة' : 'View Agency Profile',
+    loadingResults: lang === 'fa' ? 'در حال بارگذاری نتایج شهر' : lang === 'ar' ? 'جارٍ تحميل نتائج المدينة' : 'Loading city results',
+    cityLabel: raw => iranianDestinations.find(item => item.en.toLowerCase() === String(raw || '').toLowerCase())?.[lang] || raw,
     mockBanner:  lang === 'fa' ? 'نمونه — به‌زودی محتوای واقعی برای این شهر اضافه می‌شود' : lang === 'ar' ? 'عينة — سيُضاف محتوى حقيقي لهذه المدينة قريباً' : 'Sample — real content for this city is coming soon',
     // Empty-state copy
     noTours:     lang === 'fa' ? 'هنوز پکیج توری برای این شهر ثبت نشده است.' : lang === 'ar' ? 'لا توجد باقات سياحية لهذه المدينة بعد.' : 'No tour packages available for this city yet.',
-    noToursSub:  lang === 'fa' ? 'به‌زودی دوباره سر بزن — در حال افزودن پکیج‌های جدید هستیم.' : lang === 'ar' ? 'تحقق لاحقاً — نضيف باقات جديدة قريباً.' : "Check back soon — we're adding new packages.",
+    noToursSub:  lang === 'fa' ? 'بعداً دوباره بررسی کنید؛ به‌زودی تورهای جدید اضافه می‌کنیم.' : lang === 'ar' ? 'عُد قريبًا؛ نضيف جولات جديدة.' : "Check back soon — we're adding new packages.",
     noGuides:    lang === 'fa' ? 'هنوز راهنمای محلی برای این شهر ثبت نشده است.' : lang === 'ar' ? 'لا يوجد مرشدون محليون مسجلون لهذه المدينة بعد.' : 'No local guides registered for this city yet.',
-    noGuidesSub: lang === 'fa' ? 'می‌خواهی به‌عنوان راهنما ثبت‌نام کنی؟' : lang === 'ar' ? 'هل تريد الانضمام كمرشد؟' : 'Want to become a guide?',
+    noGuidesSub: lang === 'fa' ? 'مایلید به‌عنوان راهنما ثبت‌نام کنید؟' : lang === 'ar' ? 'هل ترغب في الانضمام بصفتك مرشدًا؟' : 'Want to become a guide?',
     joinGuide:   lang === 'fa' ? 'ثبت‌نام به‌عنوان راهنما' : lang === 'ar' ? 'انضم كمرشد' : 'Join as a Guide',
     attractionsTitle: lang === 'fa' ? `جاذبه‌های دیدنی ${city?.nameI18n?.fa || city?.name || ''}` : lang === 'ar' ? `معالم ${city?.nameI18n?.ar || city?.name || ''}` : `Discover ${city?.name || ''}`,
-    attractionsIntro: lang === 'fa' ? 'جاذبه موردنظرت را انتخاب کن و اجرای یک تور اختصاصی برای بازدید از آن را درخواست بده.' : lang === 'ar' ? 'اختر المعلم الذي ترغب بزيارته واطلب جولة خاصة إليه.' : 'Choose a place you would love to see and request a custom tour built around it.',
+    attractionsIntro: lang === 'fa' ? 'جاذبهٔ موردنظر خود را انتخاب کنید و برای بازدید از آن، یک تور اختصاصی درخواست دهید.' : lang === 'ar' ? 'اختر المعلم الذي ترغب في زيارته واطلب جولة خاصة تتمحور حوله.' : 'Choose a place you would love to see and request a custom tour built around it.',
     attractionLabel: lang === 'fa' ? 'جاذبه دیدنی' : lang === 'ar' ? 'معلم سياحي' : 'Featured attraction',
     requestTour: lang === 'fa' ? 'درخواست اجرای تور' : lang === 'ar' ? 'اطلب جولة' : 'Request a tour',
   }), [lang, city]);
@@ -317,7 +326,7 @@ export default function CityPage() {
           >
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-md border border-white/25 text-[10px] font-semibold uppercase tracking-wider text-white mb-4">
               <span className="w-1 h-1 rounded-full bg-gold" />
-              {city.category}
+              {translatedCity?.category || city.category}
             </span>
             <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-semibold text-white leading-tight mb-4">
               {localName}
@@ -344,7 +353,7 @@ export default function CityPage() {
                     className="overflow-hidden"
                   >
                     <p className="pt-3 font-body text-sm sm:text-base text-white/85 leading-relaxed">
-                      {city.description}
+                      {translatedCity?.description || city.description}
                     </p>
                   </motion.div>
                 )}
@@ -401,7 +410,7 @@ export default function CityPage() {
             {tab === 'tours' && (
               <TourGrid
                 tours={tours}
-                cityName={city.name}
+                cityName={localName}
                 tx={tx}
                 Arrow={Arrow}
                 loading={toursLoading}
@@ -411,7 +420,7 @@ export default function CityPage() {
             {tab === 'guides' && (
               <GuideGrid
                 guides={guides}
-                cityName={city.name}
+                cityName={localName}
                 tx={tx}
                 loading={guidesLoading}
                 navigate={navigate}
@@ -442,16 +451,17 @@ export default function CityPage() {
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function GridSkeleton() {
+function GridSkeleton({ label }) {
   return (
     <div className="flex min-h-[18rem] items-center justify-center">
-      <BreathingGlow label="Loading city results" />
+      <BreathingGlow label={label} />
     </div>
   );
 }
 
 function TourGrid({ tours, cityName, tx, Arrow, loading }) {
-  if (loading) return <GridSkeleton shape="card" />;
+  const { lang } = useI18n();
+  if (loading) return <GridSkeleton label={tx.loadingResults} />;
   if (tours.length === 0) {
     return (
       <div className="text-center py-16">
@@ -468,7 +478,7 @@ function TourGrid({ tours, cityName, tx, Arrow, loading }) {
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       {tours.map((tour) => {
         const img = tour.image_url || tour.cover_image || (Array.isArray(tour.gallery) && tour.gallery[0]) || 'https://images.unsplash.com/photo-1564960723835-2898c9df9297?w=600';
-        const title = (tour.title && typeof tour.title === 'object' ? (tour.title.en || tour.title.fa || tour.title.ar) : tour.title) || 'Tour';
+        const title = (tour.title && typeof tour.title === 'object' ? (tour.title[lang] || tour.title.en || tour.title.fa || tour.title.ar) : tour.title) || tx.tour;
         const price = tour.price ?? tour.price_from ?? tour.price_usd;
         const href = tour.slug ? `/tours/${tour.slug}` : '/tours';
         return (
@@ -488,7 +498,7 @@ function TourGrid({ tours, cityName, tx, Arrow, loading }) {
               <div className="flex items-center justify-between text-xs text-muted-foreground mb-4">
                 <span className="flex items-center gap-1.5">
                   <Clock className="w-3.5 h-3.5" />
-                  {tour.duration ? `${tour.duration} ${tx.days}` : '—'}
+                  {tour.duration ? tx.duration(tour.duration) : '—'}
                 </span>
                 {price != null && (
                   <span className="flex items-center gap-1 text-accent font-semibold">
@@ -510,7 +520,8 @@ function TourGrid({ tours, cityName, tx, Arrow, loading }) {
 }
 
 function GuideGrid({ guides, cityName, tx, loading, navigate }) {
-  if (loading) return <GridSkeleton shape="card" />;
+  const { lang } = useI18n();
+  if (loading) return <GridSkeleton label={tx.loadingResults} />;
   if (guides.length === 0) {
     return (
       <div className="text-center py-16">
@@ -544,10 +555,10 @@ function GuideGrid({ guides, cityName, tx, loading, navigate }) {
               className="w-14 h-14 rounded-full object-cover border-2 border-gold/40 flex-shrink-0"
             />
             <div className="min-w-0">
-              <p className="font-heading text-base font-semibold text-foreground truncate">{guide.full_name || 'Local guide'}</p>
+              <p className="font-heading text-base font-semibold text-foreground truncate">{guide.full_name || tx.localGuide}</p>
               <p className="text-xs text-muted-foreground flex items-center gap-1 mt-0.5">
                 <Compass className="w-3 h-3 text-accent" />
-                {guide.city || cityName}
+                {tx.cityLabel(guide.city) || cityName}
               </p>
             </div>
           </div>
@@ -555,7 +566,7 @@ function GuideGrid({ guides, cityName, tx, loading, navigate }) {
           <div className="space-y-2 mb-5">
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Languages className="w-3.5 h-3.5 text-accent" />
-              {guide.languages || '—'}
+              {toLanguageOptions(guide.languages).map(language => language[lang] || language.en).join(lang === 'en' ? ', ' : '، ') || '—'}
             </p>
             <div className="flex items-center gap-1.5">
               {[1, 2, 3, 4, 5].map((n) => (
@@ -575,7 +586,7 @@ function GuideGrid({ guides, cityName, tx, loading, navigate }) {
             className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-accent hover:bg-accent/90 text-white text-sm font-semibold transition"
           >
             <User className="w-4 h-4" />
-            {tx.viewGuide}
+            {guide.role === 'agency' ? tx.viewAgency : tx.viewGuide}
           </Link>
         </div>
       ))}
@@ -606,6 +617,8 @@ function buildAttractionRequest(city, attraction, lang) {
 function AttractionsGrid({ citySlug, city, tx, onRequest }) {
   const { lang } = useI18n();
   const photos = attractionImages[citySlug] || {};
+  const translated = cityTranslations[citySlug]?.[lang];
+  const cityName = city.nameI18n?.[lang] || city.name;
   const creditsLabel = lang === 'fa' ? 'منابع عکس‌ها' : lang === 'ar' ? 'مصادر الصور' : 'Photo credits';
   return (
     <section>
@@ -652,13 +665,13 @@ function AttractionsGrid({ citySlug, city, tx, onRequest }) {
               </div>
 
               <h3 className="font-heading text-xl font-semibold leading-snug text-white sm:text-2xl">
-                {attraction}
+                {translated?.highlights?.[index] || attraction}
               </h3>
-              <p className="mt-2 text-xs text-white/65">{city.name}</p>
+              <p className="mt-2 text-xs text-white/65">{cityName}</p>
 
               <button
                 type="button"
-                onClick={() => onRequest(attraction)}
+                onClick={() => onRequest(translated?.highlights?.[index] || attraction)}
                 className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full bg-white px-4 py-2.5 text-sm font-semibold text-navy transition hover:bg-gold focus:outline-none focus-visible:ring-2 focus-visible:ring-gold focus-visible:ring-offset-2 focus-visible:ring-offset-navy"
               >
                 <Send className="h-4 w-4" />

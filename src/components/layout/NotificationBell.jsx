@@ -13,15 +13,17 @@ import { useNavigate } from 'react-router-dom';
 import { useNotificationsContext } from '@/lib/NotificationsContext';
 import { useAuth } from '@/lib/AuthContext';
 import { notificationDestination } from '@/lib/notificationDestination';
+import { useI18n } from '@/lib/i18n.jsx';
+import { localize } from '@/lib/localize';
 
-function timeAgo(dateStr) {
+function timeAgo(dateStr, lang) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'just now';
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1) return localize(lang, 'just now', 'همین حالا', 'الآن');
+  if (mins < 60) return localize(lang, `${mins}m ago`, `${mins} دقیقه پیش`, `منذ ${mins} دقيقة`);
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
+  if (hrs < 24) return localize(lang, `${hrs}h ago`, `${hrs} ساعت پیش`, `منذ ${hrs} ساعة`);
+  return localize(lang, `${Math.floor(hrs / 24)}d ago`, `${Math.floor(hrs / 24)} روز پیش`, `قبل ${Math.floor(hrs / 24)} يوم`);
 }
 
 const TYPE_CONFIG = {
@@ -40,6 +42,8 @@ const TYPE_CONFIG = {
 };
 
 export default function NotificationBell({ isLight }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const { user } = useAuth();
   const { notifications, unreadCount, loading, markAllRead, markOneRead } = useNotificationsContext();
   const [open, setOpen] = useState(false);
@@ -98,7 +102,7 @@ export default function NotificationBell({ isLight }) {
         className={`relative p-2.5 rounded-full border transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 ${
           isLight ? 'text-white hover:bg-white/10' : 'text-foreground hover:bg-muted'
         } ${unreadCount > 0 ? 'border-accent/40 bg-accent/10 shadow-[0_0_0_4px_rgba(16,185,129,0.10)]' : 'border-transparent'}`}
-        aria-label="Notifications"
+        aria-label={l('Notifications', 'اعلان‌ها', 'الإشعارات')}
         aria-haspopup="dialog"
         aria-expanded={open}
       >
@@ -115,10 +119,10 @@ export default function NotificationBell({ isLight }) {
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
             <div className="flex items-center gap-2">
               <Bell className="w-4 h-4 text-accent" />
-              <span className="font-heading font-semibold text-sm text-foreground">Notifications</span>
+              <span className="font-heading font-semibold text-sm text-foreground">{l('Notifications', 'اعلان‌ها', 'الإشعارات')}</span>
               {unreadCount > 0 && (
                 <span className="bg-accent/10 text-accent text-xs font-semibold px-2 py-0.5 rounded-full">
-                  {unreadCount} new
+                  {l(`${unreadCount} new`, `${unreadCount} جدید`, `الجديدة: ${unreadCount}`)}
                 </span>
               )}
             </div>
@@ -127,16 +131,16 @@ export default function NotificationBell({ isLight }) {
                 <button
                   onClick={markAllRead}
                   className="flex items-center gap-1 text-xs text-muted-foreground hover:text-accent transition-colors px-2 py-1 rounded-lg hover:bg-accent/5"
-                  title="Mark all as read"
+                  title={l('Mark all as read', 'علامت‌گذاری همه به‌عنوان خوانده‌شده', 'تحديد الكل كمقروء')}
                 >
                   <CheckCheck className="w-3.5 h-3.5" />
-                  All read
+                  {l('All read', 'خواندن همه', 'قراءة الكل')}
                 </button>
               )}
               <button
                 onClick={() => setOpen(false)}
                 className="p-1 rounded-lg hover:bg-muted transition-colors text-muted-foreground"
-                aria-label="Close notifications"
+                aria-label={l('Close notifications', 'بستن اعلان‌ها', 'إغلاق الإشعارات')}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -152,7 +156,7 @@ export default function NotificationBell({ isLight }) {
             {!loading && notifications.length === 0 && (
               <div className="text-center py-10 px-4">
                 <Bell className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">No notifications yet</p>
+                <p className="text-sm text-muted-foreground">{l('No notifications yet', 'هنوز اعلانی ندارید', 'لا توجد إشعارات بعد')}</p>
               </div>
             )}
             {!loading && notifications.map((notification) => {
@@ -179,13 +183,13 @@ export default function NotificationBell({ isLight }) {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <span className={`text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-md ${config.color}`}>
-                        {config.label}
+                        {({ info: l('Info', 'اطلاع‌رسانی', 'معلومة'), success: l('Success', 'موفق', 'نجاح'), warning: l('Warning', 'هشدار', 'تنبيه'), request: l('Request', 'درخواست', 'طلب'), tour_request: l('Trip Request', 'درخواست سفر', 'طلب رحلة'), new_request: l('Trip Request', 'درخواست سفر', 'طلب رحلة'), proposal_received: l('New Proposal', 'پیشنهاد جدید', 'عرض جديد'), proposals_ready: l('Proposals Ready', 'پیشنهادها آماده‌اند', 'العروض جاهزة'), proposal_pending: l('Proposal Pending', 'پیشنهاد در انتظار', 'عرض قيد الانتظار'), guide_selected: l('Selected', 'انتخاب‌شده', 'تم الاختيار'), request_filled: l('Trip Update', 'به‌روزرسانی سفر', 'تحديث الرحلة'), message: l('Message', 'پیام', 'رسالة') })[notification.type] || config.label}
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
                       {notification.message}
                     </p>
-                    <p className="text-[10px] text-muted-foreground/60 mt-1">{timeAgo(notification.created_at)}</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">{timeAgo(notification.created_at, lang)}</p>
                   </div>
                   {!notification.is_read && (
                     <button
@@ -194,7 +198,7 @@ export default function NotificationBell({ isLight }) {
                         markOneRead(notification.id);
                       }}
                       className="p-1 rounded-full hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors shrink-0 mt-0.5"
-                      aria-label="Mark notification as read"
+                      aria-label={l('Mark notification as read', 'علامت‌گذاری اعلان به‌عنوان خوانده‌شده', 'تحديد الإشعار كمقروء')}
                     >
                       <Check className="w-3.5 h-3.5" />
                     </button>

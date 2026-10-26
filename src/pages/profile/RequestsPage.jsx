@@ -12,8 +12,10 @@ import TripRequestForm from '@/components/profile/TripRequestForm';
 import { getMyActiveDispatchRecipients } from '@/api/tripRequests';
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import PulsatingBorder from '@/components/originkit/ui/pulsating-border';
+import { localize } from '@/lib/localize';
 
 function NewTripRequestButton({ onClick, spacious = false, compactOnMobile = false, className = '' }) {
+  const { lang } = useI18n();
   return (
     <div className={`relative inline-flex w-fit shrink-0 ${className}`}>
       <button
@@ -24,10 +26,10 @@ function NewTripRequestButton({ onClick, spacious = false, compactOnMobile = fal
         <Plus className="w-4 h-4" />
         {compactOnMobile ? (
           <>
-            <span className="hidden sm:inline">New Trip Request</span>
-            <span className="sm:hidden">New</span>
+            <span className="hidden sm:inline">{localize(lang, 'New Trip Request', 'درخواست سفر جدید', 'طلب رحلة جديد')}</span>
+            <span className="sm:hidden">{localize(lang, 'New', 'جدید', 'جديد')}</span>
           </>
-        ) : 'New Trip Request'}
+        ) : localize(lang, 'New Trip Request', 'درخواست سفر جدید', 'طلب رحلة جديد')}
       </button>
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
         <PulsatingBorder

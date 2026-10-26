@@ -35,7 +35,7 @@ export default function UserAvatar({ profile, userId, onSave, size = 132, editab
       onSave?.({ ...(profile || {}), avatar_url: value || null });
       setOpen(false);
     } catch (err) {
-      setError(err.message || 'Failed to update avatar');
+      setError(lang === 'fa' ? 'به‌روزرسانی تصویر پروفایل ممکن نشد.' : lang === 'ar' ? 'تعذّر تحديث صورة الملف الشخصي.' : 'Failed to update avatar');
     } finally {
       setSaving(false);
     }
@@ -63,7 +63,7 @@ export default function UserAvatar({ profile, userId, onSave, size = 132, editab
         <button
           onClick={() => setOpen(true)}
           className="absolute bottom-0 end-0 w-10 h-10 rounded-full bg-gold hover:bg-gold-light text-navy shadow-lg flex items-center justify-center transition-all border-2 border-background"
-          aria-label="Change avatar"
+          aria-label={lang === 'fa' ? 'تغییر تصویر پروفایل' : lang === 'ar' ? 'تغيير صورة الملف الشخصي' : 'Change avatar'}
         >
           <Camera className="w-4 h-4" />
         </button>

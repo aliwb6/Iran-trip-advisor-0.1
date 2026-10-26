@@ -93,7 +93,7 @@ function GuideCard({ guide, lang, onNavigate }) {
       <div className="p-4">
         {/* Name */}
         <h3 className="font-heading text-lg font-semibold text-foreground truncate mb-1">
-          {guide.full_name || (lang === 'fa' ? 'راهنما' : 'Guide')}
+          {guide.full_name || (lang === 'fa' ? 'راهنما' : lang === 'ar' ? 'مرشد' : 'Guide')}
         </h3>
 
         {/* Stars + rating + reviews */}

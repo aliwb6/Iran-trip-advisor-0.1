@@ -28,6 +28,8 @@ import { fetchProfileReviewsSafely } from '@/lib/reviews';
 import { selectPublicTours } from '@/lib/publicTours';
 import { getProviderAbilityLabel, normalizeProviderAbilities } from '@/lib/providerCapabilities';
 import { useGuideArticles } from '@/hooks/useSupabase';
+import { toLanguageOptions } from '@/data/languages';
+import { localize, localizeTripOption } from '@/lib/localize';
 
 const pickTourImage = (tour) =>
   tour.cover_image || tour.image_url || tour.image ||
@@ -50,6 +52,7 @@ function StarRow({ rating, size = 'sm' }) {
 // ── Booking Widget ─────────────────────────────────────────────────────────────
 
 function BookingWidget({ agency, lang }) {
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [destination, setDestination] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
@@ -76,7 +79,7 @@ function BookingWidget({ agency, lang }) {
       <div className="space-y-4">
         <div>
           <label className="block font-body text-xs text-muted-foreground mb-1.5">
-            {lang === 'fa' ? 'مقصد' : 'Destination'}
+            {l('Destination', 'مقصد', 'الوجهة')}
           </label>
           <div className="relative">
             <select
@@ -84,7 +87,7 @@ function BookingWidget({ agency, lang }) {
               onChange={(e) => setDestination(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
             >
-              <option value="">{lang === 'fa' ? '-- مقصد را انتخاب کنید --' : '-- Select destination --'}</option>
+              <option value="">{l('-- Select destination --', '-- مقصد را انتخاب کنید --', '-- اختر الوجهة --')}</option>
               {iranianDestinations.map((c) => <option key={c.en} value={c.en}>{c[lang] || c.en}</option>)}
             </select>
             <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -93,7 +96,7 @@ function BookingWidget({ agency, lang }) {
 
         <div>
           <label className="block font-body text-xs text-muted-foreground mb-1.5">
-            {lang === 'fa' ? 'تاریخ سفر' : 'Travel Date'}
+            {l('Travel Date', 'تاریخ سفر', 'تاريخ السفر')}
           </label>
           <div className="grid grid-cols-2 gap-2">
             <div>
@@ -125,8 +128,8 @@ function BookingWidget({ agency, lang }) {
 
         <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-background">
           <div>
-            <p className="font-body text-sm font-medium text-foreground">{lang === 'fa' ? 'بزرگسال' : 'Adults'}</p>
-            <p className="font-body text-xs text-muted-foreground">{lang === 'fa' ? 'سنین ۱۸ تا ۶۰' : 'Aged 18–60'}</p>
+            <p className="font-body text-sm font-medium text-foreground">{l('Adults', 'بزرگسالان', 'البالغون')}</p>
+            <p className="font-body text-xs text-muted-foreground">{l('Aged 18–60', '۱۸ تا ۶۰ سال', 'من 18 إلى 60 عاماً')}</p>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => setAdults(Math.max(1, adults - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-gold/10 hover:border-gold/40 transition">
@@ -141,8 +144,8 @@ function BookingWidget({ agency, lang }) {
 
         <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-background">
           <div>
-            <p className="font-body text-sm font-medium text-foreground">{lang === 'fa' ? 'کودک' : 'Children'}</p>
-            <p className="font-body text-xs text-muted-foreground">{lang === 'fa' ? 'سنین ۱ تا ۱۰' : 'Aged 1–10'}</p>
+            <p className="font-body text-sm font-medium text-foreground">{l('Children', 'کودکان', 'الأطفال')}</p>
+            <p className="font-body text-xs text-muted-foreground">{l('Aged 1–10', '۱ تا ۱۰ سال', 'من سنة إلى 10 سنوات')}</p>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => setChildren(Math.max(0, children - 1))} className="w-8 h-8 rounded-full border border-border flex items-center justify-center hover:bg-gold/10 hover:border-gold/40 transition">
@@ -159,7 +162,7 @@ function BookingWidget({ agency, lang }) {
           onClick={handleRequest}
           className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 active:scale-[0.98] transition-all"
         >
-          {lang === 'fa' ? 'درخواست تور' : 'Request A Trip'}
+          {l('Request A Trip', 'درخواست تور', 'طلب جولة')}
           <ArrowRight className="w-4 h-4" />
         </button>
       </div>
@@ -170,11 +173,12 @@ function BookingWidget({ agency, lang }) {
 // ── Review Card ────────────────────────────────────────────────────────────────
 
 function ReviewCard({ review }) {
+  const { lang } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const text = review.review_text || review.body || review.comment || '';
-  const reviewerName = review.reviewer?.full_name || review.reviewer_name || review.userName || 'Anonymous';
+  const reviewerName = review.reviewer?.full_name || review.reviewer_name || review.userName || (lang === 'fa' ? 'ناشناس' : lang === 'ar' ? 'مجهول' : 'Anonymous');
   const reviewDate = review.created_at
-    ? new Date(review.created_at).toLocaleDateString()
+    ? new Date(review.created_at).toLocaleDateString(lang === 'fa' ? 'fa-IR-u-ca-gregory' : lang === 'ar' ? 'ar-u-ca-gregory' : undefined)
     : review.date || '';
   const needsTruncate = text.length > 150;
 
@@ -200,12 +204,12 @@ function ReviewCard({ review }) {
       </p>
       {needsTruncate && (
         <button onClick={() => setExpanded(!expanded)} className="mt-1 font-body text-xs text-gold hover:text-gold/80 font-medium transition">
-          {expanded ? 'Read less' : 'Read more'}
+          {expanded ? (lang === 'fa' ? 'نمایش کمتر' : lang === 'ar' ? 'عرض أقل' : 'Read less') : (lang === 'fa' ? 'ادامهٔ مطلب' : lang === 'ar' ? 'قراءة المزيد' : 'Read more')}
         </button>
       )}
       {review.admin_reply && (
         <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3">
-          <p className="font-body text-xs font-semibold text-emerald-600 dark:text-emerald-400">Admin reply</p>
+          <p className="font-body text-xs font-semibold text-emerald-600 dark:text-emerald-400">{lang === 'fa' ? 'پاسخ مدیر' : lang === 'ar' ? 'ردّ المسؤول' : 'Admin reply'}</p>
           <p className="mt-1 font-body text-xs leading-relaxed text-foreground/70">{review.admin_reply}</p>
         </div>
       )}
@@ -243,6 +247,7 @@ export default function AgencyProfile() {
   const location = useLocation();
   const { user } = useAuth();
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const aiConversationId = location.state?.returnToAiChat ? location.state?.conversationId : null;
   const backDestination = aiConversationId
     ? `/ai-assistant?conversation=${encodeURIComponent(aiConversationId)}`
@@ -314,7 +319,7 @@ export default function AgencyProfile() {
         <div className="flex flex-col items-center gap-3">
           <BreathingGlow />
           <p className="font-body text-muted-foreground text-sm">
-            {lang === 'fa' ? 'در حال بارگذاری...' : 'Loading...'}
+            {l('Loading...', 'در حال بارگذاری…', 'جارٍ التحميل…')}
           </p>
         </div>
       </div>
@@ -326,10 +331,10 @@ export default function AgencyProfile() {
       <div className="pt-32 pb-20 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h1 className="font-heading text-3xl text-foreground mb-4">
-            {lang === 'fa' ? 'آژانس یافت نشد' : 'Agency Not Found'}
+            {lang === 'fa' ? 'آژانس یافت نشد' : lang === 'ar' ? 'الوكالة غير موجودة' : 'Agency Not Found'}
           </h1>
           {error && <p className="font-body text-sm text-destructive mb-4">{error}</p>}
-          <Link to="/agencies" className="text-gold hover:underline font-body">← Back to Agencies</Link>
+          <Link to="/agencies" className="text-gold hover:underline font-body">← {lang === 'fa' ? 'بازگشت به آژانس‌ها' : lang === 'ar' ? 'العودة إلى الوكالات' : 'Back to Agencies'}</Link>
         </div>
       </div>
     );
@@ -353,7 +358,7 @@ export default function AgencyProfile() {
 
   const handleChat = () => {
     if (!chatUnlocked) {
-      toast(lang === 'fa' ? 'چت پس از نهایی‌شدن رزرو تور یا تور سفارشی فعال می‌شود.' : 'Chat becomes available after booking a tour or a custom tour.');
+      toast(l('Chat becomes available after booking a tour or a custom tour.', 'گفتگو پس از نهایی شدن رزرو تور یا سفر اختصاصی فعال می‌شود.', 'ستتاح المحادثة بعد تأكيد حجز الجولة أو الرحلة المخصّصة.'));
       return;
     }
     navigate(`/chat/${id}`);
@@ -378,7 +383,7 @@ export default function AgencyProfile() {
             className="profile-page-back-button flex items-center gap-2 text-muted-foreground hover:text-foreground font-body text-sm transition"
           >
             {<IconSwap active={isRtl} a={<ChevronLeft className="w-4 h-4" />} b={<ChevronRight className="w-4 h-4" />} />}
-            {lang === 'fa' ? 'بازگشت' : 'Back'}
+            {l('Back', 'بازگشت', 'رجوع')}
           </button>
         </div>
       </div>
@@ -399,7 +404,7 @@ export default function AgencyProfile() {
             ) : (
               <div className="flex flex-col items-center gap-4 text-gold/40">
                 <Building2 className="w-24 h-24" />
-                <p className="font-body text-sm">{lang === 'fa' ? 'لوگو آژانس' : 'Agency Logo'}</p>
+                <p className="font-body text-sm">{l('Agency Logo', 'نشان آژانس', 'شعار الوكالة')}</p>
               </div>
             )}
           </div>
@@ -437,7 +442,7 @@ export default function AgencyProfile() {
                 </span>
                 <StarRow rating={rating} size="md" />
                 <span className="font-body text-sm text-muted-foreground">
-                  {reviewCount} {lang === 'fa' ? 'نظر' : 'Reviews'}
+                  {l(`${reviewCount} Reviews`, `${reviewCount} نظر`, `التقييمات: ${reviewCount}`)}
                 </span>
               </div>
             )}
@@ -449,7 +454,7 @@ export default function AgencyProfile() {
                 <div className="flex items-center gap-3">
                   <BadgeCheck className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                   <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
-                    {lang === 'fa' ? 'مجوز تأیید شده' : 'Verified'}
+                    {l('Verified', 'مجوز تأییدشده', 'ترخيص موثّق')}
                   </span>
                 </div>
               )}
@@ -458,7 +463,7 @@ export default function AgencyProfile() {
                   <Calendar className="w-5 h-5 text-gold flex-shrink-0" />
                   <span className="font-body text-sm text-foreground">
                     <span className="text-muted-foreground">
-                      {lang === 'fa' ? 'تأسیس از سال:' : 'Established since:'}
+                      {l('Established since:', 'تأسیس از سال:', 'تأسست عام:')}
                     </span>{' '}
                     {established}
                   </span>
@@ -469,9 +474,9 @@ export default function AgencyProfile() {
                   <Globe className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
                   <span className="font-body text-sm text-foreground">
                     <span className="text-muted-foreground">
-                      {lang === 'fa' ? 'زبان‌های پشتیبانی:' : 'Support languages:'}
+                      {l('Support languages:', 'زبان‌های پشتیبانی:', 'لغات التواصل:')}
                     </span>{' '}
-                    {languages.join(', ')}
+                    {toLanguageOptions(languages).map(option => option[lang]).join(lang === 'en' ? ', ' : '، ')}
                   </span>
                 </div>
               )}
@@ -493,9 +498,9 @@ export default function AgencyProfile() {
                   <MapPin className="w-5 h-5 text-gold flex-shrink-0" />
                   <span className="font-body text-sm text-foreground">
                     <span className="text-muted-foreground">
-                      {lang === 'fa' ? 'دفتر مرکزی:' : 'Headquarters:'}
+                      {l('Headquarters:', 'دفتر مرکزی:', 'المقر الرئيسي:')}
                     </span>{' '}
-                    {city}
+                    {iranianDestinations.find(item => item.en === city)?.[lang] || city}
                   </span>
                 </div>
               )}
@@ -504,9 +509,9 @@ export default function AgencyProfile() {
                   <Map className="w-5 h-5 text-gold flex-shrink-0 mt-0.5" />
                   <span className="font-body text-sm text-foreground">
                     <span className="text-muted-foreground">
-                      {lang === 'fa' ? 'مناطق تحت پوشش:' : 'Coverage areas:'}
+                      {l('Coverage areas:', 'مناطق تحت پوشش:', 'مناطق التغطية:')}
                     </span>{' '}
-                    {otherCities.join(', ')}
+                    {otherCities.map(value => iranianDestinations.find(item => item.en === value)?.[lang] || value).join(lang === 'en' ? ', ' : '، ')}
                   </span>
                 </div>
               )}
@@ -533,13 +538,13 @@ export default function AgencyProfile() {
                 onClick={() => navigate(`/request-trip/agency/${id}`, { state: { guide: agency } })}
                 className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-gold text-black font-body font-bold text-sm hover:bg-gold/90 active:scale-[0.98] transition-all shadow-md"
               >
-                {lang === 'fa' ? 'درخواست تور' : 'Request A Trip'}
+                {l('Request A Trip', 'درخواست تور', 'طلب جولة')}
                 <ArrowRight className="w-4 h-4" />
               </button>
               <button
                 onClick={() => handleChat()}
                 disabled={!chatUnlocked}
-                title={chatUnlocked ? '' : (lang === 'fa' ? 'پس از نهایی‌شدن رزرو فعال می‌شود' : 'Available after booking is confirmed')}
+                title={chatUnlocked ? '' : l('Available after booking is confirmed', 'پس از تأیید رزرو فعال می‌شود', 'تتاح بعد تأكيد الحجز')}
                 className={`flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-body font-semibold text-sm active:scale-[0.98] transition-all ${
                   chatUnlocked
                     ? 'border-2 border-gold text-gold hover:bg-gold/5'
@@ -547,11 +552,11 @@ export default function AgencyProfile() {
                 }`}
               >
                 {<IconSwap active={chatUnlocked} a={<Lock className="w-4 h-4" />} b={<MessageCircle className="w-4 h-4" />} />}
-                {lang === 'fa' ? 'چت' : 'Chat'}
+                {l('Chat', 'گفتگو', 'محادثة')}
               </button>
               <button type="button" onClick={handleWriteReview} className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl border-2 border-gold text-gold font-body font-semibold text-sm hover:bg-gold/5 active:scale-[0.98] transition-all">
                 <PenLine className="w-4 h-4" />
-                {lang === 'fa' ? 'نوشتن نظر' : 'Write A Review'}
+                {l('Write A Review', 'نوشتن نظر', 'كتابة تقييم')}
               </button>
             </div>
           </div>
@@ -573,14 +578,14 @@ export default function AgencyProfile() {
             {bio && (
               <section>
                 <h2 className="font-heading text-2xl font-semibold text-foreground mb-4 pb-2 border-b border-border/50">
-                  {lang === 'fa' ? 'درباره آژانس' : 'About The Agency'}
+                  {l('About The Agency', 'دربارهٔ آژانس', 'نبذة عن الوكالة')}
                 </h2>
                 <p className="font-body text-foreground/75 leading-relaxed text-base mb-5">{bio}</p>
                 {tourTypes.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {tourTypes.map((s, i) => (
                       <span key={i} className="px-3.5 py-1.5 rounded-full text-sm font-body font-medium bg-gold/10 text-gold border border-gold/20">
-                        {s}
+                        {localizeTripOption(s, lang)}
                       </span>
                     ))}
                   </div>
@@ -592,7 +597,7 @@ export default function AgencyProfile() {
             {tours.length > 0 ? (
               <section>
                 <h2 className="font-heading text-2xl font-semibold text-foreground mb-4 pb-2 border-b border-border/50">
-                  {lang === 'fa' ? `تورهای ${name.split(' ')[0]}` : `Tours by ${name.split(' ')[0]}`}
+                  {l(`Tours by ${name.split(' ')[0]}`, `تورهای ${name.split(' ')[0]}`, `جولات ${name.split(' ')[0]}`)}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
                   {tours.map((tour, i) => (
@@ -608,10 +613,10 @@ export default function AgencyProfile() {
             ) : (
               <section>
                 <h2 className="font-heading text-2xl font-semibold text-foreground mb-4 pb-2 border-b border-border/50">
-                  {lang === 'fa' ? `تورهای ${name.split(' ')[0]}` : `Tours by ${name.split(' ')[0]}`}
+                  {l(`Tours by ${name.split(' ')[0]}`, `تورهای ${name.split(' ')[0]}`, `جولات ${name.split(' ')[0]}`)}
                 </h2>
                 <p className="font-body text-muted-foreground text-sm py-6 text-center">
-                  {lang === 'fa' ? 'هنوز توری ثبت نشده است' : 'No tours yet'}
+                  {l('No tours yet', 'هنوز توری ثبت نشده است', 'لا توجد جولات بعد')}
                 </p>
               </section>
             )}
@@ -621,11 +626,11 @@ export default function AgencyProfile() {
             {/* Reviews */}
             <section>
               <h2 className="font-heading text-2xl font-semibold text-foreground mb-4 pb-2 border-b border-border/50">
-                {lang === 'fa' ? 'نظرات' : 'Reviews'}
+                {l('Reviews', 'نظرات', 'التقييمات')}
               </h2>
               {reviewError && (
                 <p role="alert" className="mb-4 rounded-xl border border-destructive/20 bg-destructive/5 px-4 py-3 font-body text-sm text-destructive">
-                  {lang === 'fa' ? 'بارگذاری نظرات ممکن نشد.' : 'Reviews could not be loaded.'}
+                  {l('Reviews could not be loaded.', 'بارگذاری نظرها ممکن نشد.', 'تعذّر تحميل التقييمات.')}
                 </p>
               )}
               {!reviewError && rating != null && (
@@ -634,7 +639,7 @@ export default function AgencyProfile() {
                     <p className="font-heading text-5xl font-bold text-foreground">{Number(rating).toFixed(1)}</p>
                     <StarRow rating={rating} size="md" />
                     <p className="font-body text-xs text-muted-foreground mt-1">
-                      {reviewCount} {lang === 'fa' ? 'نظر' : 'reviews'}
+                      {l(`${reviewCount} reviews`, `${reviewCount} نظر`, `التقييمات: ${reviewCount}`)}
                     </p>
                   </div>
                   <div className="flex-1">
@@ -654,13 +659,13 @@ export default function AgencyProfile() {
                       onClick={() => setShowAllReviews(!showAllReviews)}
                       className="mt-4 w-full py-3 rounded-xl border-2 border-gold/30 text-gold font-body font-semibold text-sm hover:bg-gold/5 transition"
                     >
-                      {showAllReviews ? (lang === 'fa' ? 'نمایش کمتر' : 'Show Less') : (lang === 'fa' ? `نمایش همه ${reviewList.length} نظر` : `Show all ${reviewList.length} reviews`)}
+                      {showAllReviews ? l('Show Less', 'نمایش کمتر', 'عرض أقل') : l(`Show all ${reviewList.length} reviews`, `نمایش همهٔ ${reviewList.length} نظر`, `عرض جميع التقييمات (${reviewList.length})`)}
                     </button>
                   )}
                 </>
               ) : !reviewError ? (
                 <p className="font-body text-muted-foreground text-sm py-6 text-center">
-                  {lang === 'fa' ? 'هنوز نظری ثبت نشده است' : 'No reviews yet'}
+                  {l('No reviews yet', 'هنوز نظری ثبت نشده است', 'لا توجد تقييمات بعد')}
                 </p>
               ) : null}
             </section>

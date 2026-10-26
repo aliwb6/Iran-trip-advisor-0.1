@@ -21,10 +21,11 @@ import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n';
 import { supabase } from '@/supabaseClient';
-import { iranianCities as IRANIAN_CITIES } from '@/data/iranianCities';
-import { allLanguages, mergeLanguages, popularLanguages } from '@/data/languages';
+import { iranianCities as IRANIAN_CITIES, iranianDestinations } from '@/data/iranianCities';
+import { allLanguages, mergeLanguages, popularLanguages, toLanguageOptions } from '@/data/languages';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { localize, localizeTripOption } from '@/lib/localize';
 
 const HOLIDAY_TYPES = [
   { id: 'Active',       label: 'Active',       emoji: '🏃' },
@@ -76,6 +77,8 @@ const HOW_IT_WORKS = [
 const HOURS   = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 const MINUTES = ['00', '15', '30', '45'];
 const GUIDE_LANGUAGE_OPTIONS = mergeLanguages(popularLanguages, allLanguages);
+const GUIDE_LANGUAGE_LABELS = Object.fromEntries(toLanguageOptions(GUIDE_LANGUAGE_OPTIONS).map(option => [option.key, option]));
+const CITY_LABELS = Object.fromEntries(iranianDestinations.map(city => [city.en, city]));
 const REQUIREMENTS_MIN_LENGTH = 80;
 
 const INITIAL_FORM = {
@@ -112,10 +115,11 @@ function getTodayStr() {
   return `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
 }
 
-function formatDateDisplay(dateStr) {
+function formatDateDisplay(dateStr, lang = 'en') {
   if (!dateStr) return '';
   const [y, m, d] = dateStr.split('-').map(Number);
-  return `${d} ${SHORT_MONTHS[m - 1]} ${y}`;
+  if (lang === 'en') return `${d} ${SHORT_MONTHS[m - 1]} ${y}`;
+  return new Intl.DateTimeFormat(lang === 'fa' ? 'fa-IR-u-ca-gregory' : 'ar-u-ca-gregory', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(y, m - 1, d));
 }
 
 function addDays(dateStr, days) {
@@ -132,6 +136,7 @@ function tripDays(start, end) {
 // ── DatePickerInput ────────────────────────────────────────────────────────
 
 function DatePickerInput({ value, onChange, otherDate }) {
+  const { lang } = useI18n();
   const now = new Date();
   const [open, setOpen]           = useState(false);
   const [viewYear, setViewYear]   = useState(now.getFullYear());
@@ -191,7 +196,7 @@ function DatePickerInput({ value, onChange, otherDate }) {
           open ? 'border-accent' : 'border-border/40'
         } ${value ? 'text-foreground' : 'text-muted-foreground/60'}`}
       >
-        {value ? formatDateDisplay(value) : 'Select date…'}
+        {value ? formatDateDisplay(value, lang) : localize(lang, 'Select date…', 'تاریخ را انتخاب کنید…', 'اختر التاريخ…')}
       </button>
 
       <AnimatePresence>
@@ -207,7 +212,8 @@ function DatePickerInput({ value, onChange, otherDate }) {
                 <ChevronLeft className="w-4 h-4" />
               </button>
               <span className="text-sm font-semibold text-foreground">
-                {MONTH_NAMES[viewMonth]} {viewYear}
+                {lang === 'en' ? MONTH_NAMES[viewMonth] : new Intl.DateTimeFormat(lang === 'fa' ? 'fa-IR-u-ca-gregory' : 'ar-u-ca-gregory', { month: 'long', year: 'numeric' }).format(new Date(viewYear, viewMonth, 1))}
+                {lang === 'en' ? ` ${viewYear}` : ''}
               </span>
               <button
                 type="button" onClick={nextMonth}
@@ -220,7 +226,7 @@ function DatePickerInput({ value, onChange, otherDate }) {
             <div className="grid grid-cols-7 mb-0.5">
               {DAY_HEADERS.map(d => (
                 <div key={d} className="flex items-center justify-center text-[10px] font-medium text-muted-foreground/70 pb-1">
-                  {d}
+                  {lang === 'en' ? d : new Intl.DateTimeFormat(lang === 'fa' ? 'fa-IR-u-ca-gregory' : 'ar-u-ca-gregory', { weekday: 'short' }).format(new Date(2024, 0, 1 + DAY_HEADERS.indexOf(d)))}
                 </div>
               ))}
             </div>
@@ -290,7 +296,7 @@ function CityMultiSelect({ values, onChange }) {
   }, [open]);
 
   const filtered = IRANIAN_CITIES.filter(
-    c => !values.includes(c) && c.toLowerCase().includes(search.toLowerCase())
+    c => !values.includes(c) && [c, CITY_LABELS[c]?.fa, CITY_LABELS[c]?.ar].some(label => label?.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
   );
 
   const remove = (city) => onChange(values.filter(c => c !== city));
@@ -299,7 +305,7 @@ function CityMultiSelect({ values, onChange }) {
     if (!trimmedCity) return;
 
     const canonicalCity = IRANIAN_CITIES.find(
-      option => option.toLocaleLowerCase() === trimmedCity.toLocaleLowerCase()
+      option => [option, CITY_LABELS[option]?.fa, CITY_LABELS[option]?.ar].some(label => label?.toLocaleLowerCase() === trimmedCity.toLocaleLowerCase())
     ) || trimmedCity;
     const alreadySelected = values.some(
       value => value.toLocaleLowerCase() === canonicalCity.toLocaleLowerCase()
@@ -324,7 +330,7 @@ function CityMultiSelect({ values, onChange }) {
             key={city}
             className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent border border-accent/25"
           >
-            {city}
+            {CITY_LABELS[city]?.[lang] || city}
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); remove(city); }}
@@ -364,7 +370,7 @@ function CityMultiSelect({ values, onChange }) {
                 className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-accent/10 hover:text-accent transition-colors text-start"
               >
                 <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                {city}
+                {CITY_LABELS[city]?.[lang] || city}
               </button>
             ))}
           </TransitionSurface>
@@ -375,6 +381,7 @@ function CityMultiSelect({ values, onChange }) {
 }
 
 function LanguageMultiSelect({ values, onChange }) {
+  const { lang } = useI18n();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
   const wrapRef = useRef(null);
@@ -391,13 +398,15 @@ function LanguageMultiSelect({ values, onChange }) {
   }, [open]);
 
   const hasValue = (language) => values.some(value => value.toLocaleLowerCase() === language.toLocaleLowerCase());
-  const filtered = GUIDE_LANGUAGE_OPTIONS.filter(language => !hasValue(language) && language.toLocaleLowerCase().includes(normalizedSearch));
-  const exactOptionExists = GUIDE_LANGUAGE_OPTIONS.some(language => language.toLocaleLowerCase() === normalizedSearch) || hasValue(search.trim());
+  const filtered = GUIDE_LANGUAGE_OPTIONS.filter(language => !hasValue(language) && [language, GUIDE_LANGUAGE_LABELS[language]?.fa, GUIDE_LANGUAGE_LABELS[language]?.ar].some(label => label?.toLocaleLowerCase().includes(normalizedSearch)));
+  const exactOptionExists = GUIDE_LANGUAGE_OPTIONS.some(language => [language, GUIDE_LANGUAGE_LABELS[language]?.fa, GUIDE_LANGUAGE_LABELS[language]?.ar].some(label => label?.toLocaleLowerCase() === normalizedSearch)) || hasValue(search.trim());
 
   const add = (language) => {
     const clean = language.trim();
-    if (!clean || hasValue(clean)) return;
-    onChange([...values, clean]);
+    if (!clean) return;
+    const canonical = GUIDE_LANGUAGE_OPTIONS.find(option => [option, GUIDE_LANGUAGE_LABELS[option]?.fa, GUIDE_LANGUAGE_LABELS[option]?.ar].some(label => label?.toLocaleLowerCase() === clean.toLocaleLowerCase())) || clean;
+    if (hasValue(canonical)) return;
+    onChange([...values, canonical]);
     setSearch('');
     setOpen(true);
     inputRef.current?.focus();
@@ -411,8 +420,8 @@ function LanguageMultiSelect({ values, onChange }) {
       >
         {values.map(language => (
           <span key={language} className="inline-flex items-center gap-1 pl-2.5 pr-1 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent border border-accent/25">
-            {language}
-            <button type="button" aria-label={`Remove ${language}`} onClick={event => { event.stopPropagation(); onChange(values.filter(value => value !== language)); }} className="w-4 h-4 rounded-full hover:bg-accent/20 flex items-center justify-center">
+            {GUIDE_LANGUAGE_LABELS[language]?.[lang] || language}
+            <button type="button" aria-label={`${localize(lang, 'Remove', 'حذف', 'إزالة')} ${language}`} onClick={event => { event.stopPropagation(); onChange(values.filter(value => value !== language)); }} className="w-4 h-4 rounded-full hover:bg-accent/20 flex items-center justify-center">
               <X className="w-2.5 h-2.5" />
             </button>
           </span>
@@ -429,7 +438,7 @@ function LanguageMultiSelect({ values, onChange }) {
               add(filtered[0] || search);
             }
           }}
-          placeholder={values.length ? 'Search or add another language…' : 'Search or add a language…'}
+          placeholder={values.length ? localize(lang, 'Search or add another language…', 'زبان دیگری جست‌وجو یا اضافه کنید…', 'ابحث عن لغة أخرى أو أضفها…') : localize(lang, 'Search or add a language…', 'زبانی جست‌وجو یا اضافه کنید…', 'ابحث عن لغة أو أضفها…')}
           className="flex-1 min-w-[190px] bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/50 py-0.5"
         />
       </div>
@@ -439,12 +448,12 @@ function LanguageMultiSelect({ values, onChange }) {
           <TransitionSurface kind="dropdown" data-origin="top-left" className="absolute left-0 top-full mt-1.5 z-50 w-full bg-card border border-border/60 rounded-xl shadow-xl max-h-56 overflow-y-auto py-1">
             {filtered.slice(0, 20).map(language => (
               <button key={language} type="button" onMouseDown={event => { event.preventDefault(); add(language); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm text-foreground hover:bg-accent/10 hover:text-accent text-start">
-                {language}
+                {GUIDE_LANGUAGE_LABELS[language]?.[lang] || language}
               </button>
             ))}
             {search.trim() && !exactOptionExists && (
               <button type="button" onMouseDown={event => { event.preventDefault(); add(search); }} className="flex items-center gap-2 w-full px-3 py-2 text-sm font-medium text-accent hover:bg-accent/10 text-start border-t border-border/30">
-                <Plus className="w-4 h-4" /> Add “{search.trim()}”
+                <Plus className="w-4 h-4" /> {localize(lang, 'Add', 'افزودن', 'إضافة')} “{search.trim()}”
               </button>
             )}
           </TransitionSurface>
@@ -568,7 +577,10 @@ function IconGridItem({ selected, onClick, emoji, label, multi = false }) {
 // ── Step indicator ─────────────────────────────────────────────────────────
 
 function StepIndicator({ step, packageMode = false }) {
-  const steps = packageMode ? ['Customization', 'Your Details'] : ['Trip Details', 'Preferences'];
+  const { lang } = useI18n();
+  const steps = packageMode
+    ? [localize(lang, 'Customization', 'شخصی‌سازی', 'تخصيص الرحلة'), localize(lang, 'Your Details', 'جزئیات سفر شما', 'تفاصيل رحلتك')]
+    : [localize(lang, 'Trip Details', 'جزئیات سفر', 'تفاصيل الرحلة'), localize(lang, 'Preferences', 'ترجیحات', 'التفضيلات')];
   return (
     <div className="flex items-center justify-center gap-0 mb-6">
       {steps.map((label, i) => {
@@ -606,8 +618,8 @@ function StepIndicator({ step, packageMode = false }) {
 function PackageRequestSummary({ context, form, lang }) {
   const adults = form.maleAdults + form.femaleAdults;
   const travellers = [
-    adults ? `${adults} ${adults === 1 ? 'Adult' : 'Adults'}` : null,
-    form.children ? `${form.children} ${form.children === 1 ? 'Child' : 'Children'}` : null,
+    adults ? `${adults} ${localize(lang, adults === 1 ? 'Adult' : 'Adults', 'بزرگسال', 'بالغ')}` : null,
+    form.children ? `${form.children} ${localize(lang, form.children === 1 ? 'Child' : 'Children', 'کودک', 'طفل')}` : null,
   ].filter(Boolean).join(', ');
 
   return (
@@ -627,23 +639,23 @@ function PackageRequestSummary({ context, form, lang }) {
       <div className="space-y-4 p-5 text-sm">
         <div className="flex items-start gap-2.5 text-muted-foreground">
           <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-          <span>{form.start_date && form.end_date ? `${formatDateDisplay(form.start_date)} — ${formatDateDisplay(form.end_date)}` : (lang === 'fa' ? 'تاریخ سفر را انتخاب کنید' : 'Choose your travel dates')}</span>
+          <span>{form.start_date && form.end_date ? `${formatDateDisplay(form.start_date, lang)} — ${formatDateDisplay(form.end_date, lang)}` : localize(lang, 'Choose your travel dates', 'تاریخ سفر را انتخاب کنید', 'اختر مواعيد سفرك')}</span>
         </div>
         <div className="flex items-start gap-2.5 text-muted-foreground">
           <Users className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-          <span>{travellers || (lang === 'fa' ? 'مسافران را مشخص کنید' : 'Choose your travellers')}</span>
+          <span>{travellers || localize(lang, 'Choose your travellers', 'تعداد مسافران را مشخص کنید', 'حدّد عدد المسافرين')}</span>
         </div>
       </div>
 
       <div className="mt-auto border-t border-border/50 p-5">
         {context.price != null && (
           <div className="flex items-baseline justify-between gap-3">
-            <span className="text-xs text-muted-foreground">{lang === 'fa' ? 'قیمت از' : 'Estimated from'}</span>
+            <span className="text-xs text-muted-foreground">{localize(lang, 'Estimated from', 'قیمت تخمینی از', 'السعر التقديري ابتداءً من')}</span>
             <span className="font-heading text-lg font-semibold text-foreground">USD {Number(context.price).toLocaleString()}</span>
           </div>
         )}
         {context.meta && <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{context.meta}</p>}
-        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground/80">{lang === 'fa' ? 'مبلغ نهایی پس از بررسی درخواست شما تأیید می‌شود.' : 'The final price is confirmed after your request is reviewed.'}</p>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground/80">{localize(lang, 'The final price is confirmed after your request is reviewed.', 'قیمت نهایی پس از بررسی درخواست شما تأیید می‌شود.', 'يُحدَّد السعر النهائي بعد مراجعة طلبك.')}</p>
       </div>
     </aside>
   );
@@ -652,6 +664,8 @@ function PackageRequestSummary({ context, form, lang }) {
 // ── Step 1: Trip Details ───────────────────────────────────────────────────
 
 function Step1({ form, set, toggleAssistance, errors }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const starsRef = useRef(null);
 
   const handleAssistanceClick = (item) => {
@@ -688,7 +702,7 @@ function Step1({ form, set, toggleAssistance, errors }) {
     <div className="space-y-5">
       {/* Destination — multi-city select */}
       <div>
-        <FieldLabel>I am travelling to</FieldLabel>
+        <FieldLabel>{l('I am travelling to', 'مقصد سفر من', 'وجهة سفري')}</FieldLabel>
         <CityMultiSelect
           values={form.destinations}
           onChange={v => set('destinations', v)}
@@ -699,7 +713,7 @@ function Step1({ form, set, toggleAssistance, errors }) {
       {/* Dates */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Start Date</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{l('Start Date', 'تاریخ شروع', 'تاريخ البداية')}</p>
           <DatePickerInput
             value={form.start_date}
             onChange={handleStartDate}
@@ -708,7 +722,7 @@ function Step1({ form, set, toggleAssistance, errors }) {
           <FieldError msg={errors?.start_date} />
         </div>
         <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">End Date</p>
+          <p className="text-xs font-medium text-muted-foreground mb-2">{l('End Date', 'تاریخ پایان', 'تاريخ النهاية')}</p>
           <DatePickerInput
             value={form.end_date}
             onChange={handleEndDate}
@@ -719,19 +733,19 @@ function Step1({ form, set, toggleAssistance, errors }) {
       </div>
       {days > 0 && (
         <p className="text-xs text-accent font-medium -mt-2">
-          Trip duration: {days} day{days !== 1 ? 's' : ''} (minimum 1 day)
+          {l('Trip duration:', 'مدت سفر:', 'مدة الرحلة:')} {days} {l(days !== 1 ? 'days' : 'day', 'روز', 'يوم')} {l('(minimum 1 day)', '(حداقل یک روز)', '(يوم واحد على الأقل)')}
         </p>
       )}
 
       {/* Times */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-3">
         <TimeSelect
-          label="Arrival Time"
+          label={l('Arrival Time', 'زمان ورود', 'وقت الوصول')}
           hourKey="arrival_hour" minuteKey="arrival_minute" periodKey="arrival_period"
           form={form} onChange={set} disabled={form.timings_flexible}
         />
         <TimeSelect
-          label="Departure Time"
+          label={l('Departure Time', 'زمان خروج', 'وقت المغادرة')}
           hourKey="departure_hour" minuteKey="departure_minute" periodKey="departure_period"
           form={form} onChange={set} disabled={form.timings_flexible}
         />
@@ -749,42 +763,42 @@ function Step1({ form, set, toggleAssistance, errors }) {
         }`}>
           {form.timings_flexible && <Check className="w-3 h-3 text-white" />}
         </div>
-        <span className="text-sm text-foreground">Not yet sure about my timings</span>
+        <span className="text-sm text-foreground">{l('Not yet sure about my timings', 'هنوز زمان‌بندی سفرم مشخص نیست', 'لم أحدد مواعيد رحلتي بعد')}</span>
       </div>
 
       {/* Traveller counts */}
       <div className="space-y-2">
-        <Counter label="Male Adults"   value={form.maleAdults}   onChange={v => set('maleAdults', v)}   min={0} />
-        <Counter label="Female Adults" value={form.femaleAdults} onChange={v => set('femaleAdults', v)} min={0} />
+        <Counter label={l('Male Adults', 'بزرگسالان مرد', 'الرجال البالغون')} value={form.maleAdults} onChange={v => set('maleAdults', v)} min={0} />
+        <Counter label={l('Female Adults', 'بزرگسالان زن', 'النساء البالغات')} value={form.femaleAdults} onChange={v => set('femaleAdults', v)} min={0} />
         {(form.maleAdults + form.femaleAdults) === 0 && (
-          <p className="text-xs text-red-400 px-1">At least 1 adult (male or female) required.</p>
+          <p className="text-xs text-red-400 px-1">{l('At least 1 adult (male or female) required.', 'دست‌کم یک بزرگسال باید در سفر باشد.', 'يجب أن يرافق الرحلة شخص بالغ واحد على الأقل.')}</p>
         )}
         <FieldError msg={errors?.adults} />
-        <Counter label="Children" sublabel="2–12 years" value={form.children} onChange={v => set('children', v)} min={0} />
+        <Counter label={l('Children', 'کودکان', 'الأطفال')} sublabel={l('2–12 years', '۲ تا ۱۲ سال', 'من سنتين إلى ١٢ سنة')} value={form.children} onChange={v => set('children', v)} min={0} />
       </div>
 
       {/* Guide languages */}
       <div>
-        <FieldLabel>I need a guide who speaks</FieldLabel>
+        <FieldLabel>{l('I need a guide who speaks', 'به راهنمایی نیاز دارم که به این زبان‌ها صحبت کند', 'أحتاج إلى مرشد يتحدث اللغات التالية')}</FieldLabel>
         <LanguageMultiSelect values={form.guide_languages} onChange={languages => set('guide_languages', languages)} />
         <FieldError msg={errors?.guide_languages} />
       </div>
 
       {/* Assistance */}
       <div>
-        <FieldLabel>I need assistance with</FieldLabel>
+        <FieldLabel>{l('I need assistance with', 'برای این موارد به کمک نیاز دارم', 'أحتاج إلى مساعدة في')}</FieldLabel>
         <div className="flex gap-3">
           <ToggleBlock
             selected={form.assistance.includes('Transportation')}
             onClick={() => handleAssistanceClick('Transportation')}
             icon={<Car className="w-4 h-4" />}
-            label="Transportation"
+            label={l('Transportation', 'حمل‌ونقل', 'النقل')}
           />
           <ToggleBlock
             selected={form.assistance.includes('Accommodation')}
             onClick={() => handleAssistanceClick('Accommodation')}
             icon={<Hotel className="w-4 h-4" />}
-            label="Accommodation"
+            label={l('Accommodation', 'اقامت', 'الإقامة')}
           />
         </div>
 
@@ -811,7 +825,7 @@ function Step1({ form, set, toggleAssistance, errors }) {
                     }`}
                   >
                     <span className="text-[10px] leading-none tracking-tight">{'★'.repeat(stars)}</span>
-                    <span className="text-[9px] font-medium">{label}</span>
+                    <span className="text-[9px] font-medium">{localize(lang, label, { Budget: 'اقتصادی', Economy: 'مقرون‌به‌صرفه', Standard: 'استاندارد', Premium: 'ممتاز', Luxury: 'لوکس' }[label], { Budget: 'اقتصادي', Economy: 'موفّر', Standard: 'قياسي', Premium: 'ممتاز', Luxury: 'فاخر' }[label])}</span>
                   </button>
                 ))}
               </div>
@@ -831,6 +845,8 @@ function Step2({
   customAdditionalServices, onAddAdditionalService,
   requirementsPlaceholder,
 }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [newHolidayType,    setNewHolidayType]    = useState('');
   const [showHolidayInput,  setShowHolidayInput]  = useState(false);
   const [newService,        setNewService]        = useState('');
@@ -859,7 +875,7 @@ function Step2({
     <div className="space-y-6">
       {/* Holiday types */}
       <div>
-        <FieldLabel>Type of holiday I am looking for</FieldLabel>
+        <FieldLabel>{l('Type of holiday I am looking for', 'سبک سفر دلخواه من', 'نمط الرحلة الذي أفضّله')}</FieldLabel>
         <div className="grid grid-cols-5 gap-2">
           {HOLIDAY_TYPES.map(type => (
             <IconGridItem
@@ -867,7 +883,7 @@ function Step2({
               selected={form.holiday_types.includes(type.id)}
               onClick={() => toggle('holiday_types', type.id)}
               emoji={type.emoji}
-              label={type.label}
+              label={localizeTripOption(type.label, lang)}
               multi
             />
           ))}
@@ -903,7 +919,7 @@ function Step2({
                     if (e.key === 'Enter') submitHolidayType();
                     if (e.key === 'Escape') { setShowHolidayInput(false); setNewHolidayType(''); }
                   }}
-                  placeholder="e.g. Spiritual, Photography…"
+                  placeholder={l('e.g. Spiritual, Photography…', 'مثلاً زیارتی، عکاسی…', 'مثلاً سياحة دينية، تصوير…')}
                   className="flex-1 px-3 py-1.5 text-xs bg-background/50 border border-border/40 rounded-lg focus:outline-none focus:border-accent transition-colors"
                 />
                 <button
@@ -912,14 +928,14 @@ function Step2({
                   disabled={!newHolidayType.trim()}
                   className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium disabled:opacity-40 transition-colors"
                 >
-                  Add
+                  {l('Add', 'افزودن', 'إضافة')}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowHolidayInput(false); setNewHolidayType(''); }}
                   className="px-3 py-1.5 rounded-lg border border-border/40 text-muted-foreground text-xs hover:text-foreground transition-colors"
                 >
-                  Cancel
+                  {l('Cancel', 'انصراف', 'إلغاء')}
                 </button>
               </motion.div>
             ) : (
@@ -932,7 +948,7 @@ function Step2({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-border/60 text-xs font-medium text-muted-foreground hover:border-accent hover:text-accent transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add custom
+                {l('Add custom', 'افزودن سبک دلخواه', 'إضافة نمط آخر')}
               </motion.button>
             )}
           </AnimatePresence>
@@ -942,7 +958,7 @@ function Step2({
 
       {/* Additional services */}
       <div>
-        <FieldLabel>Additional services I require</FieldLabel>
+        <FieldLabel>{l('Additional services I require', 'خدمات اضافی موردنیاز من', 'الخدمات الإضافية التي أحتاج إليها')}</FieldLabel>
         <div className="grid grid-cols-5 gap-2">
           {ADDITIONAL_SERVICES.map(svc => (
             <IconGridItem
@@ -950,7 +966,7 @@ function Step2({
               selected={form.additional_services.includes(svc.id)}
               onClick={() => toggle('additional_services', svc.id)}
               emoji={svc.emoji}
-              label={svc.label}
+              label={localizeTripOption(svc.label, lang)}
               multi
             />
           ))}
@@ -986,7 +1002,7 @@ function Step2({
                     if (e.key === 'Enter') submitService();
                     if (e.key === 'Escape') { setShowServiceInput(false); setNewService(''); }
                   }}
-                  placeholder="e.g. Camel Riding, Photography Guide…"
+                  placeholder={l('e.g. Camel Riding, Photography Guide…', 'مثلاً شترسواری، راهنمای عکاسی…', 'مثلاً ركوب الجمال، مرشد للتصوير…')}
                   className="flex-1 px-3 py-1.5 text-xs bg-background/50 border border-border/40 rounded-lg focus:outline-none focus:border-accent transition-colors"
                 />
                 <button
@@ -995,14 +1011,14 @@ function Step2({
                   disabled={!newService.trim()}
                   className="px-3 py-1.5 rounded-lg bg-accent text-white text-xs font-medium disabled:opacity-40 transition-colors"
                 >
-                  Add
+                  {l('Add', 'افزودن', 'إضافة')}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowServiceInput(false); setNewService(''); }}
                   className="px-3 py-1.5 rounded-lg border border-border/40 text-muted-foreground text-xs hover:text-foreground transition-colors"
                 >
-                  Cancel
+                  {l('Cancel', 'انصراف', 'إلغاء')}
                 </button>
               </motion.div>
             ) : (
@@ -1015,7 +1031,7 @@ function Step2({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-border/60 text-xs font-medium text-muted-foreground hover:border-accent hover:text-accent transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add service
+                {l('Add service', 'افزودن خدمت', 'إضافة خدمة')}
               </motion.button>
             )}
           </AnimatePresence>
@@ -1024,7 +1040,7 @@ function Step2({
 
       {/* Tour type */}
       <div>
-        <FieldLabel>I prefer:</FieldLabel>
+        <FieldLabel>{l('I prefer:', 'ترجیح می‌دهم:', 'أفضل:')}</FieldLabel>
         <div className="flex gap-3">
           {[
             { id: 'Private Tour', label: 'Private Tour' },
@@ -1034,7 +1050,7 @@ function Step2({
               key={t.id}
               selected={form.tour_type === t.id}
               onClick={() => set('tour_type', form.tour_type === t.id ? '' : t.id)}
-              label={t.label}
+              label={localizeTripOption(t.label, lang)}
             />
           ))}
         </div>
@@ -1043,7 +1059,7 @@ function Step2({
       {/* Requirements — intentionally last so travellers can add anything not covered above */}
       <div>
         <label className="block text-sm font-bold text-foreground mb-2.5">
-          Your Requirements <span className="text-red-500">*</span>
+          {l('Your Requirements', 'نیازها و توضیحات شما', 'احتياجاتك وملاحظاتك')} <span className="text-red-500">*</span>
         </label>
         <textarea
           value={form.requirements}
@@ -1052,7 +1068,7 @@ function Step2({
             e.target.style.height = 'auto';
             e.target.style.height = e.target.scrollHeight + 'px';
           }}
-          placeholder={requirementsPlaceholder || 'Describe anything else we should know about your travel goals, interests, or special needs...'}
+          placeholder={requirementsPlaceholder || l('Describe anything else we should know about your travel goals, interests, or special needs...', 'درباره هدف سفر، علایق یا نیازهای ویژه‌ای که باید بدانیم بنویسید…', 'أخبرنا بأي تفاصيل أخرى عن أهداف سفرك أو اهتماماتك أو احتياجاتك الخاصة…')}
           rows={2}
           minLength={REQUIREMENTS_MIN_LENGTH}
           required
@@ -1063,7 +1079,7 @@ function Step2({
         <FieldError msg={errors?.requirements} />
         <div className="mt-2 flex items-start justify-between gap-3 text-xs">
           <p id="trip-requirements-help" className="text-muted-foreground">
-            Add any details not covered above. Minimum {REQUIREMENTS_MIN_LENGTH} characters.
+            {l('Add any details not covered above. Minimum', 'جزئیات دیگری را که در بالا نبود بنویسید. حداقل', 'أضف أي تفاصيل لم تذكرها أعلاه. الحد الأدنى')} {REQUIREMENTS_MIN_LENGTH} {l('characters.', 'نویسه.', 'حرفاً.')}
           </p>
           <span
             id="trip-requirements-count"
@@ -1091,6 +1107,7 @@ export default function TripRequestForm({
 }) {
   const { user }       = useAuth();
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const queryClient    = useQueryClient();
   const packageMode = Boolean(requestContext?.package);
   const [step, setStep]           = useState(1);
@@ -1232,14 +1249,14 @@ export default function TripRequestForm({
   const goNext = () => {
     const errs = {};
     if (!form.destinations.length) errs.destinations = t('trip_city_error');
-    if (!form.start_date)          errs.start_date     = 'Please select a start date.';
-    if (!form.end_date)            errs.end_date       = 'Please select an end date.';
+    if (!form.start_date)          errs.start_date     = l('Please select a start date.', 'لطفاً تاریخ شروع را انتخاب کنید.', 'يُرجى اختيار تاريخ البداية.');
+    if (!form.end_date)            errs.end_date       = l('Please select an end date.', 'لطفاً تاریخ پایان را انتخاب کنید.', 'يُرجى اختيار تاريخ النهاية.');
     if (form.start_date && form.end_date && form.end_date <= form.start_date)
-      errs.end_date = 'End date must be after start date.';
+      errs.end_date = l('End date must be after start date.', 'تاریخ پایان باید پس از تاریخ شروع باشد.', 'يجب أن يكون تاريخ النهاية بعد تاريخ البداية.');
     if (!form.guide_languages.length)
-      errs.guide_languages = 'Please select at least one language.';
+      errs.guide_languages = l('Please select at least one language.', 'لطفاً دست‌کم یک زبان انتخاب کنید.', 'يُرجى اختيار لغة واحدة على الأقل.');
     if ((form.maleAdults + form.femaleAdults) < 1)
-      errs.adults = 'At least 1 adult is required.';
+      errs.adults = l('At least 1 adult is required.', 'دست‌کم یک بزرگسال باید در سفر باشد.', 'يجب أن يرافق الرحلة شخص بالغ واحد على الأقل.');
 
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
@@ -1255,16 +1272,16 @@ export default function TripRequestForm({
 
   const handleSubmit = async () => {
     if (!user?.id) {
-      toast.error('Please log in to submit a request.');
+      toast.error(l('Please log in to submit a request.', 'برای ارسال درخواست، ابتدا وارد حساب خود شوید.', 'يُرجى تسجيل الدخول لإرسال الطلب.'));
       return;
     }
 
     const errs = {};
     const trimmedRequirements = form.requirements.trim();
     if (!form.holiday_types.length)
-      errs.holiday_types = 'Please select at least one type of holiday.';
+      errs.holiday_types = l('Please select at least one type of holiday.', 'لطفاً دست‌کم یک سبک سفر انتخاب کنید.', 'يُرجى اختيار نمط رحلة واحد على الأقل.');
     if (trimmedRequirements.length < REQUIREMENTS_MIN_LENGTH)
-      errs.requirements = `Please write at least ${REQUIREMENTS_MIN_LENGTH} characters in Your Requirements (${trimmedRequirements.length}/${REQUIREMENTS_MIN_LENGTH}).`;
+      errs.requirements = `${l('Please write at least', 'لطفاً دست‌کم', 'يُرجى كتابة')} ${REQUIREMENTS_MIN_LENGTH} ${l('characters in Your Requirements', 'نویسه در بخش نیازها و توضیحات بنویسید', 'حرفاً في خانة الاحتياجات والملاحظات')} (${trimmedRequirements.length}/${REQUIREMENTS_MIN_LENGTH}).`;
 
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
@@ -1300,12 +1317,12 @@ export default function TripRequestForm({
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['trip_requests', user.id] });
-      toast.success('Trip request submitted! Local guides will reach out soon.');
+      toast.success(l('Trip request submitted! Local guides will reach out soon.', 'درخواست سفر ثبت شد! راهنماهای محلی به‌زودی با شما تماس می‌گیرند.', 'أُرسل طلب رحلتك! سيتواصل معك المرشدون المحليون قريباً.'));
 
       onSuccess?.();
       handleClose();
     } catch (err) {
-      toast.error(err?.message || 'Failed to submit. Please try again.');
+      toast.error(l('Failed to submit. Please try again.', 'ارسال درخواست انجام نشد. لطفاً دوباره تلاش کنید.', 'تعذر إرسال الطلب. يُرجى المحاولة مجدداً.'));
     } finally {
       setSubmitting(false);
     }
@@ -1340,10 +1357,10 @@ export default function TripRequestForm({
                     <MapPin className="w-5 h-5 text-accent" />
                   </div>
                   <h3 className="font-heading text-white text-base font-semibold leading-snug">
-                    How it works
+                    {l('How it works', 'مراحل کار', 'كيف تسير العملية')}
                   </h3>
                   <p className="text-white/45 text-[11px] mt-1 leading-relaxed">
-                    Plan your perfect Iran trip in minutes
+                    {l('Plan your perfect Iran trip in minutes', 'سفر دلخواهتان به ایران را در چند دقیقه برنامه‌ریزی کنید', 'خطّط لرحلتك إلى إيران في دقائق')}
                   </p>
                 </div>
 
@@ -1354,8 +1371,18 @@ export default function TripRequestForm({
                         {s.icon}
                       </div>
                       <div>
-                        <p className="text-white text-xs font-semibold leading-snug">{s.title}</p>
-                        <p className="text-white/45 text-[11px] mt-0.5 leading-relaxed">{s.desc}</p>
+                        <p className="text-white text-xs font-semibold leading-snug">{[
+                          l('Tell us your travel wishlist', 'خواسته‌هایتان را بگویید', 'أخبرنا بما ترغب به في رحلتك'),
+                          l('Receive proposals from local guides', 'از راهنماهای محلی پیشنهاد بگیرید', 'تلقَّ عروضاً من المرشدين المحليين'),
+                          l('Choose your guide', 'راهنمای خود را انتخاب کنید', 'اختر مرشدك'),
+                          l('Have an unforgettable journey', 'سفری فراموش‌نشدنی داشته باشید', 'استمتع برحلة لا تُنسى'),
+                        ][i]}</p>
+                        <p className="text-white/45 text-[11px] mt-0.5 leading-relaxed">{[
+                          l('Share your destination, dates, and preferences', 'مقصد، تاریخ و ترجیحاتتان را ثبت کنید', 'شاركنا وجهتك ومواعيدك وتفضيلاتك'),
+                          l('Expert guides craft tailored itineraries for you', 'راهنماهای متخصص برنامه‌هایی متناسب با شما تهیه می‌کنند', 'يعدّ المرشدون الخبراء برامج تناسبك'),
+                          l('Compare proposals and pick the perfect match', 'پیشنهادها را مقایسه کنید و بهترین گزینه را برگزینید', 'قارن العروض واختر الأنسب لك'),
+                          l('Experience authentic Iran with a dedicated local guide', 'با همراهی راهنمای محلی، ایران را از نزدیک تجربه کنید', 'اكتشف إيران الأصيلة برفقة مرشد محلي'),
+                        ][i]}</p>
                       </div>
                     </div>
                   ))}
@@ -1373,12 +1400,12 @@ export default function TripRequestForm({
               <div className="flex items-start justify-between px-6 sm:px-8 pt-6 pb-0 shrink-0">
                 <div>
                   <h2 className="font-heading text-xl font-semibold text-foreground">
-                    {packageMode ? 'Customize your tour' : 'New Trip Request'}
+                    {packageMode ? l('Customize your tour', 'تور خود را شخصی‌سازی کنید', 'خصّص جولتك') : l('New Trip Request', 'درخواست سفر جدید', 'طلب رحلة جديد')}
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     {packageMode
-                      ? (step === 1 ? 'Tell us how you would like to tailor this package.' : 'Confirm your preferences before sending the request.')
-                      : (step === 1 ? 'Step 1 of 2 — Trip Details' : 'Step 2 of 2 — Preferences')}
+                      ? (step === 1 ? l('Tell us how you would like to tailor this package.', 'بگویید این بسته سفر را چگونه می‌خواهید تغییر دهید.', 'أخبرنا كيف تريد تخصيص باقة السفر هذه.') : l('Confirm your preferences before sending the request.', 'پیش از ارسال درخواست، ترجیحات خود را تأیید کنید.', 'أكد تفضيلاتك قبل إرسال الطلب.'))
+                      : (step === 1 ? l('Step 1 of 2 — Trip Details', 'مرحله ۱ از ۲ — جزئیات سفر', 'الخطوة ١ من ٢ — تفاصيل الرحلة') : l('Step 2 of 2 — Preferences', 'مرحله ۲ از ۲ — ترجیحات', 'الخطوة ٢ من ٢ — التفضيلات'))}
                   </p>
                 </div>
                 <button
@@ -1412,8 +1439,8 @@ export default function TripRequestForm({
                   </div>
                 )}
                 <div className="mb-5 rounded-2xl border border-border/40 bg-background/45 p-3 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">Your request at a glance: </span>
-                  {form.destinations.length ? form.destinations.join(', ') : 'Destination pending'} · {form.start_date && form.end_date ? `${formatDateDisplay(form.start_date)} — ${formatDateDisplay(form.end_date)}` : 'Dates pending'} · {form.maleAdults + form.femaleAdults} adults ({form.maleAdults} men, {form.femaleAdults} women){form.children ? `, ${form.children} children` : ''}
+                  <span className="font-semibold text-foreground">{l('Your request at a glance:', 'خلاصه درخواست شما:', 'ملخص طلبك:')} </span>
+                  {form.destinations.length ? form.destinations.map(city => CITY_LABELS[city]?.[lang] || city).join('، ') : l('Destination pending', 'مقصد هنوز مشخص نشده', 'لم تُحدَّد الوجهة بعد')} · {form.start_date && form.end_date ? `${formatDateDisplay(form.start_date, lang)} — ${formatDateDisplay(form.end_date, lang)}` : l('Dates pending', 'تاریخ‌ها هنوز مشخص نشده‌اند', 'لم تُحدَّد المواعيد بعد')} · {form.maleAdults + form.femaleAdults} {l('adults', 'بزرگسال', 'بالغ')} ({form.maleAdults} {l('men', 'مرد', 'رجال')}, {form.femaleAdults} {l('women', 'زن', 'نساء')}){form.children ? `, ${form.children} ${l('children', 'کودک', 'أطفال')}` : ''}
                 </div>
                 <AnimatePresence mode="wait" initial={false}>
                   <motion.div
@@ -1449,7 +1476,7 @@ export default function TripRequestForm({
                     onClick={handleClose}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    Cancel
+                    {l('Cancel', 'انصراف', 'إلغاء')}
                   </button>
                 ) : (
                   <button
@@ -1457,7 +1484,7 @@ export default function TripRequestForm({
                     className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <ChevronLeft className="w-4 h-4" />
-                    Back
+                    {l('Back', 'بازگشت', 'رجوع')}
                   </button>
                 )}
 
@@ -1466,7 +1493,7 @@ export default function TripRequestForm({
                     onClick={goNext}
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25"
                   >
-                    {packageMode ? 'Continue' : 'Next'}
+                    {packageMode ? l('Continue', 'ادامه', 'متابعة') : l('Next', 'بعدی', 'التالي')}
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 ) : (
@@ -1476,8 +1503,8 @@ export default function TripRequestForm({
                     className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-accent text-white text-sm font-semibold hover:bg-accent/90 transition-colors shadow-lg shadow-accent/25 disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     {submitting
-                      ? <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
-                      : (packageMode ? 'Send Customization Request' : 'Submit Request')
+                      ? <><Loader2 className="w-4 h-4 animate-spin" /> {l('Submitting…', 'در حال ارسال…', 'جارٍ الإرسال…')}</>
+                      : (packageMode ? l('Send Customization Request', 'ارسال درخواست شخصی‌سازی', 'إرسال طلب التخصيص') : l('Submit Request', 'ثبت درخواست', 'إرسال الطلب'))
                     }
                   </button>
                 )}

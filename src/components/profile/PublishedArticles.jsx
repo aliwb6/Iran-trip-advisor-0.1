@@ -17,7 +17,7 @@ function articleDate(article, lang) {
 
 /** Public, approved articles written by a guide or agency. */
 export default function PublishedArticles({ articles, loading, authorName }) {
-  const { lang, dir } = useI18n();
+  const { lang, dir, t } = useI18n();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
   const heading = lang === 'fa'
     ? `مقاله‌های ${authorName}`
@@ -45,7 +45,7 @@ export default function PublishedArticles({ articles, loading, authorName }) {
 
       {loading ? (
         <div className="flex min-h-[14rem] items-center justify-center">
-          <BreathingGlow label={lang === 'fa' ? 'در حال بارگذاری مقاله‌ها' : 'Loading articles'} />
+          <BreathingGlow label={lang === 'fa' ? 'در حال بارگذاری مقاله‌ها' : lang === 'ar' ? 'جارٍ تحميل المقالات' : 'Loading articles'} />
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
@@ -71,7 +71,7 @@ export default function PublishedArticles({ articles, loading, authorName }) {
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-gold/15 to-accent/10 text-accent/55"><BookOpen className="h-9 w-9" /></div>
                     )}
-                    {article.category && <span className="absolute start-3 top-3 rounded-full bg-background/90 px-2.5 py-1 font-body text-[11px] font-semibold capitalize text-accent shadow-sm backdrop-blur-sm">{article.category}</span>}
+                    {article.category && <span className="absolute start-3 top-3 rounded-full bg-background/90 px-2.5 py-1 font-body text-[11px] font-semibold capitalize text-accent shadow-sm backdrop-blur-sm">{t(`article_cat_${article.category}`)}</span>}
                   </div>
                   <div className="flex min-h-[156px] flex-col p-4">
                     <h3 className="font-heading text-lg font-semibold leading-snug text-foreground transition-colors group-hover:text-accent">{title}</h3>

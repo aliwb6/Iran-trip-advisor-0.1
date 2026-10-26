@@ -22,7 +22,7 @@ const HERO_IMAGES = [
 
 const STATS = [
   { en: "500+", fa: "۵۰۰+", ar: "500+" , label: { en: "Happy Travelers", fa: "مسافر راضی", ar: "مسافر سعيد" }},
-  { en: "40+", fa: "۴۰+", ar: "40+", label: { en: "Curated Tours", fa: "تور انتخابی", ar: "جولة منتقاة" }},
+  { en: "40+", fa: "۴۰+", ar: "40+", label: { en: "Curated Tours", fa: "تور برگزیده", ar: "جولة مختارة" }},
   { en: "15+", fa: "۱۵+", ar: "15+", label: { en: "Expert Guides", fa: "راهنمای متخصص", ar: "مرشد خبير" }},
 ];
 

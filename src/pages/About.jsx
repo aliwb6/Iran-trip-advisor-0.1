@@ -9,7 +9,7 @@ const IMAGES = {
 };
 
 export default function About() {
-  const { t, dir } = useI18n();
+  const { t, dir, lang } = useI18n();
 
   return (
     <div dir={dir} className="pt-24 pb-16">
@@ -17,7 +17,7 @@ export default function About() {
       <div className="relative h-[50vh] min-h-[400px] overflow-hidden">
         <img decoding="async" loading="lazy"
           src={IMAGES.isfahan}
-          alt="Panoramic view of Isfahan's historic architecture"
+          alt={lang === 'fa' ? 'نمایی گسترده از معماری تاریخی اصفهان' : lang === 'ar' ? 'مشهد بانورامي للعمارة التاريخية في أصفهان' : "Panoramic view of Isfahan's historic architecture"}
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
@@ -64,7 +64,7 @@ export default function About() {
             <div className="aspect-[4/3] rounded-2xl overflow-hidden">
               <img decoding="async" loading="lazy"
                 src={IMAGES.tilework}
-                alt="Intricate Persian geometric tilework mosaic in turquoise and gold"
+                alt={lang === 'fa' ? 'کاشی‌کاری هندسی ایرانی با رنگ‌های فیروزه‌ای و طلایی' : lang === 'ar' ? 'فسيفساء هندسية فارسية باللونين الفيروزي والذهبي' : 'Intricate Persian geometric tilework mosaic in turquoise and gold'}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -83,7 +83,7 @@ export default function About() {
             <div className="aspect-[4/3] rounded-2xl overflow-hidden">
               <img decoding="async" loading="lazy"
                 src={IMAGES.persepolis}
-                alt="Ancient Persepolis ruins at golden hour, massive stone columns against amber sky"
+                alt={lang === 'fa' ? 'ویرانه‌های تخت جمشید در نور غروب، با ستون‌های سنگی و آسمان کهربایی' : lang === 'ar' ? 'أطلال برسبوليس عند الغروب، وأعمدتها الحجرية تحت سماء كهرمانية' : 'Ancient Persepolis ruins at golden hour, massive stone columns against amber sky'}
                 className="w-full h-full object-cover"
               />
             </div>

@@ -3,6 +3,7 @@ import {
   useState } from 'react';
 import { supabase } from '@/supabaseClient';
 import { useI18n } from '@/lib/i18n.jsx';
+import { localize } from '@/lib/localize';
 import { CheckCircle2,
   Upload,
   X,
@@ -11,7 +12,7 @@ import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { iranianCities } from '@/data/iranianCities';
+import { iranianDestinations } from '@/data/iranianCities';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -73,6 +74,7 @@ export const EMPTY_TOUR = {
 
 export default function TourForm({ editing, onDone, onCancel, isPlatform = false }) {
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const fileRef    = useRef(null);
   const galleryRef = useRef(null);
 
@@ -179,7 +181,8 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
   const addCity = () => {
     const v = cityInput.trim();
     if (!v) return;
-    setCities(prev => prev.includes(v) ? prev : [...prev, v]);
+    const canonical = iranianDestinations.find(city => [city.en, city.fa, city.ar].some(label => label.toLocaleLowerCase() === v.toLocaleLowerCase()))?.en || v;
+    setCities(prev => prev.includes(canonical) ? prev : [...prev, canonical]);
     setCityInput('');
   };
   const removeCity = (name) => setCities(prev => prev.filter(c => c !== name));
@@ -457,7 +460,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
       )}
       {success && (
         <div className="mb-5 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-700 text-sm flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> Tour created successfully!
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" /> {l('Tour created successfully!', 'تور با موفقیت ساخته شد!', 'أُنشئت الجولة بنجاح!')}
         </div>
       )}
 
@@ -465,7 +468,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
 
         {/* Title */}
         <div>
-          <label className={labelClass}>Title *</label>
+          <label className={labelClass}>{l('Title', 'عنوان', 'العنوان')} *</label>
           <input
             name="title"
             required
@@ -473,7 +476,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
             value={form.title}
             onChange={handleChange}
             className={inputClass}
-            placeholder="e.g. 7-Day Persian Heritage Journey: Tehran, Kashan, Isfahan & Yazd"
+            placeholder={l('e.g. 7-Day Persian Heritage Journey: Tehran, Kashan, Isfahan & Yazd', 'مثلاً سفر ۷ روزه میراث ایران: تهران، کاشان، اصفهان و یزد', 'مثلاً رحلة تراث إيران لمدة ٧ أيام: طهران وكاشان وأصفهان ويزد')}
           />
           <datalist id="tour-title-examples">
             {TITLE_EXAMPLES.map(example => <option key={example} value={example} />)}
@@ -489,7 +492,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
 
         {/* Description */}
         <div>
-          <label className={labelClass}>Description</label>
+          <label className={labelClass}>{l('Description', 'توضیحات', 'الوصف')}</label>
           <textarea
             name="description"
             value={form.description}
@@ -503,44 +506,44 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               : 'Example: On this 7-day journey from Tehran to Yazd, guests discover Iran’s architecture, food, and local life. The plan includes guided daily visits, free time, and local support. Ideal for culture and history lovers.'}
           />
           <p className="text-muted-foreground text-[10px] mt-1.5">
-            {lang === 'fa' ? 'مسیر سفر، تجربه‌های اصلی، خدمات و مناسب‌بودن تور برای مخاطب را کوتاه و روشن توضیح دهید.' : 'Briefly cover the route, key experiences, included support, and who the tour is best for.'}
+            {l('Briefly cover the route, key experiences, included support, and who the tour is best for.', 'مسیر سفر، تجربه‌های اصلی، خدمات و مناسب‌بودن تور برای مخاطب را کوتاه و روشن توضیح دهید.', 'اشرح بإيجاز مسار الرحلة وأبرز تجاربها والخدمات المشمولة والفئة المناسبة لها.')}
           </p>
         </div>
 
         {/* Duration / Price */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Duration (days)</label>
+            <label className={labelClass}>{l('Duration (days)', 'مدت سفر (روز)', 'مدة الرحلة (أيام)')}</label>
             <input name="duration" type="number" min="1" value={form.duration} onChange={handleChange} className={inputClass} placeholder="7" />
           </div>
           <div>
-            <label className={labelClass}>Price (USD)</label>
+            <label className={labelClass}>{l('Price (USD)', 'قیمت (دلار آمریکا)', 'السعر (دولار أمريكي)')}</label>
             <input name="price" type="number" min="0" value={form.price} onChange={handleChange} className={inputClass} placeholder="1200" />
           </div>
           <div>
-            <label className={labelClass}>Price basis</label>
+            <label className={labelClass}>{l('Price basis', 'مبنای قیمت', 'أساس التسعير')}</label>
             <select name="price_basis" value={form.price_basis} onChange={handleChange} className={`${inputClass} [color-scheme:light]`}>
-              <option value="per_person">Per person</option>
-              <option value="per_day">Per day</option>
+              <option value="per_person">{l('Per person', 'به‌ازای هر نفر', 'لكل شخص')}</option>
+              <option value="per_day">{l('Per day', 'در روز', 'لليوم الواحد')}</option>
             </select>
           </div>
         </div>
 
         {/* Cities — chip input. Press Enter or comma to add, X (or Backspace on empty) to remove. */}
         <div>
-          <label className={labelClass}>Cities</label>
+          <label className={labelClass}>{l('Cities', 'شهرها', 'المدن')}</label>
           <div className="flex flex-wrap items-center gap-2 px-2 py-1.5 rounded-xl border border-border bg-card focus-within:border-[hsl(178,85%,32%)] focus-within:ring-1 focus-within:ring-[hsl(178,85%,32%)]/50 transition">
             {cities.map(c => (
               <span
                 key={c}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-teal-400/15 border border-teal-400/30 text-foreground text-xs"
               >
-                {c}
+                {iranianDestinations.find(city => city.en === c)?.[lang] || c}
                 <button
                   type="button"
                   onClick={() => removeCity(c)}
                   className="text-muted-foreground hover:text-foreground"
-                  aria-label={`Remove ${c}`}
+                  aria-label={`${l('Remove', 'حذف', 'إزالة')} ${c}`}
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -554,12 +557,12 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               onKeyDown={onCityKeyDown}
               onBlur={addCity}
               className="flex-1 min-w-[140px] bg-transparent text-foreground text-sm placeholder:text-muted-foreground focus:outline-none px-1 py-1"
-              placeholder={cities.length === 0 ? 'Type a city and press Enter — e.g. Tehran' : 'Add another…'}
+              placeholder={cities.length === 0 ? l('Type a city and press Enter — e.g. Tehran', 'نام شهر را وارد کنید و Enter بزنید؛ مثلاً تهران', 'اكتب اسم مدينة واضغط Enter؛ مثلاً طهران') : l('Add another…', 'شهر دیگری اضافه کنید…', 'أضف مدينة أخرى…')}
             />
           </div>
-          <p className="text-muted-foreground text-[10px] mt-1">Press Enter or comma to add. Click ✕ to remove.</p>
+          <p className="text-muted-foreground text-[10px] mt-1">{l('Press Enter or comma to add. Click ✕ to remove.', 'برای افزودن، Enter یا ویرگول را بزنید. برای حذف روی ✕ کلیک کنید.', 'اضغط Enter أو الفاصلة للإضافة، أو اضغط ✕ للإزالة.')}</p>
           <datalist id="iran-destinations">
-            {iranianCities.map(city => <option key={city} value={city} />)}
+            {iranianDestinations.map(city => <option key={city.en} value={city[lang] || city.en} />)}
           </datalist>
         </div>
 
@@ -654,7 +657,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
 
         {/* Theme tag chips */}
         <div>
-          <label className={labelClass}>Theme (select multiple)</label>
+          <label className={labelClass}>{l('Theme (select multiple)', 'موضوع سفر (چند گزینه)', 'موضوع الرحلة (يمكن اختيار أكثر من خيار)')}</label>
           <div className="flex flex-wrap gap-2 mb-2">
             {THEMES.map(th => (
               <button type="button" key={th.value} onClick={() => toggleTheme(th.value)}
@@ -669,30 +672,30 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
           <div className="flex gap-2">
             <input type="text" value={customTheme} onChange={e => setCustomTheme(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), addCustomTheme())}
-              className={inputClass} placeholder="+ Add custom theme..." />
+              className={inputClass} placeholder={l('+ Add custom theme...', '+ افزودن موضوع دلخواه…', '+ أضف موضوعاً آخر…')} />
             <button type="button" onClick={addCustomTheme}
               className="px-4 py-2.5 rounded-xl border border-border text-foreground/80 text-sm hover:border-teal-400 hover:text-foreground transition whitespace-nowrap">
-              Add
+              {l('Add', 'افزودن', 'إضافة')}
             </button>
           </div>
         </div>
 
         {/* Highlights */}
         <div>
-          <label className={labelClass}>Highlights (one per line)</label>
-          <textarea name="highlights" value={form.highlights} onChange={handleChange} rows={4} className={`${inputClass} resize-none`} placeholder={"Visit the Great Mosque of Isfahan\nExplore Naghsh-e Jahan Square\nTraditional Persian cooking class"} />
+          <label className={labelClass}>{l('Highlights (one per line)', 'برجسته‌ترین بخش‌های سفر (هر خط یک مورد)', 'أبرز ما في الرحلة (عنصر في كل سطر)')}</label>
+          <textarea name="highlights" value={form.highlights} onChange={handleChange} rows={4} className={`${inputClass} resize-none`} placeholder={l('Visit the Great Mosque of Isfahan\nExplore Naghsh-e Jahan Square\nTraditional Persian cooking class', 'بازدید از مسجد جامع اصفهان\nگشت‌وگذار در میدان نقش جهان\nآموزش آشپزی سنتی ایرانی', 'زيارة الجامع الكبير في أصفهان\nاستكشاف ميدان نقش جهان\nدرس في الطبخ الإيراني التقليدي')} />
         </div>
 
         {/* Itinerary */}
         <div>
-          <label className={labelClass}>Day-by-Day Itinerary</label>
-          <textarea name="itinerary" value={form.itinerary} onChange={handleChange} rows={5} className={`${inputClass} resize-none`} placeholder={"Day 1: Arrival in Tehran...\nDay 2: Flight to Isfahan..."} />
+          <label className={labelClass}>{l('Day-by-Day Itinerary', 'برنامه روزبه‌روز سفر', 'برنامج الرحلة يوماً بيوم')}</label>
+          <textarea name="itinerary" value={form.itinerary} onChange={handleChange} rows={5} className={`${inputClass} resize-none`} placeholder={l('Day 1: Arrival in Tehran...\nDay 2: Flight to Isfahan...', 'روز ۱: ورود به تهران…\nروز ۲: پرواز به اصفهان…', 'اليوم ١: الوصول إلى طهران…\nاليوم ٢: رحلة جوية إلى أصفهان…')} />
         </div>
 
         {/* What's Included — structured selections.
             Anything NOT picked here is implicitly excluded. */}
         <div>
-          <label className={labelClass}>What&#39;s Included</label>
+          <label className={labelClass}>{l("What's Included", 'خدمات شامل تور', 'الخدمات المشمولة')}</label>
           <p className="text-muted-foreground text-[10px] mb-2">
             {lang === 'fa' ? 'هر آنچه انتخاب نشود، در تور لحاظ نشده محسوب می‌شود.'
               : lang === 'ar' ? 'كل ما لا تختاره يُعد غير مشمول تلقائياً.'
@@ -846,7 +849,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                         type="button"
                         onClick={() => toggleTransport(value)}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-teal-400/40 bg-teal-400/15 text-foreground text-xs"
-                        title={lang === 'fa' ? 'حذف' : 'Remove'}
+                        title={lang === 'fa' ? 'حذف' : lang === 'ar' ? 'حذف' : 'Remove'}
                       >
                         {value}<X className="w-3 h-3" />
                       </button>
@@ -953,7 +956,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                         type="button"
                         onClick={() => toggleOther(value)}
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-teal-400/40 bg-teal-400/15 text-foreground text-xs"
-                        title={lang === 'fa' ? 'حذف' : 'Remove'}
+                        title={lang === 'fa' ? 'حذف' : lang === 'ar' ? 'حذف' : 'Remove'}
                       >
                         {value}<X className="w-3 h-3" />
                       </button>
@@ -990,7 +993,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
 
         {/* Main Image drag-and-drop upload */}
         <div>
-          <label className={labelClass}>Main Image</label>
+          <label className={labelClass}>{l('Main Image', 'تصویر اصلی', 'الصورة الرئيسية')}</label>
           <div
             onDrop={e => { e.preventDefault(); handleImageUpload(e.dataTransfer.files[0]); }}
             onDragOver={e => e.preventDefault()}
@@ -1000,7 +1003,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
             {uploadingMain ? (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Loader2 className="w-6 h-6 animate-spin" />
-                <p className="text-sm">Uploading...</p>
+                <p className="text-sm">{l('Uploading...', 'در حال بارگذاری…', 'جارٍ الرفع…')}</p>
               </div>
             ) : imageUrl ? (
               <div className="relative" onClick={e => e.stopPropagation()}>
@@ -1011,7 +1014,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
                   onLoad={() => setMainPreviewError(false)}
                   onError={() => setMainPreviewError(true)}
                   className="w-full h-48 object-cover rounded-lg"
-                  alt="main"
+                  alt={l('main', 'تصویر اصلی', 'الصورة الرئيسية')}
                 />
                 <button type="button" onClick={() => { setImageUrl(''); setMainImageUrlDraft(''); setMainImageCaption(''); setMainPreviewError(false); }}
                   className="absolute top-2 right-2 p-1.5 rounded-full bg-black/60 text-white hover:bg-red-500/80 transition">
@@ -1021,7 +1024,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
             ) : (
               <div className="flex flex-col items-center gap-2 text-muted-foreground">
                 <Upload className="w-8 h-8" />
-                <p className="text-sm">📷 Drop image here or click to browse</p>
+                <p className="text-sm">📷 {l('Drop image here or click to browse', 'تصویر را اینجا رها کنید یا برای انتخاب کلیک کنید', 'أسقط الصورة هنا أو انقر لاختيارها')}</p>
                 <p className="text-xs">JPG, PNG, WEBP</p>
               </div>
             )}
@@ -1078,7 +1081,7 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
 
         {/* Gallery multi-image upload */}
         <div>
-          <label className={labelClass}>Gallery Images ({galleryUrls.length}/10)</label>
+          <label className={labelClass}>{l('Gallery Images', 'تصاویر گالری', 'صور المعرض')} ({galleryUrls.length}/10)</label>
           {galleryUrls.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
               {galleryUrls.map((url, i) => (
@@ -1139,12 +1142,12 @@ export default function TourForm({ editing, onDone, onCancel, isPlatform = false
               {uploadingGallery ? (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  <p className="text-sm">Uploading...</p>
+                  <p className="text-sm">{l('Uploading...', 'در حال بارگذاری…', 'جارٍ الرفع…')}</p>
                 </div>
               ) : (
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
                   <Upload className="w-6 h-6" />
-                  <p className="text-sm">Add up to {10 - galleryUrls.length} more images</p>
+                  <p className="text-sm">{l('Add up to', 'افزودن حداکثر', 'أضف ما يصل إلى')} {10 - galleryUrls.length} {l('more images', 'تصویر دیگر', 'صور أخرى')}</p>
                 </div>
               )}
               <input ref={galleryRef} type="file" accept="image/*" multiple className="hidden"

@@ -10,6 +10,7 @@ import { BreathingGlow } from '@/components/ui/BreathingGlow';
 import { supabase } from '@/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { useI18n } from '@/lib/i18n.jsx';
+import { localize, localizeBookingStatus, localizeTripOption } from '@/lib/localize';
 
 // ── Status config ─────────────────────────────────────────────────────────────
 
@@ -52,9 +53,9 @@ function Section({ title, children }) {
   );
 }
 
-function formatDate(dateStr) {
+function formatDate(dateStr, lang) {
   if (!dateStr) return null;
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US', {
     month: 'long', day: 'numeric', year: 'numeric',
   });
 }
@@ -66,6 +67,7 @@ export default function RequestDetailPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
 
   const [request, setRequest] = useState(null);
   const [loading, setLoading]  = useState(true);
@@ -111,7 +113,7 @@ export default function RequestDetailPage() {
   const hasAccommodation  = r?.assistance?.includes('Accommodation');
   const cities = Array.isArray(r?.destination) ? r.destination : r?.destination ? [r.destination] : [];
   const title = r?.title
-    || (cities.length ? `Trip to ${cities.join(', ')}` : 'Trip Request');
+    || (cities.length ? `${l('Trip to', 'سفر به', 'رحلة إلى')} ${cities.join(', ')}` : l('Trip Request', 'درخواست سفر', 'طلب رحلة'));
 
   return (
     <div className="min-h-screen bg-background pt-24 pb-16">
@@ -123,12 +125,12 @@ export default function RequestDetailPage() {
           className="flex items-center gap-2 px-4 py-2 mb-6 bg-white/20 backdrop-blur-md border border-white/30 rounded-full text-sm font-medium hover:bg-white/30 transition-all text-gray-700 dark:text-gray-200"
         >
           <ArrowLeft className="h-4 w-4" />
-          Back
+          {l('Back', 'بازگشت', 'رجوع')}
         </button>
 
         {error ? (
           <div className="bg-card/60 border border-border/40 rounded-3xl p-16 text-center">
-            <p className="font-body text-sm text-destructive">{error}</p>
+            <p className="font-body text-sm text-destructive">{l('Request not found.', 'درخواست پیدا نشد.', 'لم يُعثر على الطلب.')}</p>
           </div>
         ) : (
           <motion.div
@@ -159,13 +161,13 @@ export default function RequestDetailPage() {
                   )}
                 </div>
                 <span className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap shrink-0 ${statusCfg.classes}`}>
-                  {statusCfg.label}
+                  {localizeBookingStatus(r?.status, lang) || statusCfg.label}
                 </span>
               </div>
 
               {r?.created_at && (
                 <p className="font-body text-xs text-muted-foreground/60 mt-2">
-                  Submitted {formatDate(r.created_at)}
+                  {l('Submitted', 'ثبت‌شده در', 'قُدّم في')} {formatDate(r.created_at, lang)}
                 </p>
               )}
             </div>
@@ -180,57 +182,57 @@ export default function RequestDetailPage() {
                 </span>
                 <span className="min-w-0 flex-1">
                   <span className="block text-[10px] font-semibold uppercase tracking-wider text-accent">
-                    Based on a Tour Package
+                    {l('Based on a Tour Package', 'بر اساس این بسته سفر', 'استناداً إلى باقة السفر هذه')}
                   </span>
                   <span className="mt-0.5 block truncate text-sm font-semibold text-foreground">
-                    {r.source_tour.title || 'View tour package'}
+                    {r.source_tour.title || l('View tour package', 'مشاهده بسته سفر', 'عرض باقة السفر')}
                   </span>
                 </span>
               </Link>
             )}
 
             {/* Travel dates & times */}
-            <Section title="Travel Dates">
-              <DetailRow icon={Calendar} label="Start Date"       value={formatDate(r?.start_date)} />
-              <DetailRow icon={Calendar} label="End Date"         value={formatDate(r?.end_date)} />
-              <DetailRow icon={Clock}    label="Arrival Time"     value={r?.arrival_time} />
-              <DetailRow icon={Clock}    label="Departure Time"   value={r?.departure_time} />
+            <Section title={l('Travel Dates', 'تاریخ‌های سفر', 'مواعيد السفر')}>
+              <DetailRow icon={Calendar} label={l('Start Date', 'تاریخ شروع', 'تاريخ البداية')} value={formatDate(r?.start_date, lang)} />
+              <DetailRow icon={Calendar} label={l('End Date', 'تاریخ پایان', 'تاريخ النهاية')} value={formatDate(r?.end_date, lang)} />
+              <DetailRow icon={Clock} label={l('Arrival Time', 'زمان ورود', 'وقت الوصول')} value={r?.arrival_time} />
+              <DetailRow icon={Clock} label={l('Departure Time', 'زمان خروج', 'وقت المغادرة')} value={r?.departure_time} />
               {r?.timings_flexible && (
-                <p className="text-xs text-muted-foreground mt-2 italic">Timings are flexible</p>
+                <p className="text-xs text-muted-foreground mt-2 italic">{l('Timings are flexible', 'زمان‌ها قابل تغییر هستند', 'المواعيد مرنة')}</p>
               )}
             </Section>
 
             {/* Travellers */}
-            <Section title="Travellers">
-              <DetailRow icon={Users} label="Adults"   value={r?.adults} />
-              <DetailRow icon={Users} label="Men"      value={r?.male_adults ?? null} />
-              <DetailRow icon={Users} label="Women"    value={r?.female_adults ?? null} />
-              <DetailRow icon={Baby}  label="Children" value={r?.children > 0 ? r.children : null} />
+            <Section title={l('Travellers', 'مسافران', 'المسافرون')}>
+              <DetailRow icon={Users} label={l('Adults', 'بزرگسالان', 'البالغون')} value={r?.adults} />
+              <DetailRow icon={Users} label={l('Men', 'مردان', 'الرجال')} value={r?.male_adults ?? null} />
+              <DetailRow icon={Users} label={l('Women', 'زنان', 'النساء')} value={r?.female_adults ?? null} />
+              <DetailRow icon={Baby} label={l('Children', 'کودکان', 'الأطفال')} value={r?.children > 0 ? r.children : null} />
             </Section>
 
             {/* Services & preferences */}
-            <Section title="Services & Preferences">
+            <Section title={l('Services & Preferences', 'خدمات و ترجیحات', 'الخدمات والتفضيلات')}>
               <DetailRow
                 icon={Car}
-                label="Transportation"
-                value={hasTransportation ? 'Required' : null}
+                label={l('Transportation', 'حمل‌ونقل', 'النقل')}
+                value={hasTransportation ? l('Required', 'درخواست شده', 'مطلوب') : null}
               />
               <DetailRow
                 icon={Hotel}
-                label="Accommodation"
+                label={l('Accommodation', 'اقامت', 'الإقامة')}
                 value={hasAccommodation
-                  ? (r?.accommodation_stars ? `${r.accommodation_stars}★ hotel` : 'Required')
+                  ? (r?.accommodation_stars ? `${l('hotel', 'هتل', 'فندق')} ${r.accommodation_stars}★` : l('Required', 'درخواست شده', 'مطلوب'))
                   : null}
               />
-              <DetailRow icon={Sparkles} label="Tour Type"          value={r?.tour_type} />
-              <DetailRow icon={Globe}    label="Guide Languages"     value={r?.guide_languages} />
-              <DetailRow icon={Tag}      label="Holiday Types"       value={r?.holiday_types} />
-              <DetailRow icon={Layers}   label="Additional Services" value={r?.additional_services} />
+              <DetailRow icon={Sparkles} label={l('Tour Type', 'نوع تور', 'نوع الجولة')} value={localizeTripOption(r?.tour_type, lang)} />
+              <DetailRow icon={Globe} label={l('Guide Languages', 'زبان‌های راهنما', 'لغات المرشد')} value={r?.guide_languages} />
+              <DetailRow icon={Tag} label={l('Holiday Types', 'سبک سفر', 'أنماط الرحلة')} value={localizeTripOption(r?.holiday_types, lang)} />
+              <DetailRow icon={Layers} label={l('Additional Services', 'خدمات اضافی', 'خدمات إضافية')} value={localizeTripOption(r?.additional_services, lang)} />
             </Section>
 
             {/* Requirements / notes */}
             {r?.requirements && (
-              <Section title="Requirements & Notes">
+              <Section title={l('Requirements & Notes', 'نیازها و توضیحات', 'الاحتياجات والملاحظات')}>
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-lg bg-accent/10 text-accent flex items-center justify-center shrink-0 mt-0.5">
                     <FileText className="w-4 h-4" />

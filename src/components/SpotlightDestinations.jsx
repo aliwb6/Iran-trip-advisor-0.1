@@ -73,19 +73,19 @@ export const SPOTLIGHT_CITIES = [
   {
     slug: 'kish-island',
     image: '/images/kish island.jpg',
-    name: { en: 'Kish Island', fa: 'جزیره کیش', ar: 'جزيرة كيش' },
+    name: { en: 'Kish Island', fa: 'جزیرهٔ کیش', ar: 'جزيرة كيش' },
     category: { en: 'Nature', fa: 'طبیعت', ar: 'الطبيعة' },
   },
   {
     slug: 'qeshm-island',
     image: '/images/qeshm island.jpg',
-    name: { en: 'Qeshm Island', fa: 'جزیره قشم', ar: 'جزيرة قشم' },
+    name: { en: 'Qeshm Island', fa: 'جزیرهٔ قشم', ar: 'جزيرة قشم' },
     category: { en: 'Nature', fa: 'طبیعت', ar: 'الطبيعة' },
   },
   {
     slug: 'hormuz-island',
     image: '/images/Hormuz Island.jpg',
-    name: { en: 'Hormuz Island', fa: 'جزیره هرمز', ar: 'جزيرة هرمز' },
+    name: { en: 'Hormuz Island', fa: 'جزیرهٔ هرمز', ar: 'جزيرة هرمز' },
     category: { en: 'Nature', fa: 'طبیعت', ar: 'الطبيعة' },
   },
 ];

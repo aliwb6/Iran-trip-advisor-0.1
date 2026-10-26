@@ -88,13 +88,13 @@ export default function RequestPaymentGate({ requestId, requestStatus }) {
   if (bookingLoading) {
     return (
       <div className="mt-3 flex items-center gap-2 rounded-2xl border border-border/40 bg-card/50 px-4 py-3 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" /> Loading booking status…
+        <Loader2 className="h-4 w-4 animate-spin" /> {lang === 'fa' ? 'در حال بررسی وضعیت رزرو…' : lang === 'ar' ? 'جارٍ التحقق من حالة الحجز…' : 'Loading booking status…'}
       </div>
     );
   }
 
   if (bookingError) {
-    return <div className="mt-3 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-500">{bookingError.message || 'Could not load the booking status.'}</div>;
+    return <div className="mt-3 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm text-red-500">{lang === 'fa' ? 'بارگذاری وضعیت رزرو ممکن نشد.' : lang === 'ar' ? 'تعذّر تحميل حالة الحجز.' : 'Could not load the booking status.'}</div>;
   }
 
   if (!booking) {

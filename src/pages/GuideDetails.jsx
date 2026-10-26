@@ -90,7 +90,7 @@ function BookingWidget({ guide, lang }) {
               onChange={(e) => setDestination(e.target.value)}
               className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-gold/40 appearance-none cursor-pointer"
             >
-              <option value="">{lang === 'fa' ? '-- مقصد را انتخاب کنید --' : '-- Select destination --'}</option>
+              <option value="">{lang === 'fa' ? '-- مقصد را انتخاب کنید --' : lang === 'ar' ? '-- اختر الوجهة --' : '-- Select destination --'}</option>
               {iranianDestinations.map((c) => <option key={c.en} value={c.en}>{c[lang] || c.en}</option>)}
             </select>
             <ChevronDown className="absolute end-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
@@ -133,8 +133,8 @@ function BookingWidget({ guide, lang }) {
         {/* Adults */}
         <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-background">
           <div>
-            <p className="font-body text-sm font-medium text-foreground">{lang === 'fa' ? 'بزرگسال' : 'Adults'}</p>
-            <p className="font-body text-xs text-muted-foreground">{lang === 'fa' ? 'سنین ۱۸ تا ۶۰' : 'Aged 18–60'}</p>
+            <p className="font-body text-sm font-medium text-foreground">{lang === 'fa' ? 'بزرگسالان' : lang === 'ar' ? 'البالغون' : 'Adults'}</p>
+            <p className="font-body text-xs text-muted-foreground">{lang === 'fa' ? '۱۸ تا ۶۰ سال' : lang === 'ar' ? 'من 18 إلى 60 عاماً' : 'Aged 18–60'}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -156,8 +156,8 @@ function BookingWidget({ guide, lang }) {
         {/* Children */}
         <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-background">
           <div>
-            <p className="font-body text-sm font-medium text-foreground">{lang === 'fa' ? 'کودک' : 'Children'}</p>
-            <p className="font-body text-xs text-muted-foreground">{lang === 'fa' ? 'سنین ۱ تا ۱۰' : 'Aged 1–10'}</p>
+            <p className="font-body text-sm font-medium text-foreground">{lang === 'fa' ? 'کودکان' : lang === 'ar' ? 'الأطفال' : 'Children'}</p>
+            <p className="font-body text-xs text-muted-foreground">{lang === 'fa' ? '۱ تا ۱۰ سال' : lang === 'ar' ? 'من سنة إلى 10 سنوات' : 'Aged 1–10'}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -191,11 +191,12 @@ function BookingWidget({ guide, lang }) {
 // ── Review Card ────────────────────────────────────────────────────────────────
 
 function ReviewCard({ review }) {
+  const { lang } = useI18n();
   const [expanded, setExpanded] = useState(false);
   const text = review.review_text || review.body || review.comment || '';
-  const reviewerName = review.reviewer?.full_name || review.reviewer_name || review.userName || 'Anonymous';
+  const reviewerName = review.reviewer?.full_name || review.reviewer_name || review.userName || (lang === 'fa' ? 'ناشناس' : lang === 'ar' ? 'مجهول' : 'Anonymous');
   const reviewDate = review.created_at
-    ? new Date(review.created_at).toLocaleDateString()
+    ? new Date(review.created_at).toLocaleDateString(lang === 'fa' ? 'fa-IR-u-ca-gregory' : lang === 'ar' ? 'ar-u-ca-gregory' : undefined)
     : review.date || '';
   const needsTruncate = text.length > 150;
 
@@ -226,12 +227,12 @@ function ReviewCard({ review }) {
           onClick={() => setExpanded(!expanded)}
           className="mt-1 font-body text-xs text-gold hover:text-gold/80 font-medium transition"
         >
-          {expanded ? 'Read less' : 'Read more'}
+          {expanded ? (lang === 'fa' ? 'نمایش کمتر' : lang === 'ar' ? 'عرض أقل' : 'Read less') : (lang === 'fa' ? 'ادامهٔ مطلب' : lang === 'ar' ? 'قراءة المزيد' : 'Read more')}
         </button>
       )}
       {review.admin_reply && (
         <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3">
-          <p className="font-body text-xs font-semibold text-emerald-600 dark:text-emerald-400">Admin reply</p>
+          <p className="font-body text-xs font-semibold text-emerald-600 dark:text-emerald-400">{lang === 'fa' ? 'پاسخ مدیر' : lang === 'ar' ? 'ردّ المسؤول' : 'Admin reply'}</p>
           <p className="mt-1 font-body text-xs leading-relaxed text-foreground/70">{review.admin_reply}</p>
         </div>
       )}
@@ -360,7 +361,7 @@ export default function GuideDetails() {
             {lang === 'fa' ? 'راهنما یافت نشد' : lang === 'ar' ? 'المرشد غير موجود' : 'Guide Not Found'}
           </h1>
           {error && <p className="font-body text-sm text-destructive mb-4">{error}</p>}
-          <Link to="/guides" className="text-gold hover:underline font-body">← Back to Guides</Link>
+          <Link to="/guides" className="text-gold hover:underline font-body">← {lang === 'fa' ? 'بازگشت به راهنماها' : lang === 'ar' ? 'العودة إلى المرشدين' : 'Back to Guides'}</Link>
         </div>
       </div>
     );
@@ -676,7 +677,7 @@ export default function GuideDetails() {
                     <p className="font-heading text-5xl font-bold text-foreground">{Number(rating).toFixed(1)}</p>
                     <StarRow rating={rating} size="md" />
                     <p className="font-body text-xs text-muted-foreground mt-1">
-                      {reviewCount} {lang === 'fa' ? 'نظر' : 'reviews'}
+                      {lang === 'fa' ? `${reviewCount} نظر` : lang === 'ar' ? `التقييمات: ${reviewCount}` : `${reviewCount} reviews`}
                     </p>
                   </div>
                   <div className="flex-1">
@@ -698,8 +699,8 @@ export default function GuideDetails() {
                       className="mt-4 w-full py-3 rounded-xl border-2 border-gold/30 text-gold font-body font-semibold text-sm hover:bg-gold/5 transition"
                     >
                       {showAllReviews
-                        ? (lang === 'fa' ? 'نمایش کمتر' : 'Show Less')
-                        : (lang === 'fa' ? `نمایش همه ${reviewList.length} نظر` : `Show all ${reviewList.length} reviews`)}
+                        ? (lang === 'fa' ? 'نمایش کمتر' : lang === 'ar' ? 'عرض أقل' : 'Show Less')
+                        : (lang === 'fa' ? `نمایش همهٔ ${reviewList.length} نظر` : lang === 'ar' ? `عرض جميع التقييمات (${reviewList.length})` : `Show all ${reviewList.length} reviews`)}
                     </button>
                   )}
                 </>

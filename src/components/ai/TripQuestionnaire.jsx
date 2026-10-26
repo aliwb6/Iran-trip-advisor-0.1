@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { localize, localizeTripOption } from '@/lib/localize';
 
 export default function TripQuestionnaire({
   currentQuestion,
@@ -32,7 +33,7 @@ export default function TripQuestionnaire({
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-medium text-slate-600">
-            {lang === 'fa' ? `سوال ${currentQuestion + 1} از ${questions.length}` : `Question ${currentQuestion + 1} of ${questions.length}`}
+            {localize(lang, `Question ${currentQuestion + 1} of ${questions.length}`, `پرسش ${currentQuestion + 1} از ${questions.length}`, `السؤال ${currentQuestion + 1} من ${questions.length}`)}
           </span>
           <span className="text-sm font-medium text-teal-600">{Math.round(progress)}%</span>
         </div>
@@ -75,7 +76,7 @@ export default function TripQuestionnaire({
                     : 'border-slate-300 bg-white text-slate-900 hover:border-teal-300'
                 }`}
               >
-                {option}
+                {localizeTripOption(option, lang)}
               </button>
             ))}
           </div>
@@ -83,7 +84,7 @@ export default function TripQuestionnaire({
 
         {question.required && !answer && (
           <p className="text-red-500 text-sm mt-2">
-            {lang === 'fa' ? 'این سوال ضروری است' : 'This question is required'}
+            {localize(lang, 'This question is required', 'پاسخ به این پرسش ضروری است.', 'الإجابة عن هذا السؤال مطلوبة.')}
           </p>
         )}
       </div>
@@ -96,7 +97,7 @@ export default function TripQuestionnaire({
           className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-slate-300 text-slate-900 font-medium hover:border-slate-400 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
         >
           <ChevronLeft className="w-5 h-5" />
-          {lang === 'fa' ? 'قبلی' : 'Back'}
+          {localize(lang, 'Back', 'قبلی', 'السابق')}
         </button>
 
         <button
@@ -106,11 +107,11 @@ export default function TripQuestionnaire({
         >
           {currentQuestion === questions.length - 1 ? (
             <>
-              {lang === 'fa' ? 'پیش نمایش' : 'Preview'}
+              {localize(lang, 'Preview', 'پیش‌نمایش', 'معاينة')}
             </>
           ) : (
             <>
-              {lang === 'fa' ? 'بعدی' : 'Next'}
+              {localize(lang, 'Next', 'بعدی', 'التالي')}
               <ChevronRight className="w-5 h-5" />
             </>
           )}

@@ -18,6 +18,7 @@ import { supabase } from '@/supabaseClient';
 import { guideSubmitProposal } from '@/api/tourRequestFlow';
 import { calculateProposalEstimate } from '@/lib/proposalPricing';
 import { buildPackageProposalPrefill, getPackageRequestKind } from '@/lib/packageTripRequest';
+import { localize, localizeTripOption } from '@/lib/localize';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -29,9 +30,9 @@ const parseLines = (text) =>
 const cap = (s) =>
   s ? s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, ' ') : '';
 
-function fmtDate(dateStr) {
+function fmtDate(dateStr, lang = 'en') {
   if (!dateStr) return null;
-  return new Date(dateStr).toLocaleDateString('en-GB', {
+  return new Date(dateStr).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-GB', {
     day: '2-digit', month: 'short', year: 'numeric',
   });
 }
@@ -66,9 +67,11 @@ function DetailRow({ icon: Icon, label, children }) {
 }
 
 function TripDetailsPanel({ request, t }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const cities    = cityList(request?.destination);
-  const startFmt  = fmtDate(request?.start_date);
-  const endFmt    = fmtDate(request?.end_date);
+  const startFmt  = fmtDate(request?.start_date, lang);
+  const endFmt    = fmtDate(request?.end_date, lang);
   const duration  = daysBetween(request?.start_date, request?.end_date);
   const adults    = request?.adults ?? 0;
   const maleAdults = request?.male_adults ?? adults;
@@ -83,9 +86,9 @@ function TripDetailsPanel({ request, t }) {
   const assistanceWithStars = (() => {
     const arr = request?.assistance || [];
     if (arr.length === 0) return null;
-    const base = arr.join(', ');
+    const base = localizeTripOption(arr, lang).join(', ');
     if (arr.includes('Accommodation') && request?.accommodation_stars > 0) {
-      return `${base} (${request.accommodation_stars}⭐ hotels)`;
+      return `${base} (${request.accommodation_stars}⭐ ${l('hotels', 'هتل', 'فندق')})`;
     }
     return base;
   })();
@@ -111,7 +114,7 @@ function TripDetailsPanel({ request, t }) {
             <span>
               {startFmt}{startFmt && endFmt ? ' → ' : ''}{endFmt}
               {duration && (
-                <span className="ml-2 text-muted-foreground">({duration} days)</span>
+                <span className="ml-2 text-muted-foreground">({duration} {l('days', 'روز', 'يوم')})</span>
               )}
             </span>
           </DetailRow>
@@ -130,7 +133,7 @@ function TripDetailsPanel({ request, t }) {
         {/* ROW 4 — Travelers */}
         {hasValue(travelersStr) && (
           <DetailRow icon={Users} label={t('travelers')}>
-            {travelersStr} <span className="text-muted-foreground">({maleAdults} men, {femaleAdults} women)</span>
+            {travelersStr} <span className="text-muted-foreground">({maleAdults} {l('men', 'مرد', 'رجال')}, {femaleAdults} {l('women', 'زن', 'نساء')})</span>
           </DetailRow>
         )}
 
@@ -150,7 +153,7 @@ function TripDetailsPanel({ request, t }) {
                   key={h}
                   className="bg-teal-400/15 text-teal-700 px-2.5 py-0.5 rounded-full text-xs"
                 >
-                  {cap(h)}
+                  {localizeTripOption(cap(h), lang)}
                 </span>
               ))}
             </div>
@@ -173,7 +176,7 @@ function TripDetailsPanel({ request, t }) {
                   key={s}
                   className="bg-muted text-foreground/80 px-2.5 py-0.5 rounded-full text-xs"
                 >
-                  {cap(s)}
+                  {localizeTripOption(cap(s), lang)}
                 </span>
               ))}
             </div>
@@ -183,7 +186,7 @@ function TripDetailsPanel({ request, t }) {
         {/* ROW 9 — Tour type */}
         {hasValue(request?.tour_type) && (
           <DetailRow icon={request?.tour_type?.toLowerCase().includes('group') ? Users : User} label={t('tour_type_label')}>
-            {cap(request.tour_type)}
+            {localizeTripOption(cap(request.tour_type), lang)}
           </DetailRow>
         )}
 
@@ -229,12 +232,13 @@ function SegmentedToggle({ options, value, onChange }) {
 }
 
 function FieldLabel({ children, optional }) {
+  const { lang } = useI18n();
   return (
     <p className="text-xs font-semibold text-foreground/80 uppercase tracking-wider mb-2">
       {children}
       {optional && (
         <span className="ml-1 text-muted-foreground normal-case tracking-normal font-normal">
-          (optional)
+          {localize(lang, '(optional)', '(اختیاری)', '(اختياري)')}
         </span>
       )}
     </p>
@@ -264,6 +268,7 @@ export default function SubmitProposalModal({
   onAdminSave,
 }) {
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
 
   const [price, setPrice]               = useState('');
   const [priceType, setPriceType]       = useState('per_person');
@@ -574,17 +579,17 @@ export default function SubmitProposalModal({
 
               <div className="rounded-lg bg-card p-3 text-xs text-muted-foreground space-y-1">
                 <p>
-                  Estimated booking total: <span className="font-semibold text-foreground">${estimate.totalEstimate.toFixed(2)}</span>
-                  {' '}(${estimate.quotedUnitPrice.toFixed(2)} × {estimate.peopleMultiplier} traveler multiplier × {estimate.durationMultiplier} duration multiplier)
+                  {l('Estimated booking total:', 'مبلغ تخمینی رزرو:', 'إجمالي الحجز التقديري:')} <span className="font-semibold text-foreground">${estimate.totalEstimate.toFixed(2)}</span>
+                  {' '}(${estimate.quotedUnitPrice.toFixed(2)} × {estimate.peopleMultiplier} {l('traveler multiplier', 'ضریب تعداد مسافران', 'معامل عدد المسافرين')} × {estimate.durationMultiplier} {l('duration multiplier', 'ضریب مدت سفر', 'معامل مدة الرحلة')})
                 </p>
                 <p>
-                  Estimated commission ({pctDisplay}%): ${estimate.commissionEstimate.toFixed(2)}
+                  {l('Estimated commission', 'کارمزد تخمینی', 'العمولة التقديرية')} ({pctDisplay}%): ${estimate.commissionEstimate.toFixed(2)}
                 </p>
                 <p>
-                  Estimated payout: <span className="font-semibold text-accent">${estimate.payoutEstimate.toFixed(2)}</span>
+                  {l('Estimated payout:', 'دریافتی تخمینی:', 'المبلغ المتوقع استلامه:')} <span className="font-semibold text-accent">${estimate.payoutEstimate.toFixed(2)}</span>
                 </p>
                 <p className="pt-1 text-[10px] text-muted-foreground">
-                  Estimate only. The server calculates and snapshots the authoritative booking total.
+                  {l('Estimate only. The server calculates and snapshots the authoritative booking total.', 'این مبلغ فقط تخمینی است. مبلغ نهایی رزرو پس از ثبت درخواست محاسبه و ذخیره می‌شود.', 'هذا المبلغ تقديري فقط. يُحسب إجمالي الحجز النهائي ويُحفظ عند تسجيل الطلب.')}
                 </p>
               </div>
             </div>
@@ -596,7 +601,7 @@ export default function SubmitProposalModal({
                 rows={6}
                 value={itinerary}
                 onChange={e => setItinerary(e.target.value)}
-                placeholder={`Day 1: Arrival in Tehran. Pick-up from IKA airport...\nDay 2: Morning visit to Golestan Palace...`}
+                placeholder={l('Day 1: Arrival in Tehran. Pick-up from IKA airport...\nDay 2: Morning visit to Golestan Palace...', 'روز ۱: ورود به تهران و استقبال در فرودگاه امام خمینی…\nروز ۲: بازدید صبحگاهی از کاخ گلستان…', 'اليوم ١: الوصول إلى طهران والاستقبال من مطار الإمام الخميني…\nاليوم ٢: زيارة قصر غلستان صباحاً…')}
                 className={inputCls}
               />
               <InlineError show={attempted && !itineraryValid} message={t('itinerary_required')} />
@@ -610,7 +615,7 @@ export default function SubmitProposalModal({
                   rows={5}
                   value={includedText}
                   onChange={e => setIncludedText(e.target.value)}
-                  placeholder={`English-speaking guide\nHotel pickup\nEntrance tickets`}
+                  placeholder={l('English-speaking guide\nHotel pickup\nEntrance tickets', 'راهنمای انگلیسی‌زبان\nاستقبال از هتل\nبلیط ورودی جاذبه‌ها', 'مرشد يتحدث الإنجليزية\nالاستقبال من الفندق\nتذاكر دخول المعالم')}
                   className={inputCls}
                 />
               </div>
@@ -620,7 +625,7 @@ export default function SubmitProposalModal({
                   rows={5}
                   value={excludedText}
                   onChange={e => setExcludedText(e.target.value)}
-                  placeholder={`International flights\nMeals not specified\nPersonal expenses`}
+                  placeholder={l('International flights\nMeals not specified\nPersonal expenses', 'پروازهای بین‌المللی\nوعده‌های غذایی ذکرنشده\nهزینه‌های شخصی', 'الرحلات الجوية الدولية\nالوجبات غير المذكورة\nالنفقات الشخصية')}
                   className={inputCls}
                 />
               </div>
@@ -629,7 +634,7 @@ export default function SubmitProposalModal({
             {/* ── Transportation ── */}
             <div>
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-                Transportation
+                {l('Transportation', 'حمل‌ونقل', 'النقل')}
               </p>
 
               {/* Toggle: included or not */}
@@ -643,7 +648,7 @@ export default function SubmitProposalModal({
                       : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                   }`}
                 >
-                  ✓ Included
+                  ✓ {l('Included', 'شامل می‌شود', 'مشمول')}
                 </button>
                 <button
                   type="button"
@@ -654,14 +659,14 @@ export default function SubmitProposalModal({
                       : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                   }`}
                 >
-                  ✕ Not included
+                  ✕ {l('Not included', 'شامل نمی‌شود', 'غير مشمول')}
                 </button>
               </div>
 
               {/* Vehicle type chips — only visible when hasTransportation is true */}
               {hasTransportation && (
                 <div>
-                  <p className="text-[11px] text-muted-foreground mb-2">Select vehicle type(s):</p>
+                  <p className="text-[11px] text-muted-foreground mb-2">{l('Select vehicle type(s):', 'نوع وسیله نقلیه را انتخاب کنید:', 'اختر نوع وسيلة النقل:')}</p>
                   <div className="flex flex-wrap gap-2 mb-3">
                     {TRANSPORT_OPTIONS.map(opt => {
                       const active = transportationItems.includes(opt);
@@ -676,7 +681,7 @@ export default function SubmitProposalModal({
                               : 'bg-card border-border text-muted-foreground hover:border-accent/30 hover:text-foreground/80'
                           }`}
                         >
-                          {active ? '✓ ' : ''}{opt}
+                          {active ? '✓ ' : ''}{localizeTripOption(opt, lang)}
                         </button>
                       );
                     })}
@@ -702,7 +707,7 @@ export default function SubmitProposalModal({
                       value={customTransport}
                       onChange={e => setCustomTransport(e.target.value)}
                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomTransport(); } }}
-                      placeholder="Add other transport..."
+                      placeholder={l('Add other transport...', 'وسیله نقلیه دیگری اضافه کنید…', 'أضف وسيلة نقل أخرى…')}
                       className="flex-1 px-3 py-2 rounded-xl bg-card border border-border text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,45%)] transition"
                     />
                     <button
@@ -710,7 +715,7 @@ export default function SubmitProposalModal({
                       onClick={addCustomTransport}
                       className="px-4 py-2 rounded-xl border border-border text-muted-foreground text-sm hover:border-[hsl(178,85%,45%)] hover:text-foreground transition whitespace-nowrap"
                     >
-                      Add
+                      {l('Add', 'افزودن', 'إضافة')}
                     </button>
                   </div>
                 </div>
@@ -724,7 +729,7 @@ export default function SubmitProposalModal({
                 rows={3}
                 value={message}
                 onChange={e => setMessage(e.target.value)}
-                placeholder="Hi! I'd love to guide you through Iran..."
+                placeholder={l("Hi! I'd love to guide you through Iran...", 'سلام! خوشحال می‌شوم در سفر به ایران راهنمای شما باشم…', 'مرحباً! يسعدني أن أرافقك في رحلتك إلى إيران…')}
                 className={inputCls}
               />
               <InlineError show={attempted && !messageValid} message={t('message_required')} />
@@ -737,7 +742,7 @@ export default function SubmitProposalModal({
             {/* IMAGES */}
             <div>
               <FieldLabel optional>{t('image_urls_optional')}</FieldLabel>
-              <p className="text-[11px] text-muted-foreground mb-2">Paste one image URL per line</p>
+              <p className="text-[11px] text-muted-foreground mb-2">{l('Paste one image URL per line', 'در هر خط یک لینک تصویر وارد کنید', 'ألصق رابط صورة واحداً في كل سطر')}</p>
               <textarea
                 rows={3}
                 value={imagesText}
@@ -747,7 +752,7 @@ export default function SubmitProposalModal({
               />
               <button type="button" onClick={openImagePicker} disabled={uploadingImages} className="mt-3 inline-flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2 text-xs font-medium text-foreground/80 transition hover:border-teal-300/50 hover:text-foreground disabled:cursor-wait disabled:opacity-70">
                 {<IconSwap active={uploadingImages} a={<Upload className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
-                {uploadingImages ? 'Uploading images…' : 'Upload images from device'}
+                {uploadingImages ? l('Uploading images…', 'در حال بارگذاری تصاویر…', 'جارٍ رفع الصور…') : l('Upload images from device', 'بارگذاری تصاویر از دستگاه', 'رفع الصور من الجهاز')}
               </button>
               <input ref={fileInputRef} type="file" accept="image/*" multiple className="sr-only" onChange={handleImagePickerChange} />
               {parseLines(imagesText).length > 0 && (
@@ -770,7 +775,7 @@ export default function SubmitProposalModal({
               disabled={submitting}
               className="px-5 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors disabled:opacity-40"
             >
-              Cancel
+              {l('Cancel', 'انصراف', 'إلغاء')}
             </button>
             <button
               type="button"
@@ -780,9 +785,9 @@ export default function SubmitProposalModal({
               style={{ background: 'linear-gradient(135deg, hsl(178,85%,32%), hsl(178,85%,28%))' }}
             >
               {submitting ? (
-                <><Loader2 className="w-4 h-4 animate-spin" /> Submitting…</>
+                <><Loader2 className="w-4 h-4 animate-spin" /> {l('Submitting…', 'در حال ارسال…', 'جارٍ الإرسال…')}</>
               ) : (
-                isAdminReview ? 'Save changes' : packageRequestKind === 'package_booking' ? 'Confirm & Send Offer' : t('apply')
+                isAdminReview ? l('Save changes', 'ذخیره تغییرات', 'حفظ التغييرات') : packageRequestKind === 'package_booking' ? l('Confirm & Send Offer', 'تأیید و ارسال پیشنهاد', 'تأكيد العرض وإرساله') : t('apply')
               )}
             </button>
           </div>

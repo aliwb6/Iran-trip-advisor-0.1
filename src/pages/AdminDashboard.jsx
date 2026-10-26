@@ -53,6 +53,9 @@ import HomeDestinationsEditor from '@/components/admin/HomeDestinationsEditor';
 import { buildReviewModerationUpdates, persistReviewModeration } from '@/lib/reviews';
 import { useNotificationsContext } from '@/lib/NotificationsContext';
 import AdminNotificationsView from '@/components/admin/AdminNotificationsView';
+import { useI18n } from '@/lib/i18n.jsx';
+import { localize, localizeBookingStatus, localizePriceBasis } from '@/lib/localize';
+import { iranianDestinations } from '@/data/iranianCities';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -84,11 +87,12 @@ const CARD = 'bg-card border border-border rounded-2xl';
 // ─── Shared atoms ────────────────────────────────────────────────────────────
 
 function StatusPill({ status }) {
+  const { lang } = useI18n();
   const cfg = STATUS_CFG[status] || STATUS_CFG.draft;
   return (
     <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold border ${cfg.wrap}`}>
       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-      {cfg.label}
+      {localizeBookingStatus(status, lang)}
     </span>
   );
 }
@@ -142,6 +146,8 @@ function EmptyState({ Icon, title, desc }) {
 }
 
 function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   if (loading) return <SectionLoader />;
 
   const pendingCount = proposals.filter(proposal => proposal.approval_status === 'pending_review').length;
@@ -154,17 +160,17 @@ function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
   });
 
   if (!ordered.length) {
-    return <EmptyState Icon={CheckCircle2} title="All caught up" desc="No pending or approved proposals to show yet." />;
+    return <EmptyState Icon={CheckCircle2} title={l('All caught up', 'همهٔ پیشنهادها بررسی شده‌اند', 'تمت مراجعة جميع العروض')} desc={l('No pending or approved proposals to show yet.', 'هنوز پیشنهاد در انتظار بررسی یا تأییدشده‌ای برای نمایش وجود ندارد.', 'لا توجد عروض قيد المراجعة أو موافق عليها لعرضها بعد.')} />;
   }
 
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <h2 className="text-lg font-bold text-foreground">Proposal Review</h2>
-          <p className="mt-1 text-[11px] text-muted-foreground">Approved proposals stay here as read-only history.</p>
+          <h2 className="text-lg font-bold text-foreground">{l('Proposal Review', 'بررسی پیشنهادها', 'مراجعة العروض')}</h2>
+          <p className="mt-1 text-[11px] text-muted-foreground">{l('Approved proposals stay here as read-only history.', 'پیشنهادهای تأییدشده برای سابقه در این بخش باقی می‌مانند و قابل ویرایش نیستند.', 'تبقى العروض الموافق عليها هنا كسجل للقراءة فقط.')}</p>
         </div>
-        <span className="text-xs text-muted-foreground">{pendingCount} awaiting approval · {approvedCount} approved</span>
+        <span className="text-xs text-muted-foreground">{l(`${pendingCount} awaiting approval · ${approvedCount} approved`, `در انتظار تأیید: ${pendingCount} · تأییدشده: ${approvedCount}`, `بانتظار الموافقة: ${pendingCount} · الموافق عليها: ${approvedCount}`)}</span>
       </div>
 
       {ordered.map(proposal => {
@@ -177,27 +183,27 @@ function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-foreground">{proposal.provider?.full_name || 'Provider'}</p>
+                  <p className="text-sm font-semibold text-foreground">{proposal.provider?.full_name || l('Provider', 'ارائه‌دهنده', 'مقدّم الخدمة')}</p>
                   {approved && (
                     <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
-                      <CheckCircle2 className="h-3 w-3" /> Approved
+                      <CheckCircle2 className="h-3 w-3" /> {l('Approved', 'تأییدشده', 'موافَق عليه')}
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-muted-foreground">{proposal.provider?.role || 'guide'} · Trip to {(proposal.request?.destination || []).join(', ') || 'Iran'}</p>
-                {proposal.price != null && <p className="mt-2 text-sm font-semibold text-accent">${Number(proposal.price).toLocaleString()} · {proposal.price_type?.replace('_', ' ')} · {proposal.price_period?.replace('_', ' ')}</p>}
+                <p className="mt-1 text-xs text-muted-foreground">{proposal.provider?.role === 'agency' ? l('agency', 'آژانس', 'وكالة') : l('guide', 'راهنما', 'مرشد')} · {l('Trip to', 'سفر به', 'رحلة إلى')} {(proposal.request?.destination || []).map(city => iranianDestinations.find(item => item.en === city)?.[lang] || city).join(lang === 'en' ? ', ' : '، ') || l('Iran', 'ایران', 'إيران')}</p>
+                {proposal.price != null && <p className="mt-2 text-sm font-semibold text-accent">${Number(proposal.price).toLocaleString()} · {localizePriceBasis(proposal.price_type, lang)} · {localizePriceBasis(proposal.price_period, lang)}</p>}
                 {proposal.message && <p className="mt-2 max-w-2xl text-xs leading-relaxed text-muted-foreground">{proposal.message}</p>}
               </div>
 
               {approved ? (
                 <span className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-xs font-semibold text-muted-foreground">
-                  <CheckCircle2 className="h-3.5 w-3.5" /> Reviewed
+                  <CheckCircle2 className="h-3.5 w-3.5" /> {l('Reviewed', 'بررسی‌شده', 'تمت المراجعة')}
                 </span>
               ) : (
                 <div className="flex gap-2">
-                  <button disabled={busyId === proposal.id} onClick={() => onEdit(proposal)} className="rounded-xl bg-muted px-3 py-2 text-xs font-semibold text-foreground/80 hover:bg-muted disabled:opacity-50">Edit</button>
-                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/25 disabled:opacity-50">Approve</button>
-                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-500/20 disabled:opacity-50">Reject</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onEdit(proposal)} className="rounded-xl bg-muted px-3 py-2 text-xs font-semibold text-foreground/80 hover:bg-muted disabled:opacity-50">{l('Edit', 'ویرایش', 'تعديل')}</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'approved')} className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/25 disabled:opacity-50">{l('Approve', 'تأیید', 'موافقة')}</button>
+                  <button disabled={busyId === proposal.id} onClick={() => onReview(proposal.id, 'rejected')} className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-500/20 disabled:opacity-50">{l('Reject', 'رد کردن', 'رفض')}</button>
                 </div>
               )}
             </div>
@@ -211,7 +217,22 @@ function ProposalReviewView({ proposals, loading, busyId, onReview, onEdit }) {
 // ─── Sidebar ─────────────────────────────────────────────────────────────────
 
 function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const initials = profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'AD';
+  const navLabels = {
+    overview: l('Overview', 'نمای کلی', 'نظرة عامة'),
+    notifications: l('Notifications', 'اعلان‌ها', 'الإشعارات'),
+    pending: l('Pending Tours', 'تورهای در انتظار', 'الجولات قيد المراجعة'),
+    proposals: l('Proposal Review', 'بررسی پیشنهادها', 'مراجعة العروض'),
+    tours: l('All Tours', 'همهٔ تورها', 'جميع الجولات'),
+    platform: l('Platform Tours', 'تورهای سامانه', 'جولات المنصة'),
+    guides: l('All Guides', 'همهٔ راهنماها', 'جميع المرشدين'),
+    chats: l('Chat Monitor', 'نظارت بر گفتگوها', 'مراقبة المحادثات'),
+    comments: l('Comments', 'نظرات', 'التعليقات'),
+    articles: l('Articles', 'مقاله‌ها', 'المقالات'),
+    destinations: l('Homepage Wonders', 'مقصدهای صفحهٔ اصلی', 'وجهات الصفحة الرئيسية'),
+  };
 
   const badgeFor = (id) => {
     if (id === 'pending')  return counts.pending;
@@ -235,7 +256,7 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
           </div>
           <span className="text-white font-semibold text-sm leading-tight">
             Iran Trip Advisor<br />
-            <span className="text-[hsl(38,62%,58%)] font-normal text-[10px] tracking-wider uppercase">Admin Panel</span>
+            <span className="text-[hsl(38,62%,58%)] font-normal text-[10px] tracking-wider uppercase">{l('Admin Panel', 'پنل مدیریت', 'لوحة الإدارة')}</span>
           </span>
         </Link>
       </div>
@@ -246,9 +267,9 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
           <span className="text-white text-sm font-bold">{initials}</span>
         </div>
         <p className="text-white text-xs font-medium leading-tight truncate">
-          {profile?.full_name || 'Administrator'}
+          {profile?.full_name || l('Administrator', 'مدیر', 'مسؤول')}
         </p>
-        <p className="text-[hsl(38,62%,58%)] text-[10px] mt-0.5">Administrator</p>
+        <p className="text-[hsl(38,62%,58%)] text-[10px] mt-0.5">{l('Administrator', 'مدیر', 'مسؤول')}</p>
       </div>
 
       {/* Nav */}
@@ -270,7 +291,7 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
               <BentoSidebarIndicator active={active} />
               <span className="relative z-10 flex items-center gap-2.5">
                 <item.Icon className="w-3.5 h-3.5 flex-shrink-0" />
-                {item.label}
+                {navLabels[item.id] || item.label}
               </span>
               {badge !== null && badge > 0 && (
                 <span className={`relative z-10 px-1.5 py-0.5 rounded-full text-[9px] font-bold ${
@@ -291,7 +312,7 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
           className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all"
         >
           <LogOut className="w-3.5 h-3.5" />
-          Sign out
+          {l('Sign out', 'خروج از حساب', 'تسجيل الخروج')}
         </button>
       </div>
     </aside>
@@ -301,15 +322,17 @@ function Sidebar({ section, onNavigate, counts, profile, onLogout }) {
 // ─── Overview ────────────────────────────────────────────────────────────────
 
 function OverviewView({ tours, guides, reviews, loading }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   if (loading) return <SectionLoader />;
 
   const pendingCount = tours.filter(t => t.status === 'pending_review' || t.status === 'draft').length;
 
   const stats = [
-    { label: 'Total Tours',     value: tours.length,    color: 'text-foreground',                Icon: Briefcase },
-    { label: 'Pending Review',  value: pendingCount,    color: 'text-yellow-700',           Icon: Clock },
-    { label: 'Total Guides',    value: guides.length,   color: 'text-accent',   Icon: Users },
-    { label: 'Total Comments',  value: reviews.length,  color: 'text-amber-700',    Icon: MessageSquare },
+    { label: l('Total Tours', 'کل تورها', 'إجمالي الجولات'), value: tours.length, color: 'text-foreground', Icon: Briefcase },
+    { label: l('Pending Review', 'در انتظار بررسی', 'بانتظار المراجعة'), value: pendingCount, color: 'text-yellow-700', Icon: Clock },
+    { label: l('Total Guides', 'کل راهنماها', 'إجمالي المرشدين'), value: guides.length, color: 'text-accent', Icon: Users },
+    { label: l('Total Comments', 'کل نظرات', 'إجمالي التعليقات'), value: reviews.length, color: 'text-amber-700', Icon: MessageSquare },
   ];
 
   const recentTours    = tours.slice(0, 5);
@@ -318,8 +341,8 @@ function OverviewView({ tours, guides, reviews, loading }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-foreground font-bold text-lg">Overview</h2>
-        <span className="text-muted-foreground text-xs">Platform statistics</span>
+        <h2 className="text-foreground font-bold text-lg">{l('Overview', 'نمای کلی', 'نظرة عامة')}</h2>
+        <span className="text-muted-foreground text-xs">{l('Platform statistics', 'آمار سامانه', 'إحصاءات المنصة')}</span>
       </div>
 
       {/* Stat cards */}
@@ -339,9 +362,9 @@ function OverviewView({ tours, guides, reviews, loading }) {
 
       {/* Recent tours */}
       <div className={`${CARD} p-5`}>
-        <p className="text-foreground/80 text-sm font-semibold mb-4">Recent Tours</p>
+        <p className="text-foreground/80 text-sm font-semibold mb-4">{l('Recent Tours', 'تورهای اخیر', 'الجولات الأخيرة')}</p>
         {recentTours.length === 0 ? (
-          <p className="text-muted-foreground text-xs text-center py-8">No tours yet</p>
+          <p className="text-muted-foreground text-xs text-center py-8">{l('No tours yet', 'هنوز توری ثبت نشده است', 'لا توجد جولات بعد')}</p>
         ) : (
           <div className="space-y-3">
             {recentTours.map(tour => (
@@ -356,8 +379,8 @@ function OverviewView({ tours, guides, reviews, loading }) {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-foreground text-xs font-medium truncate">{tour.title || 'Untitled'}</p>
-                  <p className="text-muted-foreground text-[10px] mt-0.5">{tour.profiles?.full_name || 'Unknown guide'}</p>
+                  <p className="text-foreground text-xs font-medium truncate">{tour.title || l('Untitled', 'بدون عنوان', 'دون عنوان')}</p>
+                  <p className="text-muted-foreground text-[10px] mt-0.5">{tour.profiles?.full_name || l('Unknown guide', 'راهنمای نامشخص', 'مرشد غير معروف')}</p>
                 </div>
                 <StatusPill status={tour.status} />
               </div>
@@ -368,9 +391,9 @@ function OverviewView({ tours, guides, reviews, loading }) {
 
       {/* Recent comments */}
       <div className={`${CARD} p-5`}>
-        <p className="text-foreground/80 text-sm font-semibold mb-4">Recent Comments</p>
+        <p className="text-foreground/80 text-sm font-semibold mb-4">{l('Recent Comments', 'نظرهای اخیر', 'التعليقات الأخيرة')}</p>
         {recentComments.length === 0 ? (
-          <p className="text-muted-foreground text-xs text-center py-8">No comments yet</p>
+          <p className="text-muted-foreground text-xs text-center py-8">{l('No comments yet', 'هنوز نظری ثبت نشده است', 'لا توجد تعليقات بعد')}</p>
         ) : (
           <div className="space-y-4">
             {recentComments.map(r => (
@@ -380,7 +403,7 @@ function OverviewView({ tours, guides, reviews, loading }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <p className="text-foreground text-xs font-medium">{r.reviewer?.full_name || r.reviewer_name || 'Anonymous'}</p>
+                    <p className="text-foreground text-xs font-medium">{r.reviewer?.full_name || r.reviewer_name || l('Anonymous', 'ناشناس', 'مجهول')}</p>
                     <StarRating rating={r.rating || 0} />
                   </div>
                   {r.review_text && (
@@ -399,6 +422,8 @@ function OverviewView({ tours, guides, reviews, loading }) {
 // ─── Platform Tours ──────────────────────────────────────────────────────────
 
 function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [creating, setCreating] = useState(false);
   const [editing, setEditing]   = useState(null);
 
@@ -411,7 +436,7 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
           onClick={() => { setCreating(false); setEditing(null); }}
           className="text-muted-foreground text-xs hover:text-foreground transition"
         >
-          ← Back to Platform Tours
+          ← {l('Back to Platform Tours', 'بازگشت به تورهای پلتفرم', 'العودة إلى جولات المنصة')}
         </button>
         <TourForm
           key={editing?.id || 'new'}
@@ -431,23 +456,23 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-foreground font-bold text-lg">Platform Tours</h2>
-          <p className="text-muted-foreground text-xs mt-0.5">Tours owned and curated by the platform itself</p>
+          <h2 className="text-foreground font-bold text-lg">{l('Platform Tours', 'تورهای پلتفرم', 'جولات المنصة')}</h2>
+          <p className="text-muted-foreground text-xs mt-0.5">{l('Tours owned and curated by the platform itself', 'تورهایی که خود پلتفرم تهیه و مدیریت می‌کند', 'جولات تُعدّها المنصة وتديرها بنفسها')}</p>
         </div>
         <button
           onClick={() => setCreating(true)}
           className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[hsl(178,85%,32%)] text-white text-sm font-semibold hover:bg-[hsl(178,85%,28%)] transition"
         >
           <PlusCircle className="w-4 h-4" />
-          Add Platform Tour
+          {l('Add Platform Tour', 'افزودن تور پلتفرم', 'إضافة جولة للمنصة')}
         </button>
       </div>
 
       {tours.length === 0 ? (
         <EmptyState
           Icon={Sparkles}
-          title="No platform tours yet"
-          desc="Create your first curated platform tour — it will be auto-published and featured on the homepage."
+          title={l('No platform tours yet', 'هنوز توری برای پلتفرم ثبت نشده است', 'لم تُضف أي جولة للمنصة بعد')}
+          desc={l('Create your first curated platform tour — it will be auto-published and featured on the homepage.', 'اولین تور پلتفرم را بسازید؛ به‌صورت خودکار منتشر می‌شود و در صفحهٔ اصلی نمایش داده خواهد شد.', 'أنشئ أول جولة للمنصة؛ ستُنشر تلقائيًا وتظهر في الصفحة الرئيسية.')}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -465,17 +490,17 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
                   )}
                   <div className="absolute top-2 start-2 flex items-center gap-1.5 px-2 py-1 rounded-full bg-[hsl(38,62%,52%)]/20 border border-[hsl(38,62%,52%)]/30 text-amber-700 text-[10px] font-semibold">
                     <Sparkles className="w-3 h-3" />
-                    Platform
+                    {l('Platform', 'پلتفرم', 'المنصة')}
                   </div>
                   <div className="absolute top-2 end-2">
                     <StatusPill status={tour.status || 'published'} />
                   </div>
                 </div>
                 <div className="p-4 flex-1 flex flex-col">
-                  <p className="text-foreground font-semibold text-sm truncate">{tour.title || 'Untitled'}</p>
+                  <p className="text-foreground font-semibold text-sm truncate">{tour.title || l('Untitled', 'بدون عنوان', 'بلا عنوان')}</p>
                   <p className="text-muted-foreground text-[11px] truncate mt-0.5">
                     {tour.location || '—'}
-                    {tour.duration ? ` · ${tour.duration} days` : ''}
+                    {tour.duration ? ` · ${tour.duration} ${l('days', 'روز', 'أيام')}` : ''}
                   </p>
                   {tour.price != null && (
                     <p className="text-accent text-xs font-semibold mt-2">
@@ -489,7 +514,7 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
                       className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-muted text-foreground/80 text-xs font-medium hover:bg-muted hover:text-foreground transition disabled:opacity-50"
                     >
                       <Edit2 className="w-3 h-3" />
-                      Edit
+                      {l('Edit', 'ویرایش', 'تعديل')}
                     </button>
                     <button
                       disabled={busy}
@@ -512,6 +537,8 @@ function PlatformToursView({ tours, loading, busyId, onSaved, onDelete }) {
 // ─── Tour Edit Modal ─────────────────────────────────────────────────────────
 
 function TourEditModal({ tour, onSave, onClose }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [form, setForm] = useState({
     title:       tour.title || '',
     description: tour.description || '',
@@ -552,7 +579,7 @@ function TourEditModal({ tour, onSave, onClose }) {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
       <TransitionSurface kind="modal" className={`relative w-full max-w-lg ${CARD} p-6 max-h-[90vh] overflow-y-auto`}>
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-foreground font-bold">Edit Tour</h3>
+          <h3 className="text-foreground font-bold">{l('Edit Tour', 'ویرایش تور', 'تعديل الجولة')}</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-xl bg-muted hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition">
             <X className="w-4 h-4" />
           </button>
@@ -562,33 +589,33 @@ function TourEditModal({ tour, onSave, onClose }) {
 
         <div className="space-y-4">
           <div>
-            <label className={lc}>Title</label>
+            <label className={lc}>{l('Title', 'عنوان', 'العنوان')}</label>
             <input className={ic} value={form.title}
               onChange={e => setForm(p => ({ ...p, title: e.target.value }))} />
           </div>
           <div>
-            <label className={lc}>Description</label>
+            <label className={lc}>{l('Description', 'توضیحات', 'الوصف')}</label>
             <textarea rows={4} className={`${ic} resize-none`} value={form.description}
               onChange={e => setForm(p => ({ ...p, description: e.target.value }))} />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className={lc}>Price (USD)</label>
+              <label className={lc}>{l('Price (USD)', 'قیمت (دلار آمریکا)', 'السعر (بالدولار الأمريكي)')}</label>
               <input type="number" className={ic} value={form.price}
                 onChange={e => setForm(p => ({ ...p, price: e.target.value }))} />
             </div>
             <div>
-              <label className={lc}>Duration (days)</label>
+              <label className={lc}>{l('Duration (days)', 'مدت (روز)', 'المدة (بالأيام)')}</label>
               <input type="number" className={ic} value={form.duration}
                 onChange={e => setForm(p => ({ ...p, duration: e.target.value }))} />
             </div>
           </div>
           <div>
-            <label className={lc}>Status</label>
+            <label className={lc}>{l('Status', 'وضعیت', 'الحالة')}</label>
             <select className={`${ic} cursor-pointer [color-scheme:light]`} value={form.status}
               onChange={e => setForm(p => ({ ...p, status: e.target.value }))}>
               {Object.entries(STATUS_CFG).map(([v, c]) => (
-                <option key={v} value={v} className="bg-card text-foreground">{c.label}</option>
+                <option key={v} value={v} className="bg-card text-foreground">{localizeBookingStatus(v, lang)}</option>
               ))}
             </select>
           </div>
@@ -598,11 +625,11 @@ function TourEditModal({ tour, onSave, onClose }) {
           <button onClick={handleSave} disabled={saving}
             className="flex items-center gap-2 px-5 py-2 rounded-xl bg-[hsl(178,85%,32%)] hover:bg-[hsl(178,85%,38%)] text-white text-sm font-semibold disabled:opacity-60 transition">
             {<IconSwap active={saving} a={<CheckCircle2 className="w-4 h-4" />} b={<Loader2 className="w-4 h-4 animate-spin" />} keepMounted={false} />}
-            Save Changes
+            {l('Save Changes', 'ذخیرهٔ تغییرات', 'حفظ التغييرات')}
           </button>
           <button onClick={onClose}
             className="px-5 py-2 rounded-xl border border-border text-muted-foreground hover:text-foreground hover:border-accent/30 text-sm transition">
-            Cancel
+            {l('Cancel', 'انصراف', 'إلغاء')}
           </button>
         </div>
       </TransitionSurface>
@@ -613,6 +640,8 @@ function TourEditModal({ tour, onSave, onClose }) {
 // ─── Tour Card (reused for pending + all tours) ──────────────────────────────
 
 function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const busy = busyId === tour.id;
   return (
     <div className={`${CARD} p-4`}>
@@ -626,7 +655,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1.5">
-            <h3 className="text-foreground font-semibold text-sm line-clamp-1">{tour.title || 'Untitled'}</h3>
+            <h3 className="text-foreground font-semibold text-sm line-clamp-1">{tour.title || l('Untitled', 'بدون عنوان', 'بلا عنوان')}</h3>
             <StatusPill status={tour.status} />
           </div>
 
@@ -643,7 +672,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
             )}
             {tour.duration && (
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />{tour.duration}d
+                <Clock className="w-3 h-3" />{tour.duration} {l('days', 'روز', 'أيام')}
               </span>
             )}
             {tour.price && (
@@ -661,7 +690,7 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 text-xs font-medium transition disabled:opacity-50"
               >
                 {<IconSwap active={busy} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-                Approve
+                {l('Approve', 'تأیید', 'موافقة')}
               </button>
             )}
             {tour.status !== 'rejected' && (
@@ -671,14 +700,14 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-700 text-xs font-medium transition disabled:opacity-50"
               >
                 {<IconSwap active={busy} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-                Reject
+                {l('Reject', 'رد کردن', 'رفض')}
               </button>
             )}
             <button
               onClick={() => onEdit(tour)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[hsl(178,85%,32%)]/15 hover:bg-[hsl(178,85%,32%)]/25 text-accent text-xs font-medium transition"
             >
-              <Edit2 className="w-3.5 h-3.5" /> Edit
+              <Edit2 className="w-3.5 h-3.5" /> {l('Edit', 'ویرایش', 'تعديل')}
             </button>
           </div>
         </div>
@@ -690,6 +719,8 @@ function TourRow({ tour, busyId, onApprove, onReject, onEdit }) {
 // ─── Pending Tours View ──────────────────────────────────────────────────────
 
 function PendingToursView({ tours, loading, onApprove, onReject, onEdit, busyId }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   if (loading) return <SectionLoader />;
 
   const pending = tours.filter(t => t.status === 'pending_review' || t.status === 'draft');
@@ -697,17 +728,17 @@ function PendingToursView({ tours, loading, onApprove, onReject, onEdit, busyId 
   return (
     <div>
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-foreground font-bold text-lg">Pending Tours</h2>
+        <h2 className="text-foreground font-bold text-lg">{l('Pending Tours', 'تورهای در انتظار بررسی', 'الجولات قيد المراجعة')}</h2>
         <span className="text-muted-foreground text-xs">
-          {pending.length} awaiting review
+          {l(`${pending.length} awaiting review`, `${pending.length} تور در انتظار بررسی`, `جولات قيد المراجعة: ${pending.length}`)}
         </span>
       </div>
 
       {pending.length === 0 ? (
         <EmptyState
           Icon={CheckCircle2}
-          title="All caught up"
-          desc="No tours waiting for review right now."
+          title={l('All caught up', 'همهٔ تورها بررسی شده‌اند', 'تمت مراجعة جميع الجولات')}
+          desc={l('No tours waiting for review right now.', 'اکنون توری در انتظار بررسی نیست.', 'لا توجد جولات تنتظر المراجعة حاليًا.')}
         />
       ) : (
         <div className="space-y-3">
@@ -730,6 +761,8 @@ function PendingToursView({ tours, loading, onApprove, onReject, onEdit, busyId 
 // ─── All Tours View ──────────────────────────────────────────────────────────
 
 function AllToursView({ tours, loading, onApprove, onReject, onEdit, busyId }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [filter, setFilter] = useState('all');
 
   if (loading) return <SectionLoader />;
@@ -740,23 +773,23 @@ function AllToursView({ tours, loading, onApprove, onReject, onEdit, busyId }) {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-foreground font-bold text-lg">All Tours</h2>
-          <span className="text-muted-foreground text-xs">{tours.length} total</span>
+          <h2 className="text-foreground font-bold text-lg">{l('All Tours', 'همهٔ تورها', 'جميع الجولات')}</h2>
+          <span className="text-muted-foreground text-xs">{l(`${tours.length} total`, `مجموع: ${tours.length}`, `الإجمالي: ${tours.length}`)}</span>
         </div>
         <select
           value={filter}
           onChange={e => setFilter(e.target.value)}
           className="px-3 py-1.5 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 cursor-pointer [color-scheme:light]"
         >
-          <option value="all" className="bg-card text-foreground">All Statuses</option>
+          <option value="all" className="bg-card text-foreground">{l('All Statuses', 'همهٔ وضعیت‌ها', 'جميع الحالات')}</option>
           {Object.entries(STATUS_CFG).map(([v, c]) => (
-            <option key={v} value={v} className="bg-card text-foreground">{c.label}</option>
+            <option key={v} value={v} className="bg-card text-foreground">{localizeBookingStatus(v, lang)}</option>
           ))}
         </select>
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState Icon={Briefcase} title="No tours found" desc="Try adjusting the filter." />
+        <EmptyState Icon={Briefcase} title={l('No tours found', 'توری پیدا نشد', 'لم يُعثر على جولات')} desc={l('Try adjusting the filter.', 'فیلتر را تغییر دهید.', 'جرّب تغيير عامل التصفية.')} />
       ) : (
         <div className="space-y-3">
           {filtered.map(tour => (
@@ -778,6 +811,8 @@ function AllToursView({ tours, loading, onApprove, onReject, onEdit, busyId }) {
 // ─── Guides View ─────────────────────────────────────────────────────────────
 
 function GuidesView({ guides, loading, onReviewProfile, busyId }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [sortBy, setSortBy] = useState('newest');
 
   if (loading) return <SectionLoader />;
@@ -798,26 +833,26 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
     <div>
       <div className="flex items-center justify-between flex-wrap gap-3 mb-5">
         <div className="flex items-center gap-3">
-          <h2 className="text-foreground font-bold text-lg">All Guides</h2>
-          <span className="text-muted-foreground text-xs">{guides.length} total</span>
+          <h2 className="text-foreground font-bold text-lg">{l('All Guides', 'همهٔ راهنماها', 'جميع المرشدين')}</h2>
+          <span className="text-muted-foreground text-xs">{l(`${guides.length} total`, `مجموع: ${guides.length}`, `الإجمالي: ${guides.length}`)}</span>
         </div>
         <select
           value={sortBy}
           onChange={event => setSortBy(event.target.value)}
-          aria-label="Sort guides"
+          aria-label={l('Sort guides', 'مرتب‌سازی راهنماها', 'ترتيب المرشدين')}
           className="px-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 min-w-48 [color-scheme:light]"
         >
-          <option value="newest" className="bg-card text-foreground">Sort by: Newest</option>
-          <option value="oldest" className="bg-card text-foreground">Sort by: Oldest</option>
-          <option value="name" className="bg-card text-foreground">Sort by: Name A–Z</option>
-          <option value="city" className="bg-card text-foreground">Sort by: City</option>
-          <option value="role" className="bg-card text-foreground">Sort by: Guide / Agency</option>
-          <option value="status" className="bg-card text-foreground">Sort by: Approval status</option>
+          <option value="newest" className="bg-card text-foreground">{l('Sort by: Newest', 'مرتب‌سازی: جدیدترین', 'الترتيب: الأحدث')}</option>
+          <option value="oldest" className="bg-card text-foreground">{l('Sort by: Oldest', 'مرتب‌سازی: قدیمی‌ترین', 'الترتيب: الأقدم')}</option>
+          <option value="name" className="bg-card text-foreground">{l('Sort by: Name A–Z', 'مرتب‌سازی: نام', 'الترتيب: الاسم')}</option>
+          <option value="city" className="bg-card text-foreground">{l('Sort by: City', 'مرتب‌سازی: شهر', 'الترتيب: المدينة')}</option>
+          <option value="role" className="bg-card text-foreground">{l('Sort by: Guide / Agency', 'مرتب‌سازی: راهنما / آژانس', 'الترتيب: مرشد / وكالة')}</option>
+          <option value="status" className="bg-card text-foreground">{l('Sort by: Approval status', 'مرتب‌سازی: وضعیت تأیید', 'الترتيب: حالة الموافقة')}</option>
         </select>
       </div>
 
       {sorted.length === 0 ? (
-        <EmptyState Icon={Users} title="No profiles found" desc="Guide and agency profiles will appear here." />
+        <EmptyState Icon={Users} title={l('No profiles found', 'پروفایلی پیدا نشد', 'لم يُعثر على ملفات شخصية')} desc={l('Guide and agency profiles will appear here.', 'پروفایل راهنماها و آژانس‌ها اینجا نمایش داده می‌شود.', 'ستظهر هنا ملفات المرشدين والوكالات.')} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {sorted.map(guide => {
@@ -830,7 +865,7 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                     <img decoding="async" loading="lazy" src={avatarFor(guide)} alt="" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-foreground font-semibold text-sm truncate">{guide.full_name || 'Unnamed'}</p>
+                    <p className="text-foreground font-semibold text-sm truncate">{guide.full_name || l('Unnamed', 'بدون نام', 'بلا اسم')}</p>
                     <p className="text-muted-foreground text-[11px] truncate">{guide.email}</p>
                   </div>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium border flex-shrink-0 ${
@@ -840,7 +875,7 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                         ? 'bg-red-500/15 text-red-700 border-red-500/25'
                         : 'bg-gray-500/15 text-gray-700 border-gray-500/25'
                   }`}>
-                    {guide.is_approved ? 'Approved' : guide.is_rejected ? 'Rejected' : 'Pending'}
+                    {localizeBookingStatus(guide.is_approved ? 'approved' : guide.is_rejected ? 'rejected' : 'pending', lang)}
                   </span>
                 </div>
 
@@ -850,7 +885,7 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                       ? 'bg-[hsl(38,62%,58%)]/15 text-amber-700 border-[hsl(38,62%,58%)]/25'
                       : 'bg-[hsl(178,85%,32%)]/15 text-accent border-[hsl(178,85%,32%)]/25'
                   }`}>
-                    {guide.role || 'guide'}
+                    {guide.role === 'agency' ? l('Agency', 'آژانس', 'وكالة') : l('Guide', 'راهنما', 'مرشد')}
                   </span>
                   {guide.city && (
                     <span className="flex items-center gap-1 text-muted-foreground">
@@ -863,11 +898,11 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                       ? 'bg-emerald-500/15 text-emerald-700 border-emerald-500/25'
                       : 'bg-amber-500/15 text-amber-700 border-amber-500/25'
                   }`}>
-                    {comp.completed ? 'Profile Complete' : `Incomplete — ${comp.passed}/${comp.total}`}
+                    {comp.completed ? l('Profile Complete', 'پروفایل کامل', 'الملف مكتمل') : l(`Incomplete — ${comp.passed}/${comp.total}`, `ناقص — ${comp.passed} از ${comp.total}`, `غير مكتمل — ${comp.passed} من ${comp.total}`)}
                   </span>
                   {guide.license_status === 'pending_review' && !guide.is_approved && !guide.is_rejected && (
                     <span className="px-2 py-0.5 rounded-full font-medium border bg-blue-500/15 text-blue-700 border-blue-500/25">
-                      Review Requested
+                      {l('Review Requested', 'درخواست بررسی ثبت شده', 'طُلبت المراجعة')}
                     </span>
                   )}
                 </div>
@@ -878,7 +913,7 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
                   className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-medium transition border bg-[hsl(178,85%,32%)]/10 border-[hsl(178,85%,32%)]/25 text-accent hover:bg-[hsl(178,85%,32%)]/20 disabled:opacity-50"
                 >
                   {<IconSwap active={busy} a={<Edit2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-                  View &amp; review profile
+                  {l('View & review profile', 'مشاهده و بررسی پروفایل', 'عرض الملف ومراجعته')}
                 </button>
               </div>
             );
@@ -890,6 +925,8 @@ function GuidesView({ guides, loading, onReviewProfile, busyId }) {
 }
 
 function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const initialTourTypes = Array.isArray(guide.tour_types)
     ? guide.tour_types
     : Array.isArray(guide.specialties)
@@ -922,8 +959,17 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
   const approvalEligibility = getGuideApprovalEligibility(reviewProfile, { submitting: busy });
   const completion = approvalEligibility;
   const missingRequirementLabels = {
-    special_abilities: 'Special Abilities',
-    has_vehicle: 'Vehicle Availability',
+    full_name: l('Full name', 'نام و نام خانوادگی', 'الاسم الكامل'),
+    email: l('Email', 'ایمیل', 'البريد الإلكتروني'),
+    phone: l('Phone', 'شمارهٔ تماس', 'رقم الهاتف'),
+    city: l('City', 'شهر', 'المدينة'),
+    languages: l('Languages', 'زبان‌ها', 'اللغات'),
+    tour_types: l('Tour types', 'نوع تورها', 'أنواع الجولات'),
+    specialty: l('Specialty', 'تخصص', 'التخصص'),
+    special_abilities: l('Special Abilities', 'توانایی‌های ویژه', 'مهارات خاصة'),
+    has_vehicle: l('Vehicle Availability', 'دسترسی به خودرو', 'توفر سيارة'),
+    bio: l('Bio', 'معرفی', 'نبذة تعريفية'),
+    license_url: l('License document', 'مدرک مجوز', 'وثيقة الترخيص'),
   };
   const missingRequirements = completion.items
     .filter(item => !item.ok)
@@ -947,7 +993,7 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
       if (error) throw error;
       window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
     } catch (error) {
-      setLocalError(error.message || 'The license document could not be opened.');
+      setLocalError(l('The license document could not be opened.', 'باز کردن مدرک مجوز ممکن نشد.', 'تعذّر فتح وثيقة الترخيص.'));
     } finally {
       setOpeningLicense(false);
     }
@@ -960,11 +1006,18 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
       rejectionReason: reason,
     });
     if (validationError) {
-      setLocalError(validationError);
+      const translations = {
+        'A rejection reason is required.': ['برای رد کردن، دلیل را بنویسید.', 'يجب إدخال سبب الرفض.'],
+        'This profile is already approved.': ['این پروفایل قبلاً تأیید شده است.', 'تمت الموافقة على هذا الملف مسبقًا.'],
+        'This profile review is already being submitted.': ['بررسی این پروفایل در حال ثبت است.', 'مراجعة هذا الملف قيد الإرسال بالفعل.'],
+        'A license document must be uploaded before approval.': ['پیش از تأیید، مدرک مجوز را بارگذاری کنید.', 'يجب رفع وثيقة الترخيص قبل الموافقة.'],
+        'All required profile fields must be completed before approval.': ['پیش از تأیید، همهٔ اطلاعات ضروری پروفایل را تکمیل کنید.', 'يجب استكمال جميع حقول الملف المطلوبة قبل الموافقة.'],
+      };
+      setLocalError(l(validationError, ...(translations[validationError] || [validationError, validationError])));
       return;
     }
     if (form.license_status === 'verified' && !hasLicense) {
-      setLocalError('A license document must be uploaded before it can be marked as verified.');
+      setLocalError(l('A license document must be uploaded before it can be marked as verified.', 'پیش از تأیید مجوز، باید مدرک آن بارگذاری شود.', 'يجب رفع وثيقة الترخيص قبل اعتمادها.'));
       return;
     }
     setLocalError('');
@@ -980,7 +1033,7 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
       const saved = await onSave(guide, updates, decision);
       if (saved) onClose();
     } catch (error) {
-      setLocalError(error.message || 'The profile review could not be saved.');
+      setLocalError(l('The profile review could not be saved.', 'ذخیرهٔ بررسی پروفایل ممکن نشد.', 'تعذّر حفظ مراجعة الملف.'));
     }
   };
 
@@ -991,8 +1044,8 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
           <div className="flex items-center gap-3 min-w-0">
             <img src={avatarFor(guide)} alt="" className="w-11 h-11 rounded-xl object-cover bg-card" />
             <div className="min-w-0">
-              <h3 className="text-foreground font-semibold truncate">{form.full_name || 'Unnamed profile'}</h3>
-              <p className="text-muted-foreground text-xs capitalize">{guide.role}</p>
+              <h3 className="text-foreground font-semibold truncate">{form.full_name || l('Unnamed profile', 'پروفایل بدون نام', 'ملف بلا اسم')}</h3>
+              <p className="text-muted-foreground text-xs capitalize">{guide.role === 'agency' ? l('Agency', 'آژانس', 'وكالة') : l('Guide', 'راهنما', 'مرشد')}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-9 h-9 rounded-xl bg-card text-muted-foreground hover:text-foreground flex items-center justify-center"><X className="w-4 h-4" /></button>
@@ -1000,26 +1053,26 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
 
         <div className="p-5 space-y-5">
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="text-xs text-muted-foreground">Profile completion: <span className={completion.completed ? 'text-emerald-700' : 'text-amber-700'}>{completion.percentage}%</span></div>
-            <Link to={profileHref} target="_blank" rel="noreferrer" className="text-xs text-accent hover:underline">Open public profile</Link>
+            <div className="text-xs text-muted-foreground">{l('Profile completion:', 'میزان تکمیل پروفایل:', 'اكتمال الملف:')} <span className={completion.completed ? 'text-emerald-700' : 'text-amber-700'}>{completion.percentage}%</span></div>
+            <Link to={profileHref} target="_blank" rel="noreferrer" className="text-xs text-accent hover:underline">{l('Open public profile', 'نمایش پروفایل عمومی', 'فتح الملف العام')}</Link>
           </div>
 
           {!completion.completed && (
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-700">
-              Missing requirements: {missingRequirements.join(', ')}
+              {l('Missing requirements:', 'موارد تکمیل‌نشده:', 'المتطلبات الناقصة:')} {missingRequirements.join('، ')}
             </div>
           )}
 
           <div className="grid sm:grid-cols-2 gap-4">
-            <label className="text-xs text-muted-foreground">Full name<input value={form.full_name} onChange={e => set('full_name', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
-            <label className="text-xs text-muted-foreground">Email<input value={form.email} onChange={e => set('email', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
-            <label className="text-xs text-muted-foreground">Phone<input value={form.phone} onChange={e => set('phone', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
-            <label className="text-xs text-muted-foreground">City<input value={form.city} onChange={e => set('city', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
-            <label className="text-xs text-muted-foreground">Languages<input value={form.languages} onChange={e => set('languages', e.target.value)} className={`${inputClass} mt-1.5`} placeholder="English, Persian" /></label>
-            <label className="text-xs text-muted-foreground">{guide.role === 'agency' ? 'Tour types' : 'Tour types / specialties'}<input value={form.tourTypes} onChange={e => set('tourTypes', e.target.value)} className={`${inputClass} mt-1.5`} placeholder="Cultural, Nature, Photography" /></label>
-            <label className="text-xs text-muted-foreground">License status
+            <label className="text-xs text-muted-foreground">{l('Full name', 'نام و نام خانوادگی', 'الاسم الكامل')}<input value={form.full_name} onChange={e => set('full_name', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
+            <label className="text-xs text-muted-foreground">{l('Email', 'ایمیل', 'البريد الإلكتروني')}<input value={form.email} onChange={e => set('email', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
+            <label className="text-xs text-muted-foreground">{l('Phone', 'شمارهٔ تماس', 'رقم الهاتف')}<input value={form.phone} onChange={e => set('phone', e.target.value)} className={`${inputClass} mt-1.5`} dir="ltr" /></label>
+            <label className="text-xs text-muted-foreground">{l('City', 'شهر', 'المدينة')}<input value={form.city} onChange={e => set('city', e.target.value)} className={`${inputClass} mt-1.5`} /></label>
+            <label className="text-xs text-muted-foreground">{l('Languages', 'زبان‌ها', 'اللغات')}<input value={form.languages} onChange={e => set('languages', e.target.value)} className={`${inputClass} mt-1.5`} placeholder={l('English, Persian', 'انگلیسی، فارسی', 'الإنجليزية، الفارسية')} /></label>
+            <label className="text-xs text-muted-foreground">{guide.role === 'agency' ? l('Tour types', 'نوع تورها', 'أنواع الجولات') : l('Tour types / specialties', 'نوع تورها / تخصص‌ها', 'أنواع الجولات / التخصصات')}<input value={form.tourTypes} onChange={e => set('tourTypes', e.target.value)} className={`${inputClass} mt-1.5`} placeholder={l('Cultural, Nature, Photography', 'فرهنگی، طبیعت‌گردی، عکاسی', 'ثقافية، طبيعة، تصوير')} /></label>
+            <label className="text-xs text-muted-foreground">{l('License status', 'وضعیت مجوز', 'حالة الترخيص')}
               <select value={form.license_status} onChange={e => set('license_status', e.target.value)} className={`${inputClass} mt-1.5 [color-scheme:light]`}>
-                <option value="not_uploaded" className="bg-card text-foreground">Not uploaded</option><option value="pending_review" className="bg-card text-foreground">Pending review</option><option value="verified" disabled={!hasLicense} className="bg-card text-foreground">Verified</option><option value="rejected" className="bg-card text-foreground">Rejected</option>
+                <option value="not_uploaded" className="bg-card text-foreground">{l('Not uploaded', 'بارگذاری نشده', 'لم تُرفع')}</option><option value="pending_review" className="bg-card text-foreground">{l('Pending review', 'در انتظار بررسی', 'قيد المراجعة')}</option><option value="verified" disabled={!hasLicense} className="bg-card text-foreground">{l('Verified', 'تأییدشده', 'تم التحقق')}</option><option value="rejected" className="bg-card text-foreground">{l('Rejected', 'ردشده', 'مرفوض')}</option>
               </select>
             </label>
 
@@ -1030,36 +1083,36 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
                     <FileText className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="text-foreground text-sm font-medium">License document</p>
+                    <p className="text-foreground text-sm font-medium">{l('License document', 'مدرک مجوز', 'وثيقة الترخيص')}</p>
                     <p className={`text-xs mt-0.5 ${hasLicense ? 'text-emerald-700' : 'text-amber-700'}`}>
-                      {hasLicense ? 'Uploaded — ready for admin review' : 'No license document has been uploaded'}
+                      {hasLicense ? l('Uploaded — ready for admin review', 'بارگذاری شده و آمادهٔ بررسی است', 'رُفعت وأصبحت جاهزة للمراجعة') : l('No license document has been uploaded', 'مدرک مجوز بارگذاری نشده است', 'لم تُرفع وثيقة الترخيص')}
                     </p>
                   </div>
                 </div>
                 {hasLicense && (
                   <button type="button" onClick={viewLicense} disabled={openingLicense} className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[hsl(178,85%,32%)]/15 border border-[hsl(178,85%,32%)]/30 text-accent text-xs font-medium hover:bg-[hsl(178,85%,32%)]/25 disabled:opacity-50">
                     {<IconSwap active={openingLicense} a={<ExternalLink className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-                    {openingLicense ? 'Opening…' : 'View uploaded license'}
+                    {openingLicense ? l('Opening…', 'در حال باز کردن…', 'جارٍ الفتح…') : l('View uploaded license', 'مشاهدهٔ مدرک بارگذاری‌شده', 'عرض وثيقة الترخيص المرفوعة')}
                   </button>
                 )}
               </div>
             </div>
           </div>
 
-          <label className="block text-xs text-muted-foreground">Bio<textarea rows={5} value={form.bio} onChange={e => set('bio', e.target.value)} className={`${inputClass} mt-1.5 resize-y`} /></label>
+          <label className="block text-xs text-muted-foreground">{l('Bio', 'دربارهٔ راهنما', 'نبذة تعريفية')}<textarea rows={5} value={form.bio} onChange={e => set('bio', e.target.value)} className={`${inputClass} mt-1.5 resize-y`} /></label>
 
           <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
-            <label className="block text-xs text-red-700">Rejection reason (required when rejecting)
-              <textarea rows={3} value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className={`${inputClass} mt-1.5 border-red-500/20`} placeholder="Explain what must be corrected before resubmission…" />
+            <label className="block text-xs text-red-700">{l('Rejection reason (required when rejecting)', 'دلیل رد (برای رد کردن الزامی است)', 'سبب الرفض (مطلوب عند الرفض)')}
+              <textarea rows={3} value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} className={`${inputClass} mt-1.5 border-red-500/20`} placeholder={l('Explain what must be corrected before resubmission…', 'توضیح دهید پیش از ارسال دوباره چه مواردی باید اصلاح شود…', 'وضّح ما يجب تصحيحه قبل إعادة الإرسال…')} />
             </label>
           </div>
           {localError && <p className="text-red-700 text-xs">{localError}</p>}
 
           <div className="flex items-center justify-end gap-2 flex-wrap pt-2 border-t border-border">
-            <button disabled={busy} onClick={() => submit('save')} className="px-4 py-2 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted disabled:opacity-50">Save changes</button>
-            <button disabled={busy} onClick={() => submit('reject')} className="px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/25 text-red-700 text-xs hover:bg-red-500/25 disabled:opacity-50">Reject profile</button>
+            <button disabled={busy} onClick={() => submit('save')} className="px-4 py-2 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted disabled:opacity-50">{l('Save changes', 'ذخیرهٔ تغییرات', 'حفظ التغييرات')}</button>
+            <button disabled={busy} onClick={() => submit('reject')} className="px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/25 text-red-700 text-xs hover:bg-red-500/25 disabled:opacity-50">{l('Reject profile', 'رد پروفایل', 'رفض الملف')}</button>
             {!guide.is_approved && (
-              <button disabled={!approvalEligibility.canApprove} onClick={() => submit('approve')} title={!completion.completed ? 'All required profile fields and an uploaded license are needed before approval.' : ''} className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 text-xs hover:bg-emerald-500/25 disabled:opacity-40">{busy ? 'Saving…' : 'Approve profile'}</button>
+              <button disabled={!approvalEligibility.canApprove} onClick={() => submit('approve')} title={!completion.completed ? l('All required profile fields and an uploaded license are needed before approval.', 'پیش از تأیید، همهٔ اطلاعات ضروری پروفایل و مدرک مجوز را تکمیل کنید.', 'يجب استكمال جميع حقول الملف المطلوبة ورفع وثيقة الترخيص قبل الموافقة.') : ''} className="px-4 py-2 rounded-xl bg-emerald-500/15 border border-emerald-500/25 text-emerald-700 text-xs hover:bg-emerald-500/25 disabled:opacity-40">{busy ? l('Saving…', 'در حال ذخیره…', 'جارٍ الحفظ…') : l('Approve profile', 'تأیید پروفایل', 'الموافقة على الملف')}</button>
             )}
           </div>
         </div>
@@ -1071,6 +1124,8 @@ function GuideProfileReviewModal({ guide, busy, onClose, onSave }) {
 // ─── Comment Card ────────────────────────────────────────────────────────────
 
 function CommentCard({ review, onReply, onModerate, busy }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [reply, setReply] = useState(review.admin_reply || '');
   const [reviewText, setReviewText] = useState(review.review_text || review.body || '');
   const [saving, setSaving] = useState(false);
@@ -1112,16 +1167,16 @@ function CommentCard({ review, onReply, onModerate, busy }) {
     || review.agency?.agency_name
     || review.agency?.full_name
     || review.tours?.title
-    || 'Unknown target';
+    || l('Unknown target', 'مورد نامشخص', 'جهة غير معروفة');
   const targetType = review.target_profile?.role === 'agency'
-    ? 'Agency'
+    ? l('Agency', 'آژانس', 'وكالة')
     : review.target_profile?.role === 'guide'
-      ? 'Guide'
+      ? l('Guide', 'راهنما', 'مرشد')
       : review.guide_id
-        ? 'Guide'
+        ? l('Guide', 'راهنما', 'مرشد')
         : review.agency_id
-          ? 'Agency'
-          : 'Tour';
+          ? l('Agency', 'آژانس', 'وكالة')
+          : l('Tour', 'تور', 'جولة');
 
   const handleModeration = async (decision) => {
     setError('');
@@ -1143,7 +1198,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <p className="text-foreground font-semibold text-sm">{review.reviewer?.full_name || review.reviewer_name || 'Anonymous'}</p>
+              <p className="text-foreground font-semibold text-sm">{review.reviewer?.full_name || review.reviewer_name || l('Anonymous', 'ناشناس', 'مجهول')}</p>
               <StarRating rating={review.rating || 0} />
               <StatusPill status={review.status || 'pending'} />
             </div>
@@ -1160,7 +1215,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
 
       <div className="mb-4 pl-12">
         <label className="mb-1.5 block text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Review text
+          {l('Review text', 'متن دیدگاه', 'نص التقييم')}
         </label>
         <textarea
           rows={4}
@@ -1174,7 +1229,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
         <div className="mb-4 pl-12">
           <div className="p-3 rounded-xl bg-[hsl(178,85%,32%)]/10 border border-[hsl(178,85%,32%)]/20">
             <p className="text-accent text-[10px] font-semibold mb-1 uppercase tracking-wider">
-              Current Admin Reply
+              {l('Current Admin Reply', 'پاسخ فعلی مدیر', 'ردّ المسؤول الحالي')}
             </p>
             <p className="text-foreground/80 text-xs leading-relaxed">{review.admin_reply}</p>
           </div>
@@ -1191,7 +1246,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           className="inline-flex items-center gap-1.5 rounded-xl bg-muted px-3.5 py-2 text-xs font-semibold text-foreground/80 hover:bg-muted disabled:opacity-40"
         >
           {<IconSwap active={busy} a={<Edit2 className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
-          Save edits
+          {l('Save edits', 'ذخیرهٔ ویرایش', 'حفظ التعديلات')}
         </button>
         <button
           type="button"
@@ -1200,7 +1255,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/25 bg-red-500/15 px-3.5 py-2 text-xs font-semibold text-red-700 hover:bg-red-500/25 disabled:opacity-40"
         >
           <XCircle className="h-3.5 w-3.5" />
-          Reject
+          {l('Reject', 'رد کردن', 'رفض')}
         </button>
         <button
           type="button"
@@ -1209,7 +1264,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/25 bg-emerald-500/15 px-3.5 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-500/25 disabled:opacity-40"
         >
           <CheckCircle2 className="h-3.5 w-3.5" />
-          Approve
+          {l('Approve', 'تأیید', 'موافقة')}
         </button>
       </div>
 
@@ -1218,7 +1273,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           rows={2}
           value={reply}
           onChange={e => setReply(e.target.value)}
-          placeholder="Write a reply as admin..."
+          placeholder={l('Write a reply as admin...', 'پاسخ مدیر را بنویسید…', 'اكتب ردّ المسؤول…')}
           className="w-full px-3 py-2.5 rounded-xl border border-border bg-card text-foreground text-sm placeholder:text-muted-foreground focus:outline-none focus:border-[hsl(178,85%,32%)]/60 focus:ring-1 focus:ring-[hsl(178,85%,32%)]/30 transition resize-none"
         />
         <button
@@ -1227,7 +1282,7 @@ function CommentCard({ review, onReply, onModerate, busy }) {
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(178,85%,32%)] hover:bg-[hsl(178,85%,38%)] text-white text-xs font-semibold disabled:opacity-50 transition"
         >
           {<IconSwap active={saving} a={<Send className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-          {review.admin_reply ? 'Update Reply' : 'Save Reply'}
+          {review.admin_reply ? l('Update Reply', 'به‌روزرسانی پاسخ', 'تحديث الردّ') : l('Save Reply', 'ذخیرهٔ پاسخ', 'حفظ الردّ')}
         </button>
       </div>
     </div>
@@ -1235,6 +1290,8 @@ function CommentCard({ review, onReply, onModerate, busy }) {
 }
 
 function CommentsView({ reviews, loading, onReply, onModerate, busyId }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [filter, setFilter] = useState('pending');
   const [sortBy, setSortBy] = useState('newest');
   if (loading) return <SectionLoader />;
@@ -1254,9 +1311,9 @@ function CommentsView({ reviews, loading, onReply, onModerate, busyId }) {
   return (
     <div>
       <div className="flex items-center justify-between gap-3 flex-wrap mb-5">
-        <div className="flex items-center gap-3"><h2 className="text-foreground font-bold text-lg">Comments / Reviews</h2><span className="text-muted-foreground text-xs">{reviews.length} total</span></div>
-        <select value={sortBy} onChange={event => setSortBy(event.target.value)} aria-label="Sort comments" className="px-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 [color-scheme:light]">
-          <option value="newest" className="bg-card text-foreground">Sort by: Newest</option><option value="oldest" className="bg-card text-foreground">Sort by: Oldest</option><option value="rating-high" className="bg-card text-foreground">Sort by: Highest rating</option><option value="rating-low" className="bg-card text-foreground">Sort by: Lowest rating</option><option value="unreplied" className="bg-card text-foreground">Sort by: Unreplied first</option>
+        <div className="flex items-center gap-3"><h2 className="text-foreground font-bold text-lg">{l('Comments / Reviews', 'دیدگاه‌ها و نظرها', 'التعليقات والتقييمات')}</h2><span className="text-muted-foreground text-xs">{l(`${reviews.length} total`, `مجموع: ${reviews.length}`, `الإجمالي: ${reviews.length}`)}</span></div>
+        <select value={sortBy} onChange={event => setSortBy(event.target.value)} aria-label={l('Sort comments', 'مرتب‌سازی دیدگاه‌ها', 'ترتيب التعليقات')} className="px-3 py-2 rounded-xl border border-border bg-card text-foreground text-xs focus:outline-none focus:border-[hsl(178,85%,32%)]/60 [color-scheme:light]">
+          <option value="newest" className="bg-card text-foreground">{l('Sort by: Newest', 'مرتب‌سازی: جدیدترین', 'الترتيب: الأحدث')}</option><option value="oldest" className="bg-card text-foreground">{l('Sort by: Oldest', 'مرتب‌سازی: قدیمی‌ترین', 'الترتيب: الأقدم')}</option><option value="rating-high" className="bg-card text-foreground">{l('Sort by: Highest rating', 'مرتب‌سازی: بالاترین امتیاز', 'الترتيب: أعلى تقييم')}</option><option value="rating-low" className="bg-card text-foreground">{l('Sort by: Lowest rating', 'مرتب‌سازی: پایین‌ترین امتیاز', 'الترتيب: أقل تقييم')}</option><option value="unreplied" className="bg-card text-foreground">{l('Sort by: Unreplied first', 'مرتب‌سازی: بی‌پاسخ‌ها نخست', 'الترتيب: دون ردّ أولًا')}</option>
         </select>
       </div>
 
@@ -1272,13 +1329,13 @@ function CommentsView({ reviews, loading, onReply, onModerate, busyId }) {
                 : 'border-border bg-card text-muted-foreground hover:text-foreground/80'
             }`}
           >
-            {status}
+            {status === 'all' ? l('All', 'همه', 'الكل') : localizeBookingStatus(status, lang)}
           </button>
         ))}
       </div>
 
       {sorted.length === 0 ? (
-        <EmptyState Icon={MessageSquare} title={`No ${filter === 'all' ? '' : `${filter} `}reviews`} desc="Submitted traveler reviews will appear here." />
+        <EmptyState Icon={MessageSquare} title={l(`No ${filter === 'all' ? '' : `${filter} `}reviews`, 'دیدگاهی یافت نشد', 'لم يُعثر على تقييمات')} desc={l('Submitted traveler reviews will appear here.', 'دیدگاه‌های ثبت‌شدهٔ مسافران اینجا نمایش داده می‌شوند.', 'ستظهر هنا تقييمات المسافرين المُرسلة.')} />
       ) : (
         <div className="space-y-4">
           {sorted.map(review => (
@@ -1299,17 +1356,21 @@ function CommentsView({ reviews, loading, onReply, onModerate, busyId }) {
 // ─── Articles View ────────────────────────────────────────────────────────────
 
 const ART_STATUS = {
-  approved: { label: 'منتشر شده',      cls: 'bg-teal-500/20 text-teal-700 border-teal-500/30' },
-  pending:  { label: 'در انتظار',      cls: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30' },
-  rejected: { label: 'رد شده',         cls: 'bg-red-500/20 text-red-700 border-red-500/30' },
+  approved: { cls: 'bg-teal-500/20 text-teal-700 border-teal-500/30' },
+  pending:  { cls: 'bg-yellow-500/20 text-yellow-700 border-yellow-500/30' },
+  rejected: { cls: 'bg-red-500/20 text-red-700 border-red-500/30' },
 };
 
 function ArticlesView({ profile }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
+  const articleLang = ['en', 'fa', 'ar'].includes(lang) ? lang : 'en';
   const { articles, loading, refetch } = useAllArticlesAdmin();
   const [filter, setFilter] = useState('pending');
   const [showEditor, setShowEditor] = useState(false);
   const [busyId, setBusyId] = useState(null);
   const [editingArticle, setEditingArticle] = useState(null);
+  const [editingLanguage, setEditingLanguage] = useState(null);
   const [articleDraft, setArticleDraft] = useState(null);
 
   const filtered = filter === 'all' ? articles : articles.filter(a => a.status === filter);
@@ -1322,7 +1383,7 @@ function ArticlesView({ profile }) {
     const { error } = await supabase.from('articles').update(update).eq('id', id);
     setBusyId(null);
     if (error) { toast.error(error.message); return; }
-    toast.success(status === 'approved' ? 'مقاله تایید شد.' : 'مقاله رد شد.');
+    toast.success(status === 'approved' ? l('Article approved.', 'مقاله تأیید شد.', 'تمت الموافقة على المقال.') : l('Article rejected.', 'مقاله رد شد.', 'رُفض المقال.'));
     refetch();
   };
 
@@ -1334,16 +1395,17 @@ function ArticlesView({ profile }) {
       .eq('id', article.id);
     setBusyId(null);
     if (error) { toast.error(error.message); return; }
-    toast.success(article.is_featured ? 'از ویژه‌ها حذف شد.' : 'به ویژه‌ها اضافه شد.');
+    toast.success(article.is_featured ? l('Removed from featured articles.', 'از مقاله‌های ویژه حذف شد.', 'أُزيل من المقالات المميزة.') : l('Added to featured articles.', 'به مقاله‌های ویژه اضافه شد.', 'أُضيف إلى المقالات المميزة.'));
     refetch();
   };
 
   const openArticleEditor = (article) => {
     setEditingArticle(article);
+    setEditingLanguage(articleLang);
     setArticleDraft({
-      title_fa: article.title_fa || '',
-      excerpt_fa: article.excerpt_fa || '',
-      content_fa: article.content_fa || '',
+      title: article[`title_${articleLang}`] || '',
+      excerpt: article[`excerpt_${articleLang}`] || '',
+      content: article[`content_${articleLang}`] || '',
       category: article.category || 'general',
       image_url: article.image_url || '',
     });
@@ -1351,29 +1413,27 @@ function ArticlesView({ profile }) {
 
   const closeArticleEditor = () => {
     setEditingArticle(null);
+    setEditingLanguage(null);
     setArticleDraft(null);
   };
 
   const saveArticleEdits = async () => {
-    if (!editingArticle || !articleDraft) return;
-    if (!articleDraft.title_fa.trim()) {
-      toast.error('عنوان مقاله الزامی است.');
+    if (!editingArticle || !editingLanguage || !articleDraft) return;
+    if (!articleDraft.title.trim()) {
+      toast.error(l('Article title is required.', 'عنوان مقاله الزامی است.', 'عنوان المقال مطلوب.'));
       return;
     }
 
     setBusyId(editingArticle.id);
-    const title = articleDraft.title_fa.trim();
-    const excerpt = articleDraft.excerpt_fa.trim();
-    const content = articleDraft.content_fa.trim();
+    const title = articleDraft.title.trim();
+    const excerpt = articleDraft.excerpt.trim();
+    const content = articleDraft.content.trim();
     const { error } = await supabase
       .from('articles')
       .update({
-        title_fa: title,
-        title_en: title,
-        excerpt_fa: excerpt,
-        excerpt_en: excerpt,
-        content_fa: content,
-        content_en: content,
+        [`title_${editingLanguage}`]: title,
+        [`excerpt_${editingLanguage}`]: excerpt,
+        [`content_${editingLanguage}`]: content,
         category: articleDraft.category,
         image_url: articleDraft.image_url.trim() || null,
       })
@@ -1384,31 +1444,31 @@ function ArticlesView({ profile }) {
       toast.error(error.message);
       return;
     }
-    toast.success('ویرایش مقاله ذخیره شد.');
+    toast.success(l('Article changes saved.', 'تغییرات مقاله ذخیره شد.', 'حُفظت تغييرات المقال.'));
     closeArticleEditor();
     refetch();
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('این مقاله حذف شود؟')) return;
+    if (!window.confirm(l('Delete this article?', 'این مقاله حذف شود؟', 'هل تريد حذف هذا المقال؟'))) return;
     setBusyId(id);
     const { error } = await supabase.from('articles').delete().eq('id', id);
     setBusyId(null);
     if (error) { toast.error(error.message); return; }
-    toast.success('مقاله حذف شد.');
+    toast.success(l('Article deleted.', 'مقاله حذف شد.', 'حُذف المقال.'));
     refetch();
   };
 
   const pendingCount = articles.filter(a => a.status === 'pending').length;
 
   return (
-    <div dir="rtl" className="space-y-6">
+    <div dir={lang === 'en' ? 'ltr' : 'rtl'} className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <h2 className="text-foreground font-bold text-lg">Articles</h2>
+          <h2 className="text-foreground font-bold text-lg">{l('Articles', 'مقاله‌ها', 'المقالات')}</h2>
           {pendingCount > 0 && (
             <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-500/20 text-yellow-700 border border-yellow-500/30">
-              {pendingCount} در انتظار
+              {l(`${pendingCount} pending`, `در انتظار: ${pendingCount}`, `قيد المراجعة: ${pendingCount}`)}
             </span>
           )}
         </div>
@@ -1416,7 +1476,7 @@ function ArticlesView({ profile }) {
           onClick={() => setShowEditor(v => !v)}
           className="flex items-center gap-1.5 text-sm font-medium text-teal-700 hover:text-teal-700 transition-colors"
         >
-          {showEditor ? 'بستن فرم' : '+ مقاله جدید'}
+          {showEditor ? l('Close form', 'بستن فرم', 'إغلاق النموذج') : l('+ New article', '+ مقالهٔ جدید', '+ مقال جديد')}
         </button>
       </div>
 
@@ -1431,13 +1491,13 @@ function ArticlesView({ profile }) {
 
       <TransitionPresence>{editingArticle && articleDraft && (
         <TransitionSurface kind="backdrop" className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-slate-950/75 p-0 sm:p-6" role="dialog" aria-modal="true" aria-labelledby="article-review-title">
-          <TransitionSurface kind="modal" dir="rtl" className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-border bg-card shadow-2xl">
+          <TransitionSurface kind="modal" dir={lang === 'en' ? 'ltr' : 'rtl'} className="w-full max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-3xl sm:rounded-3xl border border-border bg-card shadow-2xl">
             <div className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-card px-5 py-4 sm:px-6">
               <div>
-                <p className="text-[11px] font-medium text-teal-700">بررسی و ویرایش پیش از انتشار</p>
-                <h3 id="article-review-title" className="mt-1 text-base font-bold text-foreground">ویرایش مقاله</h3>
+                <p className="text-[11px] font-medium text-teal-700">{l('Review and edit before publishing', 'بررسی و ویرایش پیش از انتشار', 'المراجعة والتعديل قبل النشر')} · {l('Editing language:', 'زبان ویرایش:', 'لغة التعديل:')} {editingLanguage === 'fa' ? l('Persian', 'فارسی', 'الفارسية') : editingLanguage === 'ar' ? l('Arabic', 'عربی', 'العربية') : l('English', 'انگلیسی', 'الإنجليزية')}</p>
+                <h3 id="article-review-title" className="mt-1 text-base font-bold text-foreground">{l('Edit article', 'ویرایش مقاله', 'تعديل المقال')}</h3>
               </div>
-              <button onClick={closeArticleEditor} className="rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label="بستن">
+              <button onClick={closeArticleEditor} className="rounded-lg p-2 text-muted-foreground transition hover:bg-muted hover:text-foreground" aria-label={l('Close', 'بستن', 'إغلاق')}>
                 <X className="h-5 w-5" />
               </button>
             </div>
@@ -1445,44 +1505,44 @@ function ArticlesView({ profile }) {
             <div className="space-y-4 p-5 sm:p-6">
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="space-y-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">عنوان مقاله</span>
-                  <input value={articleDraft.title_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, title_fa: e.target.value }))} maxLength={120} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-teal-500/60" />
+                  <span className="text-xs font-medium text-muted-foreground">{l('Article title', 'عنوان مقاله', 'عنوان المقال')}</span>
+                  <input value={articleDraft.title} onChange={(e) => setArticleDraft(draft => ({ ...draft, title: e.target.value }))} maxLength={120} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-teal-500/60" />
                 </label>
                 <label className="space-y-1.5">
-                  <span className="text-xs font-medium text-muted-foreground">دسته‌بندی</span>
+                  <span className="text-xs font-medium text-muted-foreground">{l('Category', 'دسته‌بندی', 'الفئة')}</span>
                   <select value={articleDraft.category} onChange={(e) => setArticleDraft(draft => ({ ...draft, category: e.target.value }))} className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-teal-500/60">
-                    <option value="architecture">معماری</option>
-                    <option value="history">تاریخ</option>
-                    <option value="culture">فرهنگ</option>
-                    <option value="nature">طبیعت</option>
-                    <option value="food">غذا</option>
-                    <option value="photography">عکاسی</option>
-                    <option value="general">عمومی</option>
+                    <option value="architecture">{l('Architecture', 'معماری', 'العمارة')}</option>
+                    <option value="history">{l('History', 'تاریخ', 'التاريخ')}</option>
+                    <option value="culture">{l('Culture', 'فرهنگ', 'الثقافة')}</option>
+                    <option value="nature">{l('Nature', 'طبیعت', 'الطبيعة')}</option>
+                    <option value="food">{l('Food', 'غذا', 'الطعام')}</option>
+                    <option value="photography">{l('Photography', 'عکاسی', 'التصوير')}</option>
+                    <option value="general">{l('General', 'عمومی', 'عام')}</option>
                   </select>
                 </label>
               </div>
 
               <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-muted-foreground">خلاصه</span>
-                <textarea value={articleDraft.excerpt_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, excerpt_fa: e.target.value }))} rows={3} maxLength={500} className="w-full resize-none rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-6 text-foreground outline-none transition focus:border-teal-500/60" />
+                <span className="text-xs font-medium text-muted-foreground">{l('Summary', 'خلاصه', 'الملخص')}</span>
+                <textarea value={articleDraft.excerpt} onChange={(e) => setArticleDraft(draft => ({ ...draft, excerpt: e.target.value }))} rows={3} maxLength={500} className="w-full resize-none rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-6 text-foreground outline-none transition focus:border-teal-500/60" />
               </label>
 
               <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-muted-foreground">متن کامل مقاله</span>
-                <textarea value={articleDraft.content_fa} onChange={(e) => setArticleDraft(draft => ({ ...draft, content_fa: e.target.value }))} rows={12} className="w-full resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-7 text-foreground outline-none transition focus:border-teal-500/60" placeholder="متن کامل مقاله..." />
+                <span className="text-xs font-medium text-muted-foreground">{l('Full article', 'متن کامل مقاله', 'نص المقال الكامل')}</span>
+                <textarea value={articleDraft.content} onChange={(e) => setArticleDraft(draft => ({ ...draft, content: e.target.value }))} rows={12} className="w-full resize-y rounded-xl border border-border bg-card px-3 py-2.5 text-sm leading-7 text-foreground outline-none transition focus:border-teal-500/60" placeholder={l('Full article...', 'متن کامل مقاله…', 'نص المقال الكامل…')} />
               </label>
 
               <label className="block space-y-1.5">
-                <span className="text-xs font-medium text-muted-foreground">آدرس تصویر</span>
+                <span className="text-xs font-medium text-muted-foreground">{l('Image URL', 'نشانی تصویر', 'رابط الصورة')}</span>
                 <input type="url" dir="ltr" value={articleDraft.image_url} onChange={(e) => setArticleDraft(draft => ({ ...draft, image_url: e.target.value }))} placeholder="https://..." className="w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-teal-500/60" />
               </label>
             </div>
 
             <div className="sticky bottom-0 flex flex-wrap justify-end gap-2 border-t border-border bg-card px-5 py-4 sm:px-6">
-              <button onClick={closeArticleEditor} disabled={busyId === editingArticle.id} className="rounded-xl px-4 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50">انصراف</button>
+              <button onClick={closeArticleEditor} disabled={busyId === editingArticle.id} className="rounded-xl px-4 py-2 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground disabled:opacity-50">{l('Cancel', 'انصراف', 'إلغاء')}</button>
               <button onClick={saveArticleEdits} disabled={busyId === editingArticle.id} className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500 disabled:opacity-50">
                 {<IconSwap active={busyId === editingArticle.id} a={<CheckCircle2 className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
-                ذخیره تغییرات
+                {l('Save changes', 'ذخیرهٔ تغییرات', 'حفظ التغييرات')}
               </button>
             </div>
           </TransitionSurface>
@@ -1492,10 +1552,10 @@ function ArticlesView({ profile }) {
       {/* Filter tabs */}
       <div className="flex gap-2 flex-wrap">
         {[
-          { key: 'pending',  label: 'در انتظار' },
-          { key: 'approved', label: 'منتشر شده' },
-          { key: 'rejected', label: 'رد شده' },
-          { key: 'all',      label: 'همه' },
+          { key: 'pending',  label: l('Pending', 'در انتظار', 'قيد المراجعة') },
+          { key: 'approved', label: l('Published', 'منتشرشده', 'منشور') },
+          { key: 'rejected', label: l('Rejected', 'ردشده', 'مرفوض') },
+          { key: 'all',      label: l('All', 'همه', 'الكل') },
         ].map(tab => (
           <button
             key={tab.key}
@@ -1514,7 +1574,7 @@ function ArticlesView({ profile }) {
       {loading ? (
         <SectionLoader />
       ) : filtered.length === 0 ? (
-        <EmptyState Icon={BookOpen} title="مقاله‌ای یافت نشد" desc="مقاله‌ای در این دسته وجود ندارد." />
+        <EmptyState Icon={BookOpen} title={l('No articles found', 'مقاله‌ای یافت نشد', 'لم يُعثر على مقالات')} desc={l('No articles in this category.', 'مقاله‌ای در این دسته وجود ندارد.', 'لا توجد مقالات في هذه الفئة.')} />
       ) : (
         <div className="space-y-4">
           {filtered.map(article => {
@@ -1536,22 +1596,22 @@ function ArticlesView({ profile }) {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 flex-wrap">
-                      <p className="text-foreground font-semibold text-sm flex-1 truncate">{article.title_fa || 'بدون عنوان'}</p>
+                      <p className="text-foreground font-semibold text-sm flex-1 truncate">{article[`title_${articleLang}`] || article.title_en || article.title_fa || article.title_ar || l('Untitled', 'بدون عنوان', 'بلا عنوان')}</p>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium shrink-0 ${s.cls}`}>
-                        {s.label}
+                        {localizeBookingStatus(article.status, lang)}
                       </span>
                       {article.is_featured && (
                         <span className="text-[10px] px-2 py-0.5 rounded-full border font-medium shrink-0 bg-yellow-500/20 text-yellow-700 border-yellow-500/30">
-                          ⭐ ویژه
+                          ⭐ {l('Featured', 'ویژه', 'مميز')}
                         </span>
                       )}
                     </div>
-                    {article.excerpt_fa && (
-                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{article.excerpt_fa}</p>
+                    {(article[`excerpt_${articleLang}`] || article.excerpt_en || article.excerpt_fa || article.excerpt_ar) && (
+                      <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{article[`excerpt_${articleLang}`] || article.excerpt_en || article.excerpt_fa || article.excerpt_ar}</p>
                     )}
                     <p className="text-[10px] text-muted-foreground mt-1">
                       {article.author_profile?.full_name || '—'} ·{' '}
-                      {new Date(article.created_at).toLocaleDateString('fa-IR')}
+                      {new Date(article.created_at).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US')}
                     </p>
                   </div>
                 </div>
@@ -1564,7 +1624,7 @@ function ArticlesView({ profile }) {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500/15 hover:bg-blue-500/25 text-blue-700 text-xs font-medium transition disabled:opacity-50"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
-                    ویرایش
+                    {l('Edit', 'ویرایش', 'تعديل')}
                   </button>
                   {article.status !== 'approved' && (
                     <button
@@ -1573,7 +1633,7 @@ function ArticlesView({ profile }) {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-500/15 hover:bg-teal-500/25 text-teal-700 text-xs font-medium transition disabled:opacity-50"
                     >
                       {<IconSwap active={busy} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-                      تایید
+                      {l('Approve', 'تأیید', 'موافقة')}
                     </button>
                   )}
                   {article.status !== 'rejected' && (
@@ -1583,7 +1643,7 @@ function ArticlesView({ profile }) {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/15 hover:bg-red-500/25 text-red-700 text-xs font-medium transition disabled:opacity-50"
                     >
                       {<IconSwap active={busy} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-                      رد
+                      {l('Reject', 'رد کردن', 'رفض')}
                     </button>
                   )}
                   <button
@@ -1592,7 +1652,7 @@ function ArticlesView({ profile }) {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-700 text-xs font-medium transition disabled:opacity-50"
                   >
                     <Star className={`w-3.5 h-3.5 ${article.is_featured ? 'fill-yellow-400' : ''}`} />
-                    {article.is_featured ? 'حذف از ویژه' : 'افزودن به ویژه'}
+                    {article.is_featured ? l('Remove from featured', 'حذف از ویژه‌ها', 'إزالة من المميزة') : l('Add to featured', 'افزودن به ویژه‌ها', 'إضافة إلى المميزة')}
                   </button>
                   <button
                     disabled={busy}
@@ -1600,7 +1660,7 @@ function ArticlesView({ profile }) {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-700 text-xs font-medium transition disabled:opacity-50 ms-auto"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
-                    حذف
+                    {l('Delete', 'حذف', 'حذف')}
                   </button>
                 </div>
               </div>
@@ -1615,6 +1675,8 @@ function ArticlesView({ profile }) {
 // ─── Main AdminDashboard ─────────────────────────────────────────────────────
 
 export default function AdminDashboard() {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const navigate = useNavigate();
   const { unreadCount } = useNotificationsContext();
 
@@ -1772,11 +1834,11 @@ export default function AdminDashboard() {
     try {
       const { data, error: err } = await supabase.rpc('review_trip_proposal', { proposal_id: id, decision });
       if (err) throw err;
-      if (!data) throw new Error('This proposal is no longer awaiting review.');
+      if (!data) throw new Error(l('This proposal is no longer awaiting review.', 'این پیشنهاد دیگر در انتظار بررسی نیست.', 'لم يعد هذا العرض قيد المراجعة.'));
       setProposals(current => decision === 'approved'
       ? current.map(proposal => proposal.id === id ? { ...proposal, approval_status: 'approved' } : proposal)
       : current.filter(proposal => proposal.id !== id));
-    toast.success(decision === 'approved' ? 'Proposal approved and kept in review history.' : 'Proposal rejected.');
+    toast.success(decision === 'approved' ? l('Proposal approved and kept in review history.', 'پیشنهاد تأیید شد و در سابقهٔ بررسی باقی ماند.', 'تمت الموافقة على العرض وحُفظ في سجلّ المراجعة.') : l('Proposal rejected.', 'پیشنهاد رد شد.', 'رُفض العرض.'));
     } catch (err) { setError(err.message); } finally { setBusyId(null); }
   };
 
@@ -1789,7 +1851,7 @@ export default function AdminDashboard() {
         proposal_data: proposal,
       });
       if (err) throw err;
-      if (!data) throw new Error('This proposal is no longer awaiting review.');
+      if (!data) throw new Error(l('This proposal is no longer awaiting review.', 'این پیشنهاد دیگر در انتظار بررسی نیست.', 'لم يعد هذا العرض قيد المراجعة.'));
       setProposals(current => current.map(item => item.id === id ? { ...item, ...proposal } : item));
       setEditingProposal(null);
     } catch (err) { setError(err.message); throw err; } finally { setBusyId(null); }
@@ -1806,7 +1868,7 @@ export default function AdminDashboard() {
     try {
       const saved = await persistGuideReview(supabase, guide.id, updates);
       setGuides(current => current.map(item => item.id === saved.id ? saved : item));
-      toast.success(decision === 'approve' ? 'Profile approved.' : decision === 'reject' ? 'Profile rejected with reason.' : 'Profile changes saved.');
+      toast.success(decision === 'approve' ? l('Profile approved.', 'پروفایل تأیید شد.', 'تمت الموافقة على الملف.') : decision === 'reject' ? l('Profile rejected with reason.', 'پروفایل با درج دلیل رد شد.', 'رُفض الملف مع توضيح السبب.') : l('Profile changes saved.', 'تغییرات پروفایل ذخیره شد.', 'حُفظت تغييرات الملف.'));
       return saved;
     } catch (err) {
       setError(err.message);
@@ -1833,10 +1895,10 @@ export default function AdminDashboard() {
       await fetchReviews();
       toast.success(
         decision === 'approve'
-          ? 'Review approved.'
+          ? l('Review approved.', 'دیدگاه تأیید شد.', 'تمت الموافقة على التقييم.')
           : decision === 'reject'
-            ? 'Review rejected.'
-            : 'Review edits saved.',
+            ? l('Review rejected.', 'دیدگاه رد شد.', 'رُفض التقييم.')
+            : l('Review edits saved.', 'ویرایش دیدگاه ذخیره شد.', 'حُفظت تعديلات التقييم.'),
       );
     } catch (err) {
       setError(err.message);
@@ -1872,7 +1934,7 @@ export default function AdminDashboard() {
   };
 
   const handlePlatformTourDelete = async (id) => {
-    if (!window.confirm('Delete this platform tour? This cannot be undone.')) return;
+    if (!window.confirm(l('Delete this platform tour? This cannot be undone.', 'این تور پلتفرم حذف شود؟ این کار بازگشت‌پذیر نیست.', 'هل تريد حذف جولة المنصة هذه؟ لا يمكن التراجع عن ذلك.'))) return;
     setBusyId(id);
     setError('');
     try {
@@ -1892,7 +1954,7 @@ export default function AdminDashboard() {
       <div className="min-h-screen bg-card flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-accent animate-spin" />
-          <p className="text-muted-foreground text-sm">Verifying admin access...</p>
+          <p className="text-muted-foreground text-sm">{l('Verifying admin access...', 'در حال بررسی دسترسی مدیر…', 'جارٍ التحقق من صلاحية المسؤول…')}</p>
         </div>
       </div>
     );

@@ -63,8 +63,9 @@ import ProviderContactMethodsCard from '@/components/dashboard/ProviderContactMe
 import TripRequestForm from '@/components/profile/TripRequestForm';
 import { checkProfileCompletion } from '@/lib/profileCompletion';
 import { fetchProfileReviewsSafely } from '@/lib/reviews';
-import { parseLanguages, popularLanguages } from '@/data/languages';
+import { parseLanguages, popularLanguages, toLanguageOptions } from '@/data/languages';
 import { iranianDestinations } from '@/data/iranianCities';
+import { localize, localizeBookingStatus } from '@/lib/localize';
 import { cancelTripRequest } from '@/api/tripRequests';
 import { fetchParticipantProfiles } from '@/api/participantProfiles';
 import {
@@ -183,7 +184,7 @@ function ProfileCityMultiSelect({ values, onChange, lang }) {
     <div ref={wrapRef} className="relative">
       <div className="flex flex-wrap gap-2 mb-2">
         {values.map(city => (
-          <button key={city} type="button" onClick={() => onChange(values.filter(value => value !== city))} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)] text-teal-700 text-xs" title="Remove city">
+          <button key={city} type="button" onClick={() => onChange(values.filter(value => value !== city))} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)] text-teal-700 text-xs" title={localize(lang, 'Remove city', 'حذف شهر', 'حذف المدينة')}>
             <MapPin className="w-3 h-3" />{labelFor(city)}<X className="w-3 h-3" />
           </button>
         ))}
@@ -244,6 +245,7 @@ function StarRating({ rating }) {
 
 function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, userName, userRole, onLogout, profile }) {
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const activeId = section || 'home';
   const profileCheck = profile ? checkProfileCompletion(profile) : null;
   // Completing the provider profile is the only prerequisite for creating a tour.
@@ -257,7 +259,8 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
     'my-tours':  t('dashboard_nav_tours'),
     'add-tour':  t('dashboard_nav_add_tour'),
     requests:       t('dashboard_nav_requests'),
-    notifications:  'Notifications',
+    'my-trip-requests': l('My Trip Requests', 'درخواست‌های سفر من', 'طلبات رحلاتي'),
+    notifications:  l('Notifications', 'اعلان‌ها', 'الإشعارات'),
     chat:           t('dashboard_nav_chat'),
     profile:     t('dashboard_nav_profile'),
     gallery:     t('dashboard_nav_gallery'),
@@ -283,7 +286,7 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
             <LayoutDashboard className="w-3.5 h-3.5 text-white" />
           </div>
           <span className="text-white font-semibold text-sm leading-tight">Iran Tour<br />
-            <span className="text-[hsl(38,62%,58%)] font-normal text-[10px] tracking-wider uppercase">Dashboard</span>
+            <span className="text-[hsl(38,62%,58%)] font-normal text-[10px] tracking-wider uppercase">{l('Dashboard', 'داشبورد', 'لوحة التحكم')}</span>
           </span>
         </Link>
       </div>
@@ -295,8 +298,8 @@ function Sidebar({ section, onNavigate, profileExpanded, setProfileExpanded, use
             {userName?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '?'}
           </span>
         </div>
-        <p className="text-white text-xs font-medium leading-tight truncate">{userName || 'Guide'}</p>
-        <p className="text-white/40 text-[10px] capitalize mt-0.5">{userRole || 'guide'}</p>
+        <p className="text-white text-xs font-medium leading-tight truncate">{userName || l('Guide', 'راهنما', 'مرشد')}</p>
+        <p className="text-white/40 text-[10px] capitalize mt-0.5">{({ guide: l('guide', 'راهنما', 'مرشد'), agency: l('agency', 'آژانس', 'وكالة'), traveler: l('traveler', 'مسافر', 'مسافر'), admin: l('admin', 'مدیر', 'مسؤول') })[userRole] || userRole || l('guide', 'راهنما', 'مرشد')}</p>
       </div>
 
       {/* Nav */}
@@ -519,6 +522,7 @@ function LicenseCard({ profile, onSave }) {
 
 function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenChat, onProfileSave, canAddTour }) {
   const { t, lang: i18nLang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [reqTab, setReqTab] = useState('new');
   const [latestChats, setLatestChats] = useState([]);
   const [latestChatsLoading, setLatestChatsLoading] = useState(true);
@@ -534,9 +538,9 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
     : '—';
 
   const missingItems = [];
-  if (!profile?.avatar_url && !profile?.profile_image) missingItems.push('profile photo');
-  if (!profile?.bio && !profile?.description) missingItems.push('bio / description');
-  if (!profile?.license_url && !profile?.license_verified) missingItems.push('license');
+  if (!profile?.avatar_url && !profile?.profile_image) missingItems.push(l('profile photo', 'عکس پروفایل', 'الصورة الشخصية'));
+  if (!profile?.bio && !profile?.description) missingItems.push(l('bio / description', 'معرفی کوتاه', 'نبذة تعريفية'));
+  if (!profile?.license_url && !profile?.license_verified) missingItems.push(l('license', 'مجوز', 'الترخيص'));
   const isProfileIncomplete = missingItems.length > 0;
 
   // Live: load the 3 most-recent conversations for this user (Latest Chat widget)
@@ -652,16 +656,16 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
         <div className="mb-4 flex items-start gap-3 bg-amber-500/10 border border-amber-500/30 rounded-2xl px-4 py-3">
           <AlertTriangle className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
-            <p className="text-amber-700 font-semibold text-sm mb-0.5">Complete your profile to receive tour requests</p>
+            <p className="text-amber-700 font-semibold text-sm mb-0.5">{l('Complete your profile to receive tour requests', 'برای دریافت درخواست‌های سفر، پروفایلتان را تکمیل کنید', 'أكمل ملفك الشخصي لتلقّي طلبات الرحلات')}</p>
             <p className="text-amber-700/60 text-xs">
-              Missing: {missingItems.join(', ')}. Tourists and agencies can only find guides with complete profiles.
+              {l(`Missing: ${missingItems.join(', ')}. Tourists and agencies can only find guides with complete profiles.`, `موارد ناقص: ${missingItems.join('، ')}. مسافران و آژانس‌ها فقط راهنماهایی را می‌بینند که پروفایل کامل دارند.`, `المعلومات الناقصة: ${missingItems.join('، ')}. لا يستطيع المسافرون والوكالات العثور إلا على المرشدين الذين أكملوا ملفاتهم.`)}
             </p>
           </div>
           <button
             onClick={() => onNavigate('profile')}
             className="shrink-0 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 text-xs font-medium transition-colors"
           >
-            Fix Now
+            {l('Fix Now', 'تکمیل پروفایل', 'إكمال الملف الآن')}
           </button>
         </div>
       )}
@@ -674,7 +678,7 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
           <div>
             <p className="text-muted-foreground text-xs mb-1">{t('dashboard_welcome')}</p>
             <h2 className="text-foreground font-bold text-lg leading-tight">
-              {profile?.full_name?.split(' ')[0] || 'Guide'} 👋
+              {profile?.full_name?.split(' ')[0] || l('Guide', 'راهنما', 'مرشد')} 👋
             </h2>
             <p className="text-muted-foreground text-xs mt-2 leading-relaxed">
               {t('dashboard_nav_tours')}
@@ -865,11 +869,11 @@ function HomeView({ profile, tours, reviews, userId, lang, onNavigate, onOpenCha
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[hsl(178,85%,32%)]" />
-              Actual Earnings: <span className="text-foreground font-medium">$0</span>
+              {l('Actual Earnings:', 'درآمد قطعی:', 'الأرباح الفعلية:')} <span className="text-foreground font-medium">$0</span>
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-sm bg-[hsl(38,62%,52%)]" />
-              Future Earnings: <span className="text-foreground font-medium">$0</span>
+              {l('Future Earnings:', 'درآمد پیش‌بینی‌شده:', 'الأرباح المتوقعة:')} <span className="text-foreground font-medium">$0</span>
             </span>
           </div>
         </div>
@@ -967,7 +971,7 @@ function MyToursView({ tours, onEdit, onDelete }) {
     <div>
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-foreground font-bold text-lg">{t('dashboard_my_tours')}</h2>
-        <span className="text-muted-foreground text-xs">{tours.length} tour{tours.length !== 1 ? 's' : ''}</span>
+        <span className="text-muted-foreground text-xs">{localize(lang, `${tours.length} tour${tours.length !== 1 ? 's' : ''}`, `${tours.length} تور`, `عدد الجولات: ${tours.length}`)}</span>
       </div>
       {tours.length === 0 ? (
         <div className="bg-card border border-border rounded-2xl">
@@ -1036,7 +1040,7 @@ function MyToursView({ tours, onEdit, onDelete }) {
                     <Link
                       to={`/tours/${tour.slug}`}
                       className="flex items-center justify-center w-8 h-8 rounded-lg bg-muted hover:bg-muted text-muted-foreground hover:text-foreground transition"
-                      title="View on site"
+                      title={localize(lang, 'View on site', 'مشاهده در سایت', 'عرض على الموقع')}
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
                     </Link>
@@ -1044,7 +1048,7 @@ function MyToursView({ tours, onEdit, onDelete }) {
                   <button
                     onClick={() => onDelete(tour.id)}
                     className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-500/[0.08] hover:bg-red-500/20 text-red-700/60 hover:text-red-700 transition"
-                    title="Delete tour"
+                    title={localize(lang, 'Delete tour', 'حذف تور', 'حذف الجولة')}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -1062,6 +1066,7 @@ function MyToursView({ tours, onEdit, onDelete }) {
 
 function ProfileView({ profile, userId, onSave }) {
   const { t, lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const isAgency = profile?.role === 'agency';
   const initialTourTypes = Array.isArray(profile?.tour_types)
     ? profile.tour_types
@@ -1186,11 +1191,11 @@ function ProfileView({ profile, userId, onSave }) {
     setError('');
     const allowed = ['image/jpeg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.type)) {
-      setError(lang === 'fa' ? 'فقط تصاویر JPG، PNG یا WEBP مجاز هستند.' : 'Only JPG, PNG or WEBP images are allowed.');
+      setError(l('Only JPG, PNG or WEBP images are allowed.', 'فقط تصویرهای JPG، PNG یا WEBP مجاز هستند.', 'يُسمح بصور JPG أو PNG أو WEBP فقط.'));
       return;
     }
     if (file.size > 5 * 1024 * 1024) {
-      setError(lang === 'fa' ? 'حجم تصویر باید کمتر از ۵ مگابایت باشد.' : 'Profile image must be smaller than 5 MB.');
+      setError(l('Profile image must be smaller than 5 MB.', 'حجم عکس پروفایل باید کمتر از ۵ مگابایت باشد.', 'يجب ألا يتجاوز حجم الصورة الشخصية 5 ميغابايت.'));
       return;
     }
 
@@ -1213,9 +1218,9 @@ function ProfileView({ profile, userId, onSave }) {
 
       setForm(prev => ({ ...prev, avatar_url: avatarUrl }));
       onSave({ ...profile, avatar_url: avatarUrl });
-      toast.success(lang === 'fa' ? 'عکس پروفایل بارگذاری شد.' : 'Profile photo uploaded.');
+      toast.success(l('Profile photo uploaded.', 'عکس پروفایل بارگذاری شد.', 'تم رفع الصورة الشخصية.'));
     } catch (err) {
-      setError(err.message || 'Failed to upload profile photo');
+      setError(l('Failed to upload profile photo', 'بارگذاری عکس پروفایل ممکن نشد.', 'تعذّر رفع الصورة الشخصية.'));
     } finally {
       setUploadingAvatar(false);
       setAvatarDragActive(false);
@@ -1250,7 +1255,7 @@ function ProfileView({ profile, userId, onSave }) {
       setTimeout(() => setSaved(false), 2000);
       onSave({ ...profile, ...profilePayload });
     } catch (err) {
-      setError(err.message || 'Failed to save profile');
+      setError(l('Failed to save profile', 'ذخیرهٔ پروفایل ممکن نشد.', 'تعذّر حفظ الملف الشخصي.'));
     } finally {
       setSaving(false);
     }
@@ -1284,14 +1289,14 @@ function ProfileView({ profile, userId, onSave }) {
           <AlertTriangle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-700' : 'text-red-700'}`} />
           <div>
             <p className={`font-semibold text-sm ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-700' : 'text-red-700'}`}>
-              {profile?.license_status === 'rejected' ? 'License Document Rejected' : profile?.license_url ? 'License Awaiting Admin Review' : 'License Document Required'}
+              {profile?.license_status === 'rejected' ? l('License Document Rejected', 'مدرک مجوز رد شده است', 'رُفض مستند الترخيص') : profile?.license_url ? l('License Awaiting Admin Review', 'مجوز در انتظار بررسی مدیر', 'الترخيص بانتظار مراجعة المسؤول') : l('License Document Required', 'ارائهٔ مدرک مجوز ضروری است', 'مستند الترخيص مطلوب')}
             </p>
             <p className={`text-xs mt-1 ${profile?.license_url && profile?.license_status !== 'rejected' ? 'text-amber-700/70' : 'text-red-700/70'}`}>
               {profile?.license_status === 'rejected'
-                ? 'Please upload a replacement license document for review.'
+                ? l('Please upload a replacement license document for review.', 'لطفاً مدرک مجوز دیگری برای بررسی بارگذاری کنید.', 'يرجى رفع مستند ترخيص بديل لمراجعته.')
                 : profile?.license_url
-                  ? 'Your profile information is complete. An admin must verify your license before your profile becomes public or you can create tours.'
-                  : 'Upload your license document below. Admin verification happens separately after upload.'}
+                  ? l('Your profile information is complete. An admin must verify your license before your profile becomes public or you can create tours.', 'اطلاعات پروفایل شما کامل است. مدیر باید مجوزتان را تأیید کند تا پروفایلتان عمومی شود یا بتوانید تور بسازید.', 'معلومات ملفك مكتملة. يجب أن يتحقق المسؤول من ترخيصك قبل نشر ملفك أو تمكينك من إنشاء جولات.')
+                  : l('Upload your license document below. Admin verification happens separately after upload.', 'مدرک مجوز را در بخش زیر بارگذاری کنید. بررسی مدیر پس از بارگذاری انجام می‌شود.', 'ارفع مستند الترخيص أدناه. ستتم مراجعته من قِبل المسؤول بعد الرفع.')}
             </p>
           </div>
         </div>
@@ -1338,10 +1343,10 @@ function ProfileView({ profile, userId, onSave }) {
             <div className="flex-1">
               <p className="text-foreground/80 text-sm font-medium">
                 {uploadingAvatar
-                  ? (lang === 'fa' ? 'در حال بارگذاری…' : 'Uploading…')
+                  ? l('Uploading…', 'در حال بارگذاری…', 'جارٍ الرفع…')
                   : (lang === 'fa' ? 'عکس را اینجا رها کنید یا برای انتخاب کلیک کنید' : lang === 'ar' ? 'اسحب الصورة هنا أو انقر للاختيار' : 'Drop your photo here or click to choose')}
               </p>
-              <p className="text-muted-foreground text-xs mt-1">JPG, PNG, WEBP · max 5 MB</p>
+              <p className="text-muted-foreground text-xs mt-1">{l('JPG, PNG, WEBP · max 5 MB', 'JPG، PNG، WEBP · حداکثر ۵ مگابایت', 'JPG، PNG، WEBP · الحد الأقصى 5 ميغابايت')}</p>
             </div>
             {<IconSwap active={uploadingAvatar} a={<Upload className="w-5 h-5 text-muted-foreground" />} b={<Loader2 className="w-5 h-5 text-teal-700 animate-spin" />} keepMounted={false} />}
           </div>
@@ -1357,11 +1362,11 @@ function ProfileView({ profile, userId, onSave }) {
         {/* Name + Phone */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className={labelClass}>Full Name</label>
-            <input name="full_name" value={form.full_name} onChange={handleChange} className={inputClass} placeholder="Your name" />
+            <label className={labelClass}>{l('Full Name', 'نام و نام خانوادگی', 'الاسم الكامل')}</label>
+            <input name="full_name" value={form.full_name} onChange={handleChange} className={inputClass} placeholder={l('Your name', 'نام شما', 'اسمك')} />
           </div>
           <div>
-            <label className={labelClass}>Phone</label>
+            <label className={labelClass}>{l('Phone', 'شمارهٔ تلفن', 'رقم الهاتف')}</label>
             <input name="phone" type="tel" value={form.phone} onChange={handleChange} className={inputClass} placeholder="+98 ..." dir="ltr" />
           </div>
         </div>
@@ -1382,7 +1387,7 @@ function ProfileView({ profile, userId, onSave }) {
         {/* Languages */}
         {(profile?.role === 'guide' || profile?.role === 'agency') && (
           <div>
-            <label className={labelClass}>Languages Spoken</label>
+            <label className={labelClass}>{l('Languages Spoken', 'زبان‌هایی که صحبت می‌کنید', 'اللغات التي تتحدثها')}</label>
             <div className="flex flex-wrap gap-2 mb-3">
               {popularLanguages.map(language => {
                 const selected = form.languages.some(item => item.toLocaleLowerCase() === language.toLocaleLowerCase());
@@ -1396,7 +1401,7 @@ function ProfileView({ profile, userId, onSave }) {
                       : 'bg-card border-border text-muted-foreground hover:border-accent/30'
                     }`}
                   >
-                    {selected && <span className="me-1">✓</span>}{language}
+                    {selected && <span className="me-1">✓</span>}{toLanguageOptions([language])[0]?.[lang] || language}
                   </button>
                 );
               })}
@@ -1412,9 +1417,9 @@ function ProfileView({ profile, userId, onSave }) {
                       type="button"
                       onClick={() => toggleLanguage(language)}
                       className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[hsl(178,85%,32%)]/20 border border-[hsl(178,85%,32%)] text-teal-700"
-                      title="Remove language"
+                      title={l('Remove language', 'حذف زبان', 'إزالة اللغة')}
                     >
-                      {language}<X className="w-3 h-3" />
+                      {toLanguageOptions([language])[0]?.[lang] || language}<X className="w-3 h-3" />
                     </button>
                   ))}
               </div>
@@ -1431,7 +1436,7 @@ function ProfileView({ profile, userId, onSave }) {
                   }
                 }}
                 className={inputClass}
-                placeholder="Other language"
+                placeholder={l('Other language', 'زبان دیگر', 'لغة أخرى')}
                 maxLength={60}
               />
               <button
@@ -1439,7 +1444,7 @@ function ProfileView({ profile, userId, onSave }) {
                 onClick={addOtherLanguage}
                 className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted"
               >
-                <Plus className="w-3.5 h-3.5" /> Add
+                <Plus className="w-3.5 h-3.5" /> {l('Add', 'افزودن', 'إضافة')}
               </button>
             </div>
           </div>
@@ -1448,7 +1453,7 @@ function ProfileView({ profile, userId, onSave }) {
         {/* Tour types / specialties */}
         {isGuideOrAgencyProfile && (
           <div>
-            <label className={labelClass}>{isAgency ? 'Tour Types' : 'Tour Types / Specialties'}</label>
+            <label className={labelClass}>{isAgency ? l('Tour Types', 'انواع تور', 'أنواع الجولات') : l('Tour Types / Specialties', 'انواع تور / تخصص‌ها', 'أنواع الجولات / التخصصات')}</label>
             <p className="text-muted-foreground text-xs mb-3">
               {lang === 'fa' ? 'حداقل یک نوع تور یا تخصص را انتخاب کنید.' : lang === 'ar' ? 'اختر نوع رحلة أو تخصصاً واحداً على الأقل.' : 'Choose at least one tour type or specialty.'}
             </p>
@@ -1476,7 +1481,7 @@ function ProfileView({ profile, userId, onSave }) {
                 {form.tourTypes
                   .filter(tourType => !PROFILE_TOUR_TYPES.some(option => option.value.toLocaleLowerCase() === tourType.toLocaleLowerCase()))
                   .map(tourType => (
-                    <button key={tourType} type="button" onClick={() => toggleTourType(tourType)} className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[hsl(38,62%,58%)]/20 border border-[hsl(38,62%,58%)] text-amber-700" title="Remove tour type">
+                    <button key={tourType} type="button" onClick={() => toggleTourType(tourType)} className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs bg-[hsl(38,62%,58%)]/20 border border-[hsl(38,62%,58%)] text-amber-700" title={l('Remove tour type', 'حذف نوع تور', 'إزالة نوع الجولة')}>
                       {tourType}<X className="w-3 h-3" />
                     </button>
                   ))}
@@ -1498,7 +1503,7 @@ function ProfileView({ profile, userId, onSave }) {
                 maxLength={80}
               />
               <button type="button" onClick={addOtherTourType} className="shrink-0 flex items-center gap-1.5 px-4 rounded-xl bg-muted text-foreground/80 text-xs hover:bg-muted">
-                <Plus className="w-3.5 h-3.5" /> Add
+                <Plus className="w-3.5 h-3.5" /> {l('Add', 'افزودن', 'إضافة')}
               </button>
             </div>
           </div>
@@ -1620,8 +1625,8 @@ function ProfileView({ profile, userId, onSave }) {
 
         {/* Bio */}
         <div>
-          <label className={labelClass}>Bio</label>
-          <textarea name="bio" value={form.bio} onChange={handleChange} rows={4} className={`${inputClass} resize-none`} placeholder="Tell travelers about yourself, your expertise, and your passion for Iran..." />
+          <label className={labelClass}>{l('Bio', 'دربارهٔ من', 'نبذة عنّي')}</label>
+          <textarea name="bio" value={form.bio} onChange={handleChange} rows={4} className={`${inputClass} resize-none`} placeholder={l('Tell travelers about yourself, your expertise, and your passion for Iran...', 'خودتان، تخصصتان و علاقه‌تان به ایران را به مسافران معرفی کنید…', 'عرّف المسافرين بنفسك وخبرتك وشغفك بإيران…')} />
         </div>
 
         {/* License Document Section */}
@@ -1655,6 +1660,7 @@ function ProfileView({ profile, userId, onSave }) {
 
 function GalleryView({ profile, userId, onSave }) {
   const { t, lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [gallery, setGallery] = useState(profile?.gallery_images || []);
   const [showModal, setShowModal] = useState(false);
   const [newUrl, setNewUrl] = useState('');
@@ -1693,11 +1699,11 @@ function GalleryView({ profile, userId, onSave }) {
     const invalidType = files.find(file => !allowedTypes.includes(file.type));
     const oversized = files.find(file => file.size > 5 * 1024 * 1024);
     if (invalidType) {
-      setError(lang === 'fa' ? 'فقط تصاویر JPG، PNG یا WEBP مجاز هستند.' : 'Only JPG, PNG or WEBP images are allowed.');
+      setError(l('Only JPG, PNG or WEBP images are allowed.', 'فقط تصویرهای JPG، PNG یا WEBP مجاز هستند.', 'يُسمح بصور JPG أو PNG أو WEBP فقط.'));
       return;
     }
     if (oversized) {
-      setError(lang === 'fa' ? 'حجم هر تصویر باید کمتر از ۵ مگابایت باشد.' : 'Each image must be smaller than 5 MB.');
+      setError(l('Each image must be smaller than 5 MB.', 'حجم هر تصویر باید کمتر از ۵ مگابایت باشد.', 'يجب ألا يتجاوز حجم كل صورة 5 ميغابايت.'));
       return;
     }
 
@@ -1705,7 +1711,7 @@ function GalleryView({ profile, userId, onSave }) {
     try {
       const currentGallery = await loadLatestGallery();
       const acceptedFiles = files.slice(0, Math.max(0, 20 - currentGallery.length));
-      if (!acceptedFiles.length) throw new Error(lang === 'fa' ? 'حداکثر ۲۰ عکس مجاز است.' : 'Maximum of 20 photos allowed.');
+      if (!acceptedFiles.length) throw new Error(l('Maximum of 20 photos allowed.', 'حداکثر ۲۰ عکس مجاز است.', 'الحد الأقصى 20 صورة.'));
 
       const urls = await Promise.all(acceptedFiles.map(async (file, index) => {
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -1719,10 +1725,10 @@ function GalleryView({ profile, userId, onSave }) {
       }));
 
       await persistGallery([...currentGallery, ...urls]);
-      toast.success(lang === 'fa' ? 'عکس‌های گالری بارگذاری شدند.' : 'Gallery photos uploaded.');
+      toast.success(l('Gallery photos uploaded.', 'عکس‌های گالری بارگذاری شدند.', 'تم رفع صور المعرض.'));
       setShowModal(false);
     } catch (err) {
-      setError(err.message || 'Failed to upload gallery photos');
+      setError(l('Failed to upload gallery photos', 'بارگذاری عکس‌های گالری ممکن نشد.', 'تعذّر رفع صور المعرض.'));
     } finally {
       setUploading(false);
       setDragActive(false);
@@ -1736,7 +1742,7 @@ function GalleryView({ profile, userId, onSave }) {
     setError('');
     try {
       const currentGallery = await loadLatestGallery();
-      if (currentGallery.length >= 20) throw new Error(lang === 'fa' ? 'حداکثر ۲۰ عکس مجاز است.' : 'Maximum of 20 photos allowed.');
+      if (currentGallery.length >= 20) throw new Error(l('Maximum of 20 photos allowed.', 'حداکثر ۲۰ عکس مجاز است.', 'الحد الأقصى 20 صورة.'));
       await persistGallery([...currentGallery, newUrl.trim()]);
       setNewUrl('');
       setShowModal(false);
@@ -1761,7 +1767,7 @@ function GalleryView({ profile, userId, onSave }) {
         if (removeError) console.error('Failed to remove gallery object:', removeError);
       }
     } catch (err) {
-      setError(err.message || 'Failed to delete gallery photo');
+      setError(l('Failed to delete gallery photo', 'حذف عکس گالری ممکن نشد.', 'تعذّر حذف صورة المعرض.'));
     }
   };
 
@@ -1857,13 +1863,13 @@ function GalleryView({ profile, userId, onSave }) {
                 {uploading ? (
                   <div className="flex flex-col items-center gap-2 text-teal-700">
                     <Loader2 className="w-6 h-6 animate-spin" />
-                    <p className="text-sm">{lang === 'fa' ? 'در حال بارگذاری…' : 'Uploading…'}</p>
+                    <p className="text-sm">{l('Uploading…', 'در حال بارگذاری…', 'جارٍ الرفع…')}</p>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center gap-2 text-muted-foreground">
                     <Upload className="w-7 h-7" />
-                    <p className="text-sm">{lang === 'fa' ? 'عکس‌ها را اینجا رها کنید یا برای انتخاب کلیک کنید' : 'Drop photos here or click to choose'}</p>
-                    <p className="text-[10px] text-muted-foreground">JPG, PNG, WEBP · max 5 MB each · up to {20 - gallery.length}</p>
+                    <p className="text-sm">{l('Drop photos here or click to choose', 'عکس‌ها را اینجا رها کنید یا برای انتخاب کلیک کنید', 'اسحب الصور إلى هنا أو انقر لاختيارها')}</p>
+                    <p className="text-[10px] text-muted-foreground">{l(`JPG, PNG, WEBP · max 5 MB each · up to ${20 - gallery.length}`, `JPG، PNG، WEBP · حداکثر ۵ مگابایت برای هر عکس · تا ${20 - gallery.length} عکس دیگر`, `JPG، PNG، WEBP · حتى 5 ميغابايت لكل صورة · يمكنك إضافة ${20 - gallery.length} صورة`)}</p>
                   </div>
                 )}
               </div>
@@ -1878,7 +1884,7 @@ function GalleryView({ profile, userId, onSave }) {
 
               <div className="flex items-center gap-3 mb-4">
                 <div className="h-px flex-1 bg-muted" />
-                <span className="text-muted-foreground text-[10px] uppercase">{lang === 'fa' ? 'یا لینک عکس' : 'or image URL'}</span>
+                <span className="text-muted-foreground text-[10px] uppercase">{l('or image URL', 'یا لینک عکس', 'أو رابط الصورة')}</span>
                 <div className="h-px flex-1 bg-muted" />
               </div>
 
@@ -1893,7 +1899,7 @@ function GalleryView({ profile, userId, onSave }) {
 
               {newUrl && (
                 <div className="w-full aspect-video rounded-xl overflow-hidden bg-card mb-4">
-                  <img decoding="async" loading="lazy" src={newUrl} alt="Preview" className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                  <img decoding="async" loading="lazy" src={newUrl} alt={l('Preview', 'پیش‌نمایش', 'معاينة')} className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; }} />
                 </div>
               )}
 
@@ -2177,7 +2183,7 @@ function SettingsView({ profile, userId, onSave }) {
                 </div>
                 <div>
                   <h3 className="text-foreground font-semibold text-sm">{t('settings_deactivate')}</h3>
-                  <p className="text-muted-foreground text-xs mt-0.5">This action cannot be undone.</p>
+                  <p className="text-muted-foreground text-xs mt-0.5">{lang === 'fa' ? 'این کار بازگشت‌پذیر نیست.' : lang === 'ar' ? 'لا يمكن التراجع عن هذا الإجراء.' : 'This action cannot be undone.'}</p>
                 </div>
               </div>
               <div className="flex gap-3 mt-5">
@@ -2413,6 +2419,8 @@ function EmptySection({ section }) {
 // ─── MyTripRequestsView ───────────────────────────────────────────────────────
 
 function MyTripRequestsView({ userId }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
@@ -2433,15 +2441,15 @@ function MyTripRequestsView({ userId }) {
   }, [userId]);
 
   const handleCancel = async (id) => {
-    if (!window.confirm('Cancel this trip request?')) return;
+    if (!window.confirm(l('Cancel this trip request?', 'این درخواست سفر را لغو می‌کنید؟', 'هل تريد إلغاء طلب الرحلة هذا؟'))) return;
     try {
       await cancelTripRequest(id);
       setRequests(prev => prev.map(request => (
         request.id === id ? { ...request, status: 'cancelled' } : request
       )));
-      toast.success('Trip request cancelled.');
+      toast.success(l('Trip request cancelled.', 'درخواست سفر لغو شد.', 'أُلغي طلب الرحلة.'));
     } catch (error) {
-      toast.error(error?.message || 'Could not cancel this trip request.');
+      toast.error(l('Could not cancel this trip request.', 'لغو کردن درخواست سفر ممکن نشد.', 'تعذّر إلغاء طلب الرحلة.'));
     }
   };
 
@@ -2454,13 +2462,13 @@ function MyTripRequestsView({ userId }) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-foreground font-bold text-xl">My Trip Requests</h2>
+        <h2 className="text-foreground font-bold text-xl">{l('My Trip Requests', 'درخواست‌های سفر من', 'طلبات رحلاتي')}</h2>
         <button
           onClick={() => setFormOpen(true)}
           className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[hsl(178,85%,32%)] text-white text-sm font-medium hover:bg-[hsl(178,85%,28%)] transition"
         >
           <Plus className="w-4 h-4" />
-          New Request
+          {l('New Request', 'درخواست جدید', 'طلب جديد')}
         </button>
       </div>
 
@@ -2473,8 +2481,8 @@ function MyTripRequestsView({ userId }) {
           <div className="w-14 h-14 rounded-2xl bg-card border border-border flex items-center justify-center mb-4">
             <MapPin className="w-7 h-7 text-muted-foreground" />
           </div>
-          <p className="text-muted-foreground font-medium mb-1">No trip requests yet</p>
-          <p className="text-muted-foreground text-sm">Create your first request and local guides will reach out.</p>
+          <p className="text-muted-foreground font-medium mb-1">{l('No trip requests yet', 'هنوز درخواست سفری ثبت نکرده‌اید', 'لم تنشئ أي طلب رحلة بعد')}</p>
+          <p className="text-muted-foreground text-sm">{l('Create your first request and local guides will reach out.', 'اولین درخواستتان را ثبت کنید تا راهنماهای محلی با شما تماس بگیرند.', 'أنشئ طلبك الأول وسيتواصل معك المرشدون المحليون.')}</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -2486,15 +2494,15 @@ function MyTripRequestsView({ userId }) {
               <div className="min-w-0 flex-1 space-y-1.5">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-foreground font-semibold text-sm truncate">
-                    {Array.isArray(req.destination) ? req.destination.join(', ') : req.destination || 'No destination'}
+                    {(Array.isArray(req.destination) ? req.destination : req.destination ? [req.destination] : []).map(city => iranianDestinations.find(item => item.en === city)?.[lang] || city).join(lang === 'en' ? ', ' : '، ') || l('No destination', 'مقصد مشخص نشده', 'لم تُحدَّد الوجهة')}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusColor(req.status)}`}>
-                    {req.status || 'active'}
+                    {localizeBookingStatus(req.status || 'active', lang)}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-muted-foreground text-xs">
                   {req.start_date && <span>{req.start_date} → {req.end_date}</span>}
-                  {req.adults != null && <span>{req.adults} adult{req.adults !== 1 ? 's' : ''}</span>}
+                  {req.adults != null && <span>{l(`${req.adults} adult${req.adults !== 1 ? 's' : ''}`, `${req.adults} بزرگسال`, `البالغون: ${req.adults}`)}</span>}
                 </div>
                 {req.requirements && (
                   <p className="text-muted-foreground text-xs line-clamp-2">{req.requirements}</p>
@@ -2506,7 +2514,7 @@ function MyTripRequestsView({ userId }) {
                   <button
                     onClick={() => handleCancel(req.id)}
                     className="p-2 rounded-lg bg-muted text-muted-foreground hover:text-red-700 hover:bg-red-500/10 transition"
-                    title="Cancel"
+                    title={l('Cancel', 'لغو کردن', 'إلغاء')}
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -2686,7 +2694,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-card flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-8 h-8 text-accent animate-spin" />
-          <p className="text-muted-foreground text-sm">Loading dashboard...</p>
+          <p className="text-muted-foreground text-sm">{localize(lang, 'Loading dashboard...', 'در حال بارگذاری داشبورد…', 'جارٍ تحميل لوحة التحكم…')}</p>
         </div>
       </div>
     );

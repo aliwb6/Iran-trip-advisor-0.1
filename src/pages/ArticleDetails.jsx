@@ -24,7 +24,7 @@ export default function ArticleDetails() {
   if (loading) {
     return (
       <div dir={dir} className="pt-32 pb-20 min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 text-accent animate-spin" aria-label="Loading article" />
+        <Loader2 className="w-8 h-8 text-accent animate-spin" aria-label={lang === 'fa' ? 'در حال بارگذاری مقاله' : lang === 'ar' ? 'جارٍ تحميل المقالة' : 'Loading article'} />
       </div>
     );
   }
@@ -33,7 +33,7 @@ export default function ArticleDetails() {
     return (
       <div dir={dir} className="pt-32 pb-20 min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="font-heading text-3xl text-foreground mb-4">Article Not Found</h1>
+          <h1 className="font-heading text-3xl text-foreground mb-4">{lang === 'fa' ? 'مقاله پیدا نشد' : lang === 'ar' ? 'لم يُعثر على المقالة' : 'Article Not Found'}</h1>
           <Link to="/blog" className="text-accent hover:underline">{t('view_all')} →</Link>
         </div>
       </div>
@@ -41,7 +41,7 @@ export default function ArticleDetails() {
   }
 
   const localized = (field) =>
-    article[`${field}_${lang}`] || article[`${field}_fa`] || article[`${field}_en`] || '';
+    article[`${field}_${lang}`] || article[`${field}_en`] || article[`${field}_fa`] || '';
   const title = localized('title');
   const excerpt = localized('excerpt');
   const content = localized('content');
@@ -69,7 +69,7 @@ export default function ArticleDetails() {
           className="absolute top-24 start-6 flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white hover:bg-white/20 transition-colors"
         >
           <Arrow className={`w-4 h-4 ${dir === 'rtl' ? 'rotate-180' : ''}`} />
-          {t('back_to_home')}
+          {lang === 'fa' ? 'بازگشت به مقاله‌ها' : lang === 'ar' ? 'العودة إلى المقالات' : 'Back to Articles'}
         </Link>
 
         {/* Content overlay */}
@@ -82,7 +82,7 @@ export default function ArticleDetails() {
             >
               {/* Category */}
               <span className="inline-block px-4 py-1.5 rounded-full bg-accent text-white text-sm font-body font-medium mb-4">
-                {category}
+                {category ? t(`article_cat_${category}`) : ''}
               </span>
 
               <h1 className="font-heading text-3xl sm:text-4xl lg:text-5xl text-white mb-4 leading-tight">

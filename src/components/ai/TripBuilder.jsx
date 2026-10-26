@@ -33,7 +33,7 @@ export default function TripBuilder({
 
   const handleSaveTrip = async () => {
     if (!user) {
-      alert(lang === 'fa' ? 'لطفاً ابتدا وارد شوید' : 'Please login first');
+      alert(lang === 'fa' ? 'لطفاً ابتدا وارد حساب خود شوید.' : lang === 'ar' ? 'يرجى تسجيل الدخول أولاً.' : 'Please login first');
       return;
     }
 
@@ -62,7 +62,7 @@ export default function TripBuilder({
       }, 2000);
     } catch (error) {
       console.error('Error saving trip:', error);
-      alert(lang === 'fa' ? 'خرابی در ذخیره سفر' : 'Error saving trip');
+      alert(lang === 'fa' ? 'ذخیرهٔ سفر ممکن نشد.' : lang === 'ar' ? 'تعذّر حفظ الرحلة.' : 'Error saving trip');
     } finally {
       setSaving(false);
     }

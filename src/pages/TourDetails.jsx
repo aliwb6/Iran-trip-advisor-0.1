@@ -462,7 +462,7 @@ export default function TourDetails() {
                   />
                   <span className="min-w-0">
                     <span className="flex items-center gap-1.5 font-heading text-sm font-semibold text-foreground">
-                      <span className="truncate">{provider.full_name || (provider.role === 'agency' ? (lang === 'fa' ? 'آژانس' : 'Agency') : (lang === 'fa' ? 'راهنما' : 'Guide'))}</span>
+                      <span className="truncate">{provider.full_name || (provider.role === 'agency' ? (lang === 'fa' ? 'آژانس' : lang === 'ar' ? 'وكالة' : 'Agency') : (lang === 'fa' ? 'راهنما' : lang === 'ar' ? 'مرشد' : 'Guide'))}</span>
                       {<IconSwap active={provider.role === 'agency'} a={<UserRound className="h-4 w-4 shrink-0 text-accent" />} b={<Building2 className="h-4 w-4 shrink-0 text-accent" />} />}
                     </span>
                     <span className="mt-0.5 flex items-center gap-1 font-body text-xs text-muted-foreground">

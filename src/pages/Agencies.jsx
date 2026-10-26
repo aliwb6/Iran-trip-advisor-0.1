@@ -100,7 +100,7 @@ function AgencyCard({ agency, lang, onNavigate }) {
       {/* Card body */}
       <div className="p-4">
         <h3 className="font-heading text-lg font-semibold text-foreground truncate mb-1">
-          {agency.full_name || (lang === 'fa' ? 'آژانس' : 'Agency')}
+          {agency.full_name || (lang === 'fa' ? 'آژانس' : lang === 'ar' ? 'وكالة' : 'Agency')}
         </h3>
 
         {/* Stars */}

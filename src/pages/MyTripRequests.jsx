@@ -37,6 +37,8 @@ import { fetchPaymentProviderConfig, redirectToDepositCheckout } from '../api/pa
 import { fetchReleasedBookingContact } from '../api/participantProfiles';
 import TripRequestForm from '../components/trips/TripRequestForm';
 import { Button } from '@/components/ui/button';
+import { useI18n } from '@/lib/i18n.jsx';
+import { localize, localizeBookingStatus } from '@/lib/localize';
 import {
   Dialog,
   DialogContent,
@@ -140,17 +142,23 @@ const friendlyPaymentStatus = (status) => String(status || 'unpaid')
   .replace(/\b\w/g, letter => letter.toUpperCase());
 
 function StatusBadge({ status }) {
+  const { lang } = useI18n();
   const cfg = STATUS_CONFIG[status] || STATUS_CONFIG.pending;
   const Icon = cfg.icon;
   return (
     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium font-body ${cfg.classes}`}>
       <Icon className="w-3 h-3" />
-      {cfg.label}
+      {status === 'proposals_ready'
+        ? localize(lang, 'Proposals ready', 'پیشنهادها آماده‌اند', 'العروض جاهزة')
+        : status === 'confirmed'
+          ? localize(lang, 'Guide selected', 'راهنما انتخاب شد', 'تم اختيار المرشد')
+          : localizeBookingStatus(status, lang) || cfg.label}
     </span>
   );
 }
 
 function ProposalProgress({ proposalsCount, maxProposals }) {
+  const { lang } = useI18n();
   const max = Math.max(1, Number(maxProposals) || 5);
   const count = Math.max(0, Math.min(Number(proposalsCount) || 0, max));
   const percent = Math.round((count / max) * 100);
@@ -161,15 +169,17 @@ function ProposalProgress({ proposalsCount, maxProposals }) {
         <div className="h-full bg-accent transition-all" style={{ width: `${percent}%` }} />
       </div>
       <span className="font-body text-xs text-muted-foreground whitespace-nowrap">
-        {count}/{max} proposal{max !== 1 ? 's' : ''}
+        {count}/{max} {localize(lang, max !== 1 ? 'proposals' : 'proposal', 'پیشنهاد', 'عرض')}
       </span>
     </div>
   );
 }
 
 function GuideSlot({ slot, canSelect, onSelect, selecting }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const navigate = useNavigate();
-  const guideName = slot.guide?.full_name || 'Guide';
+  const guideName = slot.guide?.full_name || l('Guide', 'راهنما', 'مرشد');
   const avatarUrl = slot.guide?.avatar_url;
   const initials = (slot.guide?.full_name || 'G')
     .split(' ')
@@ -200,7 +210,13 @@ function GuideSlot({ slot, canSelect, onSelect, selecting }) {
         </div>
         <div>
           <p className="font-body text-sm font-medium text-foreground">{guideName}</p>
-          <p className={`font-body text-xs ${slotStatusLabel.color}`}>{slotStatusLabel.label}</p>
+          <p className={`font-body text-xs ${slotStatusLabel.color}`}>{({
+            accepted: l('Proposal received', 'پیشنهاد دریافت شد', 'وصل العرض'),
+            chatting: l('Chatting', 'در حال گفت‌وگو', 'جارٍ التحدث'),
+            selected: l('Selected — awaiting guide confirmation', 'انتخاب شده؛ در انتظار تأیید راهنما', 'تم الاختيار؛ بانتظار تأكيد المرشد'),
+            finalized: l('Booking confirmed', 'رزرو تأیید شد', 'تأكد الحجز'),
+            closed: l('Closed', 'بسته‌شده', 'مغلق'),
+          })[slot.status] || slotStatusLabel.label}</p>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -212,7 +228,7 @@ function GuideSlot({ slot, canSelect, onSelect, selecting }) {
             className="font-body text-xs rounded-lg h-7 bg-emerald-600 hover:bg-emerald-700 text-white"
           >
             {selecting ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-            {selecting ? 'Selecting…' : 'Select'}
+            {selecting ? l('Selecting…', 'در حال انتخاب…', 'جارٍ الاختيار…') : l('Select', 'انتخاب', 'اختيار')}
           </Button>
         )}
         <Button
@@ -222,7 +238,7 @@ function GuideSlot({ slot, canSelect, onSelect, selecting }) {
           className="font-body text-xs rounded-lg h-7 border-border/60 gap-1"
         >
           <MessageCircle className="w-3 h-3" />
-          Message
+          {l('Message', 'پیام', 'مراسلة')}
         </Button>
       </div>
     </div>
@@ -230,6 +246,8 @@ function GuideSlot({ slot, canSelect, onSelect, selecting }) {
 }
 
 function TripCard({ trip, onChanged, paymentConfig }) {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const [rebroadcasting, setRebroadcasting] = useState(false);
   const [completing, setCompleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
@@ -255,10 +273,10 @@ function TripCard({ trip, onChanged, paymentConfig }) {
 
   const effectiveStatus = effectiveRequestStatus(trip);
   const startDate = trip.start_date
-    ? new Date(trip.start_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(trip.start_date).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
   const endDate = trip.end_date
-    ? new Date(trip.end_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    ? new Date(trip.end_date).toLocaleDateString(lang === 'fa' ? 'fa-IR' : lang === 'ar' ? 'ar' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })
     : null;
   const people = travelerCount(trip);
   const activeSlots = (trip.slots || []).filter(slot => slot.status !== 'rejected');
@@ -280,14 +298,14 @@ function TripCard({ trip, onChanged, paymentConfig }) {
   const paymentPending = ['deposit_pending', 'payment_pending'].includes(booking?.payment_status);
 
   const handleSelect = async (slot) => {
-    if (!window.confirm('Select this guide or agency for your trip?')) return;
+    if (!window.confirm(l('Select this guide or agency for your trip?', 'این راهنما یا آژانس را برای سفرتان انتخاب می‌کنید؟', 'هل تريد اختيار هذا المرشد أو الوكالة لرحلتك؟'))) return;
     setSelectingId(slot.id);
     try {
       await touristSelectGuide(trip.id, slot.guide_id);
-      toast.success('Guide selected. Your 15% deposit is ready to pay.');
+      toast.success(l('Guide selected. Your 15% deposit is ready to pay.', 'راهنما انتخاب شد. اکنون می‌توانید پیش‌پرداخت ۱۵٪ را بپردازید.', 'تم اختيار المرشد. يمكنك الآن دفع عربون بنسبة ١٥٪.'));
       await onChanged();
     } catch (err) {
-      toast.error(err.message || 'Could not select this guide.');
+      toast.error(l('Could not select this guide.', 'انتخاب راهنما انجام نشد.', 'تعذر اختيار هذا المرشد.'));
     } finally {
       setSelectingId(null);
     }
@@ -297,38 +315,38 @@ function TripCard({ trip, onChanged, paymentConfig }) {
     setRebroadcasting(true);
     try {
       await rebroadcastTripRequest(trip.id);
-      toast.success('Your trip request has been re-broadcast to guides!');
+      toast.success(l('Your trip request has been re-broadcast to guides!', 'درخواست سفرتان دوباره برای راهنماها ارسال شد!', 'أُعيد إرسال طلب رحلتك إلى المرشدين!'));
       await onChanged();
     } catch (err) {
-      toast.error(err.message || 'Failed to re-broadcast.');
+      toast.error(l('Failed to re-broadcast.', 'ارسال دوباره درخواست انجام نشد.', 'تعذرت إعادة إرسال الطلب.'));
     } finally {
       setRebroadcasting(false);
     }
   };
 
   const handleComplete = async () => {
-    if (!window.confirm('Mark this booked trip as completed?')) return;
+    if (!window.confirm(l('Mark this booked trip as completed?', 'این سفر رزروشده را تکمیل‌شده علامت می‌زنید؟', 'هل تريد وضع علامة «مكتملة» على هذه الرحلة المحجوزة؟'))) return;
     setCompleting(true);
     try {
       await completeTripRequest(trip.id);
-      toast.success('Trip marked as completed.');
+      toast.success(l('Trip marked as completed.', 'سفر به‌عنوان تکمیل‌شده ثبت شد.', 'تم وضع علامة «مكتملة» على الرحلة.'));
       await onChanged();
     } catch (err) {
-      toast.error(err.message || 'Could not complete this trip.');
+      toast.error(l('Could not complete this trip.', 'ثبت تکمیل سفر انجام نشد.', 'تعذر إكمال الرحلة.'));
     } finally {
       setCompleting(false);
     }
   };
 
   const handleCancel = async () => {
-    if (!window.confirm('Cancel this trip request? This will close the active proposal/booking lifecycle.')) return;
+    if (!window.confirm(l('Cancel this trip request? This will close the active proposal/booking lifecycle.', 'این درخواست سفر لغو شود؟ با لغو آن، روند پیشنهادها و رزروهای فعال پایان می‌یابد.', 'هل تريد إلغاء طلب الرحلة؟ سيؤدي ذلك إلى إنهاء العروض والحجوزات النشطة.'))) return;
     setCancelling(true);
     try {
       await cancelTripRequest(trip.id);
-      toast.success('Trip request cancelled.');
+      toast.success(l('Trip request cancelled.', 'درخواست سفر لغو شد.', 'أُلغي طلب الرحلة.'));
       await onChanged();
     } catch (err) {
-      toast.error(err.message || 'Could not cancel this trip request.');
+      toast.error(l('Could not cancel this trip request.', 'لغو درخواست سفر انجام نشد.', 'تعذر إلغاء طلب الرحلة.'));
     } finally {
       setCancelling(false);
     }
@@ -340,7 +358,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
     try {
       await redirectToDepositCheckout(booking.id);
     } catch (err) {
-      toast.error(err.message || 'Could not start the deposit payment.');
+      toast.error(l('Could not start the deposit payment.', 'شروع پرداخت پیش‌پرداخت انجام نشد.', 'تعذر بدء دفع العربون.'));
       setStartingPayment(false);
     }
   };
@@ -351,10 +369,10 @@ function TripCard({ trip, onChanged, paymentConfig }) {
     setContactError('');
     try {
       const result = await fetchReleasedBookingContact(booking.id);
-      if (!result) throw new Error('Contact details are not available yet.');
+      if (!result) throw new Error(l('Contact details are not available yet.', 'اطلاعات تماس هنوز در دسترس نیست.', 'بيانات التواصل غير متاحة بعد.'));
       setContact(result);
     } catch (err) {
-      setContactError(err.message || 'Could not load contact details.');
+      setContactError(l('Could not load contact details.', 'بارگذاری اطلاعات تماس انجام نشد.', 'تعذر تحميل بيانات التواصل.'));
     } finally {
       setContactLoading(false);
     }
@@ -371,7 +389,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
         <div className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20">
           <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
           <span className="font-body text-sm font-medium text-emerald-700 dark:text-emerald-400">
-            Trip completed successfully.
+            {l('Trip completed successfully.', 'سفر با موفقیت تکمیل شد.', 'اكتملت الرحلة بنجاح.')}
           </span>
         </div>
       )}
@@ -380,7 +398,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
         <div className="flex items-center gap-2 px-5 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20">
           <Clock className="w-4 h-4 text-emerald-600 shrink-0" />
           <span className="font-body text-sm font-medium text-emerald-700 dark:text-emerald-400">
-            Your guide was selected. You can now pay the 15% deposit while the guide or agency confirms the booking.
+            {l('Your guide was selected. You can now pay the 15% deposit while the guide or agency confirms the booking.', 'راهنما انتخاب شد. اکنون می‌توانید پیش‌پرداخت ۱۵٪ را بپردازید تا راهنما یا آژانس رزرو را تأیید کند.', 'تم اختيار مرشدك. يمكنك الآن دفع عربون ١٥٪ بينما يؤكد المرشد أو الوكالة الحجز.')}
           </span>
         </div>
       )}
@@ -389,7 +407,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
         <div className="flex items-center gap-2 px-5 py-2.5 bg-red-500/10 border-b border-red-500/20">
           <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
           <span className="font-body text-sm font-medium text-red-700 dark:text-red-400">
-            The proposal window has ended. You can re-broadcast this request now.
+            {l('The proposal window has ended. You can re-broadcast this request now.', 'مهلت دریافت پیشنهاد به پایان رسید. اکنون می‌توانید درخواست را دوباره ارسال کنید.', 'انتهت مهلة تقديم العروض. يمكنك إعادة إرسال الطلب الآن.')}
           </span>
         </div>
       )}
@@ -398,7 +416,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-heading text-base font-semibold text-foreground leading-snug">
-              {trip.title || 'Custom trip request'}
+              {trip.title || l('Custom trip request', 'درخواست سفر اختصاصی', 'طلب رحلة مخصصة')}
             </h3>
             <div className="flex items-center gap-1.5 mt-1 text-muted-foreground">
               <MapPin className="w-3.5 h-3.5 shrink-0 text-gold" />
@@ -417,12 +435,12 @@ function TripCard({ trip, onChanged, paymentConfig }) {
           )}
           <span className="flex items-center gap-1">
             <Users className="w-3.5 h-3.5 shrink-0" />
-            {people} {people === 1 ? 'person' : 'people'}
+            {people} {l(people === 1 ? 'person' : 'people', 'نفر', 'مسافر')}
           </span>
           {trip.rebroadcast_count > 0 && (
             <span className="flex items-center gap-1 text-xs">
               <RefreshCw className="w-3 h-3 shrink-0" />
-              Re-broadcast ×{trip.rebroadcast_count}
+              {l('Re-broadcast', 'ارسال دوباره', 'أُعيد الإرسال')} ×{trip.rebroadcast_count}
             </span>
           )}
         </div>
@@ -435,23 +453,23 @@ function TripCard({ trip, onChanged, paymentConfig }) {
           <div className="mb-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="font-body text-xs font-semibold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">
-                Booking payment summary
+                {l('Booking payment summary', 'خلاصه پرداخت رزرو', 'ملخص دفع الحجز')}
               </p>
               <span className="font-body text-xs text-muted-foreground">
-                Payment: {friendlyPaymentStatus(booking.payment_status)}
+                {l('Payment:', 'پرداخت:', 'الدفع:')} {lang === 'en' ? friendlyPaymentStatus(booking.payment_status) : localizeBookingStatus(booking.payment_status, lang)}
               </span>
             </div>
             <dl className="mt-3 grid grid-cols-1 gap-3 font-body text-sm sm:grid-cols-3">
               <div>
-                <dt className="text-xs text-muted-foreground">Total</dt>
+                <dt className="text-xs text-muted-foreground">{l('Total', 'مبلغ کل', 'الإجمالي')}</dt>
                 <dd className="font-semibold text-foreground">{formatMoney(booking.price, booking.currency)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Deposit</dt>
+                <dt className="text-xs text-muted-foreground">{l('Deposit', 'پیش‌پرداخت', 'العربون')}</dt>
                 <dd className="font-semibold text-foreground">{formatMoney(booking.deposit_amount, booking.currency)}</dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Balance due</dt>
+                <dt className="text-xs text-muted-foreground">{l('Balance due', 'مانده قابل پرداخت', 'المبلغ المتبقي')}</dt>
                 <dd className="font-semibold text-foreground">{formatMoney(booking.balance_due, booking.currency)}</dd>
               </div>
             </dl>
@@ -467,27 +485,31 @@ function TripCard({ trip, onChanged, paymentConfig }) {
                 >
                   {<IconSwap active={startingPayment} a={<CreditCard className="h-4 w-4" />} b={<Loader2 className="h-4 w-4 animate-spin" />} keepMounted={false} />}
                   {startingPayment
-                    ? 'Opening secure checkout…'
-                    : `Pay deposit ${formatMoney(booking.deposit_amount, booking.currency)}`}
+                    ? l('Opening secure checkout…', 'در حال بازکردن صفحه پرداخت امن…', 'جارٍ فتح صفحة الدفع الآمنة…')
+                    : `${l('Pay deposit', 'پرداخت پیش‌پرداخت', 'دفع العربون')} ${formatMoney(booking.deposit_amount, booking.currency)}`}
                 </Button>
               )}
 
               {paymentPending && (
                 <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
                   <Clock className="h-3.5 w-3.5 shrink-0" />
-                  Payment confirmation is pending. The booking will refresh when the verified provider webhook settles it.
+                  {l('Payment confirmation is pending. The booking will refresh when the verified provider webhook settles it.', 'پرداخت در انتظار تأیید است. پس از تأیید درگاه پرداخت، وضعیت رزرو به‌روز می‌شود.', 'الدفع بانتظار التأكيد. ستتحدث حالة الحجز بعد تأكيد مزود الدفع.')}
                 </div>
               )}
 
               {paymentConfig && !paymentConfig.enabled && ['unpaid', 'failed'].includes(booking.payment_status) && (
                 <p className="text-xs text-muted-foreground">
-                  Online deposit payment is not enabled yet. No payment has been recorded.
+                  {l('Online deposit payment is not enabled yet. No payment has been recorded.', 'پرداخت آنلاین پیش‌پرداخت هنوز فعال نیست و پرداختی ثبت نشده است.', 'دفع العربون عبر الإنترنت غير متاح بعد، ولم تُسجَّل أي دفعة.')}
                 </p>
               )}
 
               {paymentConfig?.enabled && !paymentCurrencySupported && ['unpaid', 'failed'].includes(booking.payment_status) && (
                 <p className="text-xs text-muted-foreground">
-                  Online payment is not currently available for {String(booking.currency || '').toUpperCase()} bookings.
+                  {lang === 'fa'
+                    ? `پرداخت آنلاین برای رزرو با ارز ${String(booking.currency || '').toUpperCase()} در حال حاضر در دسترس نیست.`
+                    : lang === 'ar'
+                      ? `الدفع عبر الإنترنت غير متاح حالياً للحجوزات بعملة ${String(booking.currency || '').toUpperCase()}.`
+                      : `Online payment is not currently available for ${String(booking.currency || '').toUpperCase()} bookings.`}
                 </p>
               )}
 
@@ -496,9 +518,9 @@ function TripCard({ trip, onChanged, paymentConfig }) {
                   <div className="mt-3 rounded-xl border border-emerald-500/20 bg-background/70 p-3 text-xs">
                     <div className="flex items-center gap-2 font-semibold text-emerald-700 dark:text-emerald-300">
                       <Contact className="h-4 w-4" />
-                      Guide / agency contact
+                      {l('Guide / agency contact', 'اطلاعات تماس راهنما یا آژانس', 'بيانات التواصل مع المرشد أو الوكالة')}
                     </div>
-                    <p className="mt-2 font-medium text-foreground">{contact.full_name || 'Provider'}</p>
+                    <p className="mt-2 font-medium text-foreground">{contact.full_name || l('Provider', 'ارائه‌دهنده', 'مقدم الخدمة')}</p>
                     {contact.email && <p className="mt-1 flex items-center gap-2 text-muted-foreground"><Mail className="h-3.5 w-3.5" />{contact.email}</p>}
                     {contact.phone && <p className="mt-1 flex items-center gap-2 text-muted-foreground"><Phone className="h-3.5 w-3.5" />{contact.phone}</p>}
                   </div>
@@ -513,14 +535,14 @@ function TripCard({ trip, onChanged, paymentConfig }) {
                       className="gap-2 rounded-xl"
                     >
                       {<IconSwap active={contactLoading} a={<Contact className="h-3.5 w-3.5" />} b={<Loader2 className="h-3.5 w-3.5 animate-spin" />} keepMounted={false} />}
-                      {contactLoading ? 'Loading contact…' : 'View guide / agency contact'}
+                      {contactLoading ? l('Loading contact…', 'در حال بارگذاری اطلاعات تماس…', 'جارٍ تحميل بيانات التواصل…') : l('View guide / agency contact', 'مشاهده اطلاعات تماس راهنما یا آژانس', 'عرض بيانات تواصل المرشد أو الوكالة')}
                     </Button>
                     {contactError && <p className="mt-2 text-xs text-destructive">{contactError}</p>}
                   </div>
                 )
               ) : (
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Private contact details unlock only after the booking deposit is confirmed by the payment provider.
+                  {l('Private contact details unlock only after the booking deposit is confirmed by the payment provider.', 'اطلاعات تماس خصوصی فقط پس از تأیید پیش‌پرداخت رزرو توسط درگاه پرداخت در دسترس قرار می‌گیرد.', 'لن تتاح بيانات التواصل الخاصة إلا بعد تأكيد مزود الدفع لعربون الحجز.')}
                 </p>
               )}
             </div>
@@ -530,7 +552,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
         {activeSlots.length > 0 && (
           <div className="space-y-2 mb-4">
             <p className="font-body text-xs font-medium text-muted-foreground uppercase tracking-wider">
-              Guide proposals
+              {l('Guide proposals', 'پیشنهادهای راهنماها', 'عروض المرشدين')}
             </p>
             {activeSlots.map(slot => (
               <GuideSlot
@@ -554,7 +576,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
               className="w-full font-body text-sm rounded-xl border-dashed border-border/60 gap-2"
             >
               {<IconSwap active={rebroadcasting} a={<RefreshCw className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-              {rebroadcasting ? 'Re-broadcasting…' : 'Re-broadcast to Guides'}
+              {rebroadcasting ? l('Re-broadcasting…', 'در حال ارسال دوباره…', 'جارٍ إعادة الإرسال…') : l('Re-broadcast to Guides', 'ارسال دوباره برای راهنماها', 'إعادة الإرسال إلى المرشدين')}
             </Button>
           )}
 
@@ -566,13 +588,13 @@ function TripCard({ trip, onChanged, paymentConfig }) {
               className="w-full font-body text-sm rounded-xl gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
             >
               {<IconSwap active={completing} a={<CheckCircle2 className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-              {completing ? 'Completing…' : 'Mark trip as completed'}
+              {completing ? l('Completing…', 'در حال ثبت تکمیل سفر…', 'جارٍ إكمال الرحلة…') : l('Mark trip as completed', 'ثبت تکمیل سفر', 'وضع علامة «مكتملة» على الرحلة')}
             </Button>
           )}
 
           {trip.status === 'booked' && !canComplete && trip.end_date && (
             <p className="text-xs text-muted-foreground text-center">
-              You can mark this trip completed after {endDate}.
+              {l('You can mark this trip completed after', 'می‌توانید پس از', 'يمكنك وضع علامة «مكتملة» على الرحلة بعد')} {endDate}{l('.', '، تکمیل سفر را ثبت کنید.', '.')}
             </p>
           )}
 
@@ -585,7 +607,7 @@ function TripCard({ trip, onChanged, paymentConfig }) {
               className="w-full font-body text-sm rounded-xl gap-2 border-red-500/30 text-red-600 hover:bg-red-500/5"
             >
               {<IconSwap active={cancelling} a={<XCircle className="w-3.5 h-3.5" />} b={<Loader2 className="w-3.5 h-3.5 animate-spin" />} keepMounted={false} />}
-              {cancelling ? 'Cancelling…' : 'Cancel trip request'}
+              {cancelling ? l('Cancelling…', 'در حال لغو…', 'جارٍ الإلغاء…') : l('Cancel trip request', 'لغو درخواست سفر', 'إلغاء طلب الرحلة')}
             </Button>
           )}
         </div>
@@ -595,14 +617,17 @@ function TripCard({ trip, onChanged, paymentConfig }) {
 }
 
 function LoadingSkeleton() {
+  const { lang } = useI18n();
   return (
     <div className="flex min-h-[18rem] items-center justify-center">
-      <Loader2 label="Loading trip requests" />
+      <Loader2 label={localize(lang, 'Loading trip requests', 'در حال بارگذاری درخواست‌های سفر', 'جارٍ تحميل طلبات الرحلات')} />
     </div>
   );
 }
 
 export default function MyTripRequests() {
+  const { lang } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -623,11 +648,11 @@ export default function MyTripRequests() {
       const data = await getMyTripRequests(user.id);
       setTrips(data || []);
     } catch (err) {
-      setError(err.message || 'Failed to load your trips.');
+      setError(l('Failed to load your trips.', 'بارگذاری سفرهای شما انجام نشد.', 'تعذر تحميل رحلاتك.'));
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, [user?.id, lang]);
 
   useEffect(() => {
     if (user?.id) loadTrips();
@@ -660,9 +685,9 @@ export default function MyTripRequests() {
     if (!paymentResult) return undefined;
 
     if (paymentResult === 'success') {
-      toast.success('Payment submitted. Waiting for secure provider confirmation.');
+      toast.success(l('Payment submitted. Waiting for secure provider confirmation.', 'پرداخت ارسال شد و در انتظار تأیید امن درگاه پرداخت است.', 'أُرسل الدفع وهو بانتظار تأكيد مزود الدفع الآمن.'));
     } else if (paymentResult === 'cancelled') {
-      toast.info('Payment checkout was cancelled. No successful payment was recorded.');
+      toast.info(l('Payment checkout was cancelled. No successful payment was recorded.', 'صفحه پرداخت بسته شد و پرداخت موفقی ثبت نشده است.', 'أُلغيت عملية الدفع ولم تُسجَّل أي دفعة ناجحة.'));
     }
 
     const timers = paymentResult === 'success'
@@ -675,7 +700,7 @@ export default function MyTripRequests() {
     setSearchParams(next, { replace: true });
 
     return () => timers.forEach(timer => window.clearTimeout(timer));
-  }, [searchParams, setSearchParams, loadTrips]);
+  }, [searchParams, setSearchParams, loadTrips, lang]);
 
   if (isLoadingAuth) {
     return (
@@ -689,10 +714,10 @@ export default function MyTripRequests() {
     <div className="min-h-screen bg-background pt-20 pb-24">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <p className="font-body text-xs uppercase tracking-widest text-gold mb-1">Travel Planning</p>
-          <h1 className="font-heading text-3xl font-bold text-foreground">My Trip Requests</h1>
+          <p className="font-body text-xs uppercase tracking-widest text-gold mb-1">{l('Travel Planning', 'برنامه‌ریزی سفر', 'تخطيط الرحلة')}</p>
+          <h1 className="font-heading text-3xl font-bold text-foreground">{l('My Trip Requests', 'درخواست‌های سفر من', 'طلبات رحلاتي')}</h1>
           <p className="font-body text-muted-foreground mt-1.5">
-            Track your trip requests and communicate with matched guides.
+            {l('Track your trip requests and communicate with matched guides.', 'درخواست‌های سفرتان را پیگیری کنید و با راهنماهای انتخاب‌شده گفت‌وگو کنید.', 'تابع طلبات رحلاتك وتواصل مع المرشدين الذين جرت مطابقتهم معك.')}
           </p>
         </div>
 
@@ -701,7 +726,7 @@ export default function MyTripRequests() {
             <p className="font-body text-sm text-destructive mb-4">{error}</p>
             <Button variant="outline" onClick={loadTrips} className="font-body">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              {l('Try Again', 'تلاش دوباره', 'إعادة المحاولة')}
             </Button>
           </div>
         ) : loading ? (
@@ -711,16 +736,16 @@ export default function MyTripRequests() {
             <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto mb-4">
               <MapPin className="w-8 h-8 text-muted-foreground/40" />
             </div>
-            <h3 className="font-heading text-lg font-semibold text-foreground mb-1">No trip requests yet</h3>
+            <h3 className="font-heading text-lg font-semibold text-foreground mb-1">{l('No trip requests yet', 'هنوز درخواستی برای سفر ثبت نکرده‌اید', 'لم تُرسل أي طلب رحلة بعد')}</h3>
             <p className="font-body text-sm text-muted-foreground max-w-xs mx-auto mb-6">
-              Create your first trip request and get matched with expert local guides.
+              {l('Create your first trip request and get matched with expert local guides.', 'اولین درخواست سفرتان را ثبت کنید تا راهنماهای محلی مناسب را پیدا کنید.', 'أرسل أول طلب رحلة لتتواصل مع مرشدين محليين خبراء يناسبونك.')}
             </p>
             <Button
               onClick={() => setDialogOpen(true)}
               className="bg-accent hover:bg-accent/90 text-white font-body font-semibold rounded-xl gap-2"
             >
               <Plus className="w-4 h-4" />
-              New Trip Request
+              {l('New Trip Request', 'درخواست سفر جدید', 'طلب رحلة جديد')}
             </Button>
           </div>
         ) : (
@@ -746,7 +771,7 @@ export default function MyTripRequests() {
             className="flex items-center gap-2 px-5 py-3 rounded-full bg-accent text-white font-body font-semibold text-sm shadow-lg shadow-accent/30 hover:bg-accent/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
-            New Trip Request
+            {l('New Trip Request', 'درخواست سفر جدید', 'طلب رحلة جديد')}
           </motion.button>
         </div>
       )}
@@ -754,9 +779,9 @@ export default function MyTripRequests() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="font-heading text-xl font-semibold">New Trip Request</DialogTitle>
+            <DialogTitle className="font-heading text-xl font-semibold">{l('New Trip Request', 'درخواست سفر جدید', 'طلب رحلة جديد')}</DialogTitle>
             <p className="font-body text-sm text-muted-foreground">
-              Fill in your preferences and we'll match you with local guides.
+              {l("Fill in your preferences and we'll match you with local guides.", 'ترجیحاتتان را وارد کنید تا راهنماهای محلی مناسب را به شما معرفی کنیم.', 'أدخل تفضيلاتك لنوصلك بالمرشدين المحليين المناسبين.')}
             </p>
           </DialogHeader>
           <TripRequestForm onClose={() => setDialogOpen(false)} />

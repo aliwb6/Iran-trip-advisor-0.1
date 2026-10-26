@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, CheckCircle } from 'lucide-react';
 
 import { BreathingGlow } from '@/components/ui/BreathingGlow';
+import { localize, localizeTripOption } from '@/lib/localize';
 function InfoBox({ icon, label, value, lang }) {
   return (
     <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
@@ -19,14 +20,15 @@ export default function TripPreviewCard({
   lang,
   dir
 }) {
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const displayDays = tripData.duration || '—';
   const displayDestinations = tripData.destinations || '—';
   const displayGroupSize = tripData.groupSize || '—';
   const displayBudget = tripData.budget || '—';
   const displayPurpose = tripData.purpose || '—';
   const displayActivityLevel = tripData.activityLevel || '—';
-  const displayDietary = Array.isArray(tripData.dietary) ? tripData.dietary.join(', ') : (tripData.dietary || '—');
-  const displayAccommodation = Array.isArray(tripData.accommodation) ? tripData.accommodation.join(', ') : (tripData.accommodation || '—');
+  const displayDietary = Array.isArray(tripData.dietary) ? tripData.dietary.map(item => localizeTripOption(item, lang)).join(lang === 'en' ? ', ' : '، ') : (localizeTripOption(tripData.dietary, lang) || '—');
+  const displayAccommodation = Array.isArray(tripData.accommodation) ? tripData.accommodation.map(item => localizeTripOption(item, lang)).join(lang === 'en' ? ', ' : '، ') : (localizeTripOption(tripData.accommodation, lang) || '—');
   const displayPace = tripData.pace || '—';
 
   return (
@@ -40,7 +42,7 @@ export default function TripPreviewCard({
       {/* Header */}
       <div className="mb-8">
         <h2 className="text-4xl font-bold text-slate-900 mb-2">
-          {displayDays}-{lang === 'fa' ? 'روزه' : lang === 'ar' ? 'يوم' : 'day'} {lang === 'fa' ? 'سفر به' : lang === 'ar' ? 'رحلة إلى' : 'trip to'} {displayDestinations}
+          {l(`${displayDays}-day trip to ${displayDestinations}`, `سفر ${displayDays}روزه به ${displayDestinations}`, `رحلة إلى ${displayDestinations} · المدة بالأيام: ${displayDays}`)}
         </h2>
         <p className="text-slate-600">
           {lang === 'fa' ? 'خلاصه سفر سفارشی شما' : lang === 'ar' ? 'ملخص رحلتك المخصصة' : 'Your personalized trip summary'}
@@ -50,16 +52,16 @@ export default function TripPreviewCard({
       {/* Trip Overview Grid */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 mb-8 shadow-sm">
         <h3 className="text-xl font-bold text-slate-900 mb-6">
-          {lang === 'fa' ? 'تفاصیل سفر' : lang === 'ar' ? 'تفاصيل الرحلة' : 'Trip Details'}
+          {l('Trip Details', 'جزئیات سفر', 'تفاصيل الرحلة')}
         </h3>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
-          <InfoBox icon="🗓️" label={lang === 'fa' ? 'مدت' : 'Duration'} value={`${displayDays} ${lang === 'fa' ? 'روز' : 'days'}`} lang={lang} />
-          <InfoBox icon="👥" label={lang === 'fa' ? 'تعداد' : 'Group Size'} value={`${displayGroupSize} ${lang === 'fa' ? 'نفر' : 'people'}`} lang={lang} />
-          <InfoBox icon="💰" label={lang === 'fa' ? 'بودجه' : 'Budget'} value={displayBudget} lang={lang} />
-          <InfoBox icon="🎯" label={lang === 'fa' ? 'هدف' : 'Purpose'} value={displayPurpose} lang={lang} />
-          <InfoBox icon="🚶" label={lang === 'fa' ? 'فعالیت' : 'Activity Level'} value={displayActivityLevel} lang={lang} />
-          <InfoBox icon="🏨" label={lang === 'fa' ? 'اقامت' : 'Accommodation'} value={displayAccommodation} lang={lang} />
+          <InfoBox icon="🗓️" label={l('Duration', 'مدت', 'المدة')} value={l(`${displayDays} days`, `${displayDays} روز`, `عدد الأيام: ${displayDays}`)} lang={lang} />
+          <InfoBox icon="👥" label={l('Group Size', 'تعداد مسافران', 'عدد المسافرين')} value={l(`${displayGroupSize} people`, `${displayGroupSize} نفر`, `${displayGroupSize}`)} lang={lang} />
+          <InfoBox icon="💰" label={l('Budget', 'بودجه', 'الميزانية')} value={localizeTripOption(displayBudget, lang)} lang={lang} />
+          <InfoBox icon="🎯" label={l('Purpose', 'هدف سفر', 'هدف الرحلة')} value={localizeTripOption(displayPurpose, lang)} lang={lang} />
+          <InfoBox icon="🚶" label={l('Activity Level', 'میزان فعالیت', 'مستوى النشاط')} value={localizeTripOption(displayActivityLevel, lang)} lang={lang} />
+          <InfoBox icon="🏨" label={l('Accommodation', 'اقامتگاه', 'الإقامة')} value={localizeTripOption(displayAccommodation, lang)} lang={lang} />
         </div>
 
         {/* Additional Details */}
@@ -71,16 +73,16 @@ export default function TripPreviewCard({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {displayDietary !== '—' && (
-                <InfoBox icon="🍽️" label={lang === 'fa' ? 'غذایی' : 'Dietary'} value={displayDietary} lang={lang} />
+                <InfoBox icon="🍽️" label={l('Dietary', 'رژیم غذایی', 'النظام الغذائي')} value={displayDietary} lang={lang} />
               )}
               {displayPace !== '—' && (
-                <InfoBox icon="⚡" label={lang === 'fa' ? 'سرعت' : 'Pace'} value={displayPace} lang={lang} />
+                <InfoBox icon="⚡" label={l('Pace', 'سرعت سفر', 'وتيرة الرحلة')} value={localizeTripOption(displayPace, lang)} lang={lang} />
               )}
               {tripData.children.hasChildren && (
-                <InfoBox icon="👨‍👩‍👧" label={lang === 'fa' ? 'کودکان' : 'Children'} value={`${tripData.children.count} ${lang === 'fa' ? 'کودک' : 'children'}`} lang={lang} />
+                <InfoBox icon="👨‍👩‍👧" label={l('Children', 'کودکان', 'الأطفال')} value={l(`${tripData.children.count} children`, `${tripData.children.count} کودک`, `عدد الأطفال: ${tripData.children.count}`)} lang={lang} />
               )}
               {tripData.healthConsiderations && (
-                <InfoBox icon="⚕️" label={lang === 'fa' ? 'سلامت' : 'Health'} value={lang === 'fa' ? 'نیازهای خاص' : 'Special needs'} lang={lang} />
+                <InfoBox icon="⚕️" label={l('Health', 'سلامت', 'الصحة')} value={l('Special needs', 'نیازهای ویژه', 'احتياجات خاصة')} lang={lang} />
               )}
             </div>
           </div>
@@ -124,7 +126,7 @@ export default function TripPreviewCard({
         >
           {loading ? (
             <>
-              <BreathingGlow className="h-5 w-5" label="Loading trip" />
+              <BreathingGlow className="h-5 w-5" label={l('Loading trip', 'در حال بارگذاری سفر', 'جارٍ تحميل الرحلة')} />
               {lang === 'fa' ? 'در حال ذخیره...' : lang === 'ar' ? 'جاري الحفظ...' : 'Saving...'}
             </>
           ) : (

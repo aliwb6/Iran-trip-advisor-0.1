@@ -24,6 +24,7 @@ import {
   Star,
 } from 'lucide-react';
 import { BreathingGlow as Loader2 } from '@/components/ui/BreathingGlow';
+import { localize, localizeCountry } from '@/lib/localize';
 
 const COUNTRIES = [
   'Afghanistan', 'Albania', 'Algeria', 'Argentina', 'Armenia', 'Australia', 'Austria',
@@ -39,11 +40,10 @@ const COUNTRIES = [
   'Tunisia', 'Turkey', 'Turkmenistan', 'Ukraine', 'United Arab Emirates',
   'United Kingdom', 'United States', 'Uzbekistan', 'Venezuela', 'Vietnam', 'Yemen',
 ];
-
 const ROLES = [
-  { value: 'traveler', en: 'Traveler',        fa: 'مسافر',           icon: Compass },
-  { value: 'guide',    en: 'Tour Guide', fa: 'راهنمای مسافران', icon: MapPin },
-  { value: 'agency',   en: 'Travel Agency',   fa: 'آژانس مسافرتی',   icon: Building2 },
+  { value: 'traveler', en: 'Traveler', fa: 'مسافر', ar: 'مسافر', icon: Compass },
+  { value: 'guide', en: 'Tour Guide', fa: 'راهنمای سفر', ar: 'مرشد سياحي', icon: MapPin },
+  { value: 'agency', en: 'Travel Agency', fa: 'آژانس مسافرتی', ar: 'وكالة سفر', icon: Building2 },
 ];
 
 const BENEFITS = [
@@ -51,21 +51,25 @@ const BENEFITS = [
     icon: Compass,
     en: { title: 'Explore Iran', desc: "Curated journeys through ancient Persia's living heritage" },
     fa: { title: 'ایران را کشف کنید', desc: 'سفرهای منتخب در دل تمدن باستانی ایران' },
+    ar: { title: 'اكتشف إيران', desc: 'رحلات مختارة للتعرّف على التراث الإيراني العريق الحيّ' },
   },
   {
     icon: User,
     en: { title: 'Find Your Guide', desc: 'Connect with verified local experts who bring every story to life' },
     fa: { title: 'راهنمای خود را بیابید', desc: 'با کارشناسان محلی تأیید شده آشنا شوید' },
+    ar: { title: 'اعثر على مرشدك', desc: 'تواصل مع خبراء محليين موثوقين يُحيون قصص كل وجهة' },
   },
   {
     icon: Shield,
     en: { title: 'Travel with Confidence', desc: 'Transparent pricing, authentic experiences, total peace of mind' },
     fa: { title: 'با اطمینان سفر کنید', desc: 'قیمت‌های شفاف، تجربه‌های اصیل، خیال آسوده' },
+    ar: { title: 'سافر بثقة', desc: 'أسعار واضحة وتجارب أصيلة وراحة بال' },
   },
 ];
 
 export default function Register() {
   const { lang, dir } = useI18n();
+  const l = (en, fa, ar) => localize(lang, en, fa, ar);
   const navigate = useNavigate();
   const isRtl = dir === 'rtl';
   const Arrow = isRtl ? ArrowLeft : ArrowRight;
@@ -88,21 +92,19 @@ export default function Register() {
 
   const validate = () => {
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      return lang === 'fa' ? 'نام و نام‌خانوادگی الزامی است' : 'First and last name are required';
+      return l('First and last name are required', 'نام و نام خانوادگی را وارد کنید.', 'يرجى إدخال الاسم الأول واسم العائلة.');
     }
     if (!formData.email.trim()) {
-      return lang === 'fa' ? 'ایمیل الزامی است' : 'Email is required';
+      return l('Email is required', 'ایمیل را وارد کنید.', 'يرجى إدخال البريد الإلكتروني.');
     }
     if (!formData.phone.trim()) {
-      return lang === 'fa' ? 'شماره تلفن الزامی است' : 'Phone number is required';
+      return l('Phone number is required', 'شمارهٔ تلفن را وارد کنید.', 'يرجى إدخال رقم الهاتف.');
     }
     if (formData.password.length < 8) {
-      return lang === 'fa'
-        ? 'رمز عبور باید حداقل ۸ کاراکتر باشد'
-        : 'Password must be at least 8 characters';
+      return l('Password must be at least 8 characters', 'رمز عبور باید دست‌کم ۸ نویسه داشته باشد.', 'يجب أن تتكوّن كلمة المرور من 8 أحرف على الأقل.');
     }
     if (!formData.gender) {
-      return lang === 'fa' ? 'لطفاً جنسیت خود را انتخاب کنید' : 'Please select your gender';
+      return l('Please select your gender', 'لطفاً جنسیت خود را انتخاب کنید.', 'يرجى اختيار الجنس.');
     }
     return null;
   };
@@ -146,17 +148,9 @@ export default function Register() {
     } catch (err) {
       const msg = err.message || '';
       if (msg.includes('already registered') || msg.includes('already exists')) {
-        setError(
-          lang === 'fa'
-            ? 'این ایمیل قبلاً ثبت شده است. / This email is already registered.'
-            : 'This email is already registered. / این ایمیل قبلاً ثبت شده است.'
-        );
+        setError(l('This email is already registered.', 'این ایمیل قبلاً ثبت شده است.', 'هذا البريد الإلكتروني مسجّل بالفعل.'));
       } else {
-        setError(
-          lang === 'fa'
-            ? `خطا در ثبت‌نام / Registration failed: ${msg}`
-            : `Registration failed / خطا در ثبت‌نام: ${msg}`
-        );
+        setError(l(`Registration failed: ${msg}`, 'ثبت‌نام ممکن نشد. لطفاً دوباره تلاش کنید.', 'تعذّر إنشاء الحساب. يُرجى المحاولة مجدداً.'));
       }
     } finally {
       setLoading(false);
@@ -201,21 +195,21 @@ export default function Register() {
             <h2 className="font-heading text-4xl xl:text-5xl font-bold text-white leading-tight mb-4">
               {lang === 'fa' ? (
                 <>سفری که<br /><span className="text-[hsl(178,85%,50%)]">فراموش نمی‌کنید</span></>
+              ) : lang === 'ar' ? (
+                <>رحلةٌ<br /><span className="text-[hsl(178,85%,50%)]">لا تُنسى</span></>
               ) : (
                 <>A Journey<br /><span className="text-[hsl(178,85%,50%)]">Unforgettable</span></>
               )}
             </h2>
             <p className="font-body text-[hsl(222,20%,65%)] text-base leading-relaxed max-w-xs">
-              {lang === 'fa'
-                ? 'به هزاران مسافر که ایران را با ما کشف کردند بپیوندید'
-                : 'Join thousands of travellers who discovered Iran with us'}
+              {l('Join thousands of travellers who discovered Iran with us', 'به هزاران مسافری بپیوندید که با ما ایران را کشف کرده‌اند.', 'انضمّ إلى آلاف المسافرين الذين اكتشفوا إيران معنا.')}
             </p>
           </div>
 
           {/* Benefits */}
           <div className="space-y-6 flex-1">
-            {BENEFITS.map(({ icon: Icon, en, fa }, i) => {
-              const content = lang === 'fa' ? fa : en;
+            {BENEFITS.map(({ icon: Icon, en, fa, ar }, i) => {
+              const content = lang === 'fa' ? fa : lang === 'ar' ? ar : en;
               return (
                 <motion.div
                   key={i}
@@ -239,9 +233,7 @@ export default function Register() {
           {/* Bottom quote */}
           <div className="mt-auto pt-10 border-t border-white/10">
             <p className="font-body text-[hsl(222,15%,50%)] text-xs italic leading-relaxed">
-              {lang === 'fa'
-                ? '"ایران سرزمینی است که هر بار با چشمانی تازه باید دیده شود"'
-                : '"Iran is a land that must be seen with fresh eyes each time"'}
+              {l('"Iran is a land that must be seen with fresh eyes each time"', '«ایران سرزمینی است که هر بار باید آن را با نگاهی تازه دید.»', '«إيران بلد يستحق أن تراه كل مرة بعينين جديدتين.»')}
             </p>
           </div>
         </div>
@@ -258,17 +250,17 @@ export default function Register() {
           {/* Header */}
           <div className="mb-8">
             <h1 className="font-heading text-3xl font-bold text-foreground mb-1">
-              {lang === 'fa' ? 'ثبت‌نام' : 'Create Account'}
+              {l('Create Account', 'ثبت‌نام', 'إنشاء حساب')}
             </h1>
             <p className="font-body text-muted-foreground text-sm">
-              {lang === 'fa' ? 'یک حساب کاربری جدید بسازید' : 'Start your Iranian adventure today'}
+              {l('Start your Iranian adventure today', 'سفر خود در ایران را از همین‌جا آغاز کنید.', 'ابدأ مغامرتك في إيران اليوم.')}
             </p>
           </div>
 
           {/* Role Tabs */}
           <div className="mb-6">
             <div className="flex rounded-xl border border-border overflow-hidden bg-muted/40">
-              {ROLES.map(({ value, en, fa, icon: Icon }) => (
+              {ROLES.map(({ value, en, fa, ar, icon: Icon }) => (
                 <button
                   key={value}
                   type="button"
@@ -280,7 +272,7 @@ export default function Register() {
                   }`}
                 >
                   <Icon className="w-4 h-4" />
-                  {lang === 'fa' ? fa : en}
+                  {l(en, fa, ar)}
                 </button>
               ))}
             </div>
@@ -307,7 +299,7 @@ export default function Register() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block font-body text-xs text-muted-foreground mb-1.5">
-                  {lang === 'fa' ? 'نام' : 'First Name'} *
+                  {l('First Name', 'نام', 'الاسم الأول')} *
                 </label>
                 <input
                   type="text"
@@ -315,12 +307,12 @@ export default function Register() {
                   value={formData.firstName}
                   onChange={e => set('firstName', e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background font-body text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent/50 transition"
-                  placeholder={lang === 'fa' ? 'علی' : 'John'}
+                  placeholder={l('John', 'علی', 'أحمد')}
                 />
               </div>
               <div>
                 <label className="block font-body text-xs text-muted-foreground mb-1.5">
-                  {lang === 'fa' ? 'نام‌خانوادگی' : 'Last Name'} *
+                  {l('Last Name', 'نام خانوادگی', 'اسم العائلة')} *
                 </label>
                 <input
                   type="text"
@@ -328,7 +320,7 @@ export default function Register() {
                   value={formData.lastName}
                   onChange={e => set('lastName', e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background font-body text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent/50 transition"
-                  placeholder={lang === 'fa' ? 'رضایی' : 'Doe'}
+                  placeholder={l('Doe', 'رضایی', 'الحسن')}
                 />
               </div>
             </div>
@@ -336,7 +328,7 @@ export default function Register() {
             {/* Email */}
             <div>
               <label className="block font-body text-xs text-muted-foreground mb-1.5">
-                {lang === 'fa' ? 'ایمیل' : 'Email'} *
+                {l('Email', 'ایمیل', 'البريد الإلكتروني')} *
               </label>
               <div className="relative">
                 <Mail className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none ${isRtl ? 'end-3.5' : 'start-3.5'}`} />
@@ -355,7 +347,7 @@ export default function Register() {
             {/* Phone Number */}
             <div>
               <label className="block font-body text-xs text-muted-foreground mb-1.5">
-                {lang === 'fa' ? 'شماره تلفن' : 'Phone Number'} *
+                {l('Phone Number', 'شمارهٔ تلفن', 'رقم الهاتف')} *
               </label>
               <div className="relative">
                 <Phone className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none ${isRtl ? 'end-3.5' : 'start-3.5'}`} />
@@ -365,7 +357,7 @@ export default function Register() {
                   value={formData.phone}
                   onChange={e => set('phone', e.target.value)}
                   className={`w-full ${isRtl ? 'pe-10 ps-3.5' : 'ps-10 pe-3.5'} py-2.5 rounded-xl border border-border bg-background font-body text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent/50 transition`}
-                  placeholder={lang === 'fa' ? '+98 XXX XXX XXXX' : '+1 (555) 000-0000'}
+                  placeholder={l('+1 (555) 000-0000', '+98 XXX XXX XXXX', '+971 XX XXX XXXX')}
                   autoComplete="tel"
                   dir="ltr"
                 />
@@ -375,7 +367,7 @@ export default function Register() {
             {/* Password */}
             <div>
               <label className="block font-body text-xs text-muted-foreground mb-1.5">
-                {lang === 'fa' ? 'رمز عبور' : 'Password'} *
+                {l('Password', 'رمز عبور', 'كلمة المرور')} *
               </label>
               <div className="relative">
                 <Lock className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none ${isRtl ? 'end-3.5' : 'start-3.5'}`} />
@@ -398,14 +390,14 @@ export default function Register() {
                 </button>
               </div>
               <p className="mt-1 font-body text-xs text-muted-foreground/70">
-                {lang === 'fa' ? 'حداقل ۸ کاراکتر' : 'Minimum 8 characters'}
+                {l('Minimum 8 characters', 'دست‌کم ۸ نویسه', '8 أحرف على الأقل')}
               </p>
             </div>
 
             {/* Country */}
             <div>
               <label className="block font-body text-xs text-muted-foreground mb-1.5">
-                {lang === 'fa' ? 'کشور' : 'Country'}
+                {l('Country', 'کشور', 'البلد')}
               </label>
               <div className="relative">
                 <Globe className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none ${isRtl ? 'end-3.5' : 'start-3.5'}`} />
@@ -415,10 +407,10 @@ export default function Register() {
                   className={`w-full ${isRtl ? 'pe-10 ps-3.5' : 'ps-10 pe-3.5'} py-2.5 rounded-xl border border-border bg-background font-body text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/50 transition appearance-none cursor-pointer`}
                 >
                   <option value="">
-                    {lang === 'fa' ? '-- کشور خود را انتخاب کنید --' : '-- Select your country --'}
+                    {l('-- Select your country --', '-- کشور خود را انتخاب کنید --', '-- اختر بلدك --')}
                   </option>
                   {COUNTRIES.map(c => (
-                    <option key={c} value={c}>{c}</option>
+                    <option key={c} value={c}>{localizeCountry(c, lang)}</option>
                   ))}
                 </select>
               </div>
@@ -427,13 +419,13 @@ export default function Register() {
             {/* Gender */}
             <div>
               <label className="block font-body text-xs text-muted-foreground mb-2">
-                {lang === 'fa' ? 'جنسیت' : 'Gender'} *
+                {l('Gender', 'جنسیت', 'الجنس')} *
               </label>
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { value: 'male', fa: 'آقا', en: 'Male', img: '/avatars/default-male.png' },
-                  { value: 'female', fa: 'خانم', en: 'Female', img: '/avatars/default-female.png' },
-                ].map(({ value, fa, en, img }) => {
+                  { value: 'male', fa: 'مرد', ar: 'ذكر', en: 'Male', img: '/avatars/default-male.png' },
+                  { value: 'female', fa: 'زن', ar: 'أنثى', en: 'Female', img: '/avatars/default-female.png' },
+                ].map(({ value, fa, ar, en, img }) => {
                   const selected = formData.gender === value;
                   return (
                     <button
@@ -453,7 +445,7 @@ export default function Register() {
                         className={`w-14 h-14 rounded-full object-cover transition-opacity ${selected ? 'opacity-100' : 'opacity-80'}`}
                       />
                       <span className={`font-body text-sm font-semibold ${selected ? 'text-accent' : 'text-foreground'}`}>
-                        {lang === 'fa' ? fa : en}
+                        {l(en, fa, ar)}
                       </span>
                     </button>
                   );
@@ -471,19 +463,19 @@ export default function Register() {
                 ? <Loader2 className="w-4 h-4 animate-spin" />
                 : <Arrow className="w-4 h-4" />}
               {loading
-                ? (lang === 'fa' ? 'در حال ثبت‌نام...' : 'Creating account...')
-                : (lang === 'fa' ? 'ایجاد حساب کاربری' : 'Create Account')}
+                ? l('Creating account...', 'در حال ساخت حساب…', 'جارٍ إنشاء الحساب…')
+                : l('Create Account', 'ایجاد حساب کاربری', 'إنشاء حساب')}
             </button>
           </form>
 
           {/* Login link */}
           <p className="mt-6 text-center font-body text-sm text-muted-foreground">
-            {lang === 'fa' ? 'قبلاً حساب دارید؟' : 'Already have an account?'}{' '}
+            {l('Already have an account?', 'قبلاً حساب ساخته‌اید؟', 'هل لديك حساب بالفعل؟')}{' '}
             <Link
               to="/login"
               className="text-accent font-medium hover:underline underline-offset-2 transition"
             >
-              {lang === 'fa' ? 'وارد شوید' : 'Sign in'}
+              {l('Sign in', 'وارد شوید', 'سجّل الدخول')}
             </Link>
           </p>
         </motion.div>

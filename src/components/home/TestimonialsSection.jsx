@@ -9,10 +9,10 @@ const testimonials = [
     rating: 5,
     text: {
       en: "Iran absolutely blew me away. The level of hospitality, the architecture, the food — nothing could have prepared me for how extraordinary this country is. Iran Soul Tours made every moment seamless.",
-      fa: "ایران مرا کاملاً شگفت‌زده کرد. سطح مهمان‌نوازی، معماری، غذا — هیچ چیز نمی‌توانست مرا برای این عظمت آماده کند.",
-      ar: "أذهلتني إيران تمامًا. مستوى الضيافة والمعمار والطعام — لم أكن أتخيل أن تكون هذه الدولة بهذه الروعة."
+      fa: "ایران واقعاً شگفت‌زده‌ام کرد. مهمان‌نوازی، معماری و غذا فراتر از تصورم بود؛ هیچ‌چیز مرا برای زیبایی خارق‌العادهٔ این کشور آماده نکرده بود. Iran Soul Tours کاری کرد که تمام لحظه‌های سفر بی‌دردسر بگذرد.",
+      ar: "أذهلتني إيران حقًا. كرم الضيافة والعمارة والطعام؛ لم يكن بوسعي تخيّل مدى روعة هذا البلد. وجعلت Iran Soul Tours كل لحظة من الرحلة تسير بسلاسة."
     },
-    tour: { en: "Persian Jewels — 10 days", fa: "جواهرات ایران — ۱۰ روز", ar: "جواهر فارس — 10 أيام" },
+    tour: { en: "Persian Jewels — 10 days", fa: "گوهرهای ایران — ۱۰ روز", ar: "جواهر بلاد فارس — ١٠ أيام" },
   },
   {
     name: "Khaled Al-Rashid",
@@ -20,10 +20,10 @@ const testimonials = [
     rating: 5,
     text: {
       en: "As an Arab traveler, I felt completely at home. The guides spoke Arabic, the cultural depth was incredible. Seeing Persepolis at sunrise is something I'll carry forever.",
-      fa: "به عنوان یک مسافر عرب، کاملاً احساس خانه کردم. راهنماها عربی صحبت می‌کردند، عمق فرهنگی شگفت‌انگیز بود.",
-      ar: "كمسافر عربي شعرت بأنني في وطني. المرشدون يتحدثون العربية والعمق الثقافي كان رائعاً."
+      fa: "به‌عنوان یک مسافر عرب، کاملاً احساس می‌کردم در خانهٔ خودم هستم. راهنماها عربی صحبت می‌کردند و ژرفای فرهنگ ایران شگفت‌انگیز بود. تماشای تخت جمشید هنگام طلوع آفتاب خاطره‌ای است که همیشه با من می‌ماند.",
+      ar: "بوصفي مسافرًا عربيًا، شعرت وكأنني في بيتي. كان المرشدون يتحدثون العربية، وكان عمق الثقافة مدهشًا. ستبقى رؤية برسبوليس عند شروق الشمس ذكرى ترافقني دائمًا."
     },
-    tour: { en: "Ancient Persia — 9 days", fa: "ایران باستان — ۹ روز", ar: "بلاد فارس القديمة — 9 أيام" },
+    tour: { en: "Ancient Persia — 9 days", fa: "ایران باستان — ۹ روز", ar: "بلاد فارس القديمة — ٩ أيام" },
   },
   {
     name: "Yuki Tanaka",
@@ -31,10 +31,10 @@ const testimonials = [
     rating: 5,
     text: {
       en: "The photography tour was a dream. Every morning had golden light, every guide knew the perfect angle. The Lut Desert under the stars was the most beautiful thing I've ever photographed.",
-      fa: "تور عکاسی یک رویا بود. هر صبح نور طلایی داشت، هر راهنما زاویه کامل را می‌دانست.",
-      ar: "كان جولة التصوير حلمًا. كل صباح كان يحمل ضوءاً ذهبياً ومرشدون يعرفون الزاوية المثالية."
+      fa: "تور عکاسی مثل یک رؤیا بود. هر صبح نور طلایی زیبایی داشت و راهنماها بهترین زاویه‌ها را می‌شناختند. آسمان پرستارهٔ کویر لوت زیباترین منظره‌ای بود که تا به حال عکاسی کرده‌ام.",
+      ar: "كانت جولة التصوير حلمًا. حمل كل صباح ضوءًا ذهبيًا، وكان كل مرشد يعرف الزاوية المثالية. وكانت صحراء لوت تحت النجوم أجمل مشهد التقطت له صورة في حياتي."
     },
-    tour: { en: "Photographer's Dream — 11 days", fa: "رویای عکاس — ۱۱ روز", ar: "حلم المصور — 11 أيام" },
+    tour: { en: "Photographer's Dream — 11 days", fa: "رؤیای عکاس — ۱۱ روز", ar: "حلم المصوّر — ١١ يومًا" },
   },
 ];
 
