@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { fetchWithPublicReadTimeout } from './lib/supabaseFetch'
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim()
 // Supabase now calls the browser-safe value a "publishable key". Keep the
@@ -12,5 +13,7 @@ const supabaseAnonKey = (
 // renders a setup screen until both public browser values are configured.
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      global: { fetch: fetchWithPublicReadTimeout },
+    })
   : null;

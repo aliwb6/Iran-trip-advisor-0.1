@@ -6,7 +6,6 @@ import { Star, ShieldCheck, MapPin, Globe, SlidersHorizontal, X, ArrowUpDown } f
 import { useI18n } from '@/lib/i18n.jsx';
 import { useAvailableProfileLanguages, useGuides } from '@/hooks/useSupabase';
 import { avatarFor } from '@/lib/avatar';
-import { guides as localGuides } from '@/data/guides';
 import FilterDropdown from '@/components/ui/FilterDropdown';
 import { destinationSelectionAliases, iranianDestinationOptions } from '@/data/iranianCities';
 import { toLanguageOptions } from '@/data/languages';
@@ -163,11 +162,7 @@ export default function Guides() {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sortBy, setSortBy] = useState('recommended');
 
-  // useGuides() already filters is_approved: true from Supabase.
-  // Fall back to local verified-only data if Supabase returns nothing.
-  const allGuides = supabaseGuides.length > 0
-    ? supabaseGuides
-    : localGuides.filter(g => g.is_verified === true);
+  const allGuides = supabaseGuides;
 
   const languageOptions = useMemo(() => [
     { key: 'all', en: 'All Languages', fa: 'همه زبان‌ها', ar: 'كل اللغات' },
@@ -299,6 +294,9 @@ export default function Guides() {
           <div className="text-center py-16">
             <p className="font-body text-destructive mb-2">{errorText}</p>
             <p className="font-body text-xs text-muted-foreground">{error}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 text-sm font-body text-accent hover:underline">
+              {lang === 'fa' ? 'تلاش دوباره' : lang === 'ar' ? 'إعادة المحاولة' : 'Try again'}
+            </button>
           </div>
         ) : sorted.length === 0 ? (
           <div className="text-center py-24">

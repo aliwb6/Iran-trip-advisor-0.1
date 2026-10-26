@@ -14,7 +14,7 @@ export default function Blog() {
   const navigate = useNavigate();
   const Arrow = dir === 'rtl' ? ArrowLeft : ArrowRight;
 
-  const { articles: allArticles, loading } = useArticles({});
+  const { articles: allArticles, loading, error } = useArticles({});
 
   // Every featured article gets the prominent treatment. Regular articles never
   // become a hero as a fallback, so the page cannot promote one at random.
@@ -54,7 +54,18 @@ export default function Blog() {
         )}
 
         {/* Empty state */}
-        {!loading && allArticles.length === 0 && (
+        {!loading && error && (
+          <div className="text-center py-24" role="alert">
+            <p className="font-heading text-2xl text-destructive">
+              {lang === 'fa' ? 'بارگذاری مقالات با خطا مواجه شد' : lang === 'ar' ? 'فشل تحميل المقالات' : 'Failed to load articles'}
+            </p>
+            <p className="font-body text-sm text-muted-foreground mt-2">{error}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 text-sm font-body text-accent hover:underline">
+              {lang === 'fa' ? 'تلاش دوباره' : lang === 'ar' ? 'إعادة المحاولة' : 'Try again'}
+            </button>
+          </div>
+        )}
+        {!loading && !error && allArticles.length === 0 && (
           <div className="text-center py-24">
             <div className="w-20 h-20 mx-auto mb-6 rounded-full border-2 border-border flex items-center justify-center">
               <span className="text-3xl text-accent/40">✦</span>

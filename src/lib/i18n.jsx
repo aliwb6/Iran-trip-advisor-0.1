@@ -525,7 +525,7 @@ const translations = {
     hero_cta_request: "درخواست تور",
     hero_cta_custom: "سفر خود را بسازید",
     hero_cta_ai: "برنامه‌ریزی با هوش مصنوعی",
-    philosophy_title: "تجربه ایران تور ادوایزر",
+    philosophy_title: "تجربه ایران تریپ ادوایزر",
     philosophy_subtitle: "پیوند فناوری امروز با مهمان‌نوازی دیرینه ایرانی",
     philosophy_modern: "فناوری هوش مصنوعی مدرن",
     philosophy_modern_desc: "برنامه‌ریزی سفر هوشمند با قدرت هوش مصنوعی",

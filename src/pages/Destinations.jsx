@@ -61,6 +61,9 @@ export default function Destinations() {
         ) : error ? (
           <div className="text-center py-16">
             <p className="font-body text-destructive">{error}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 text-sm font-body text-accent hover:underline">
+              {lang === 'fa' ? 'تلاش دوباره' : lang === 'ar' ? 'إعادة المحاولة' : 'Try again'}
+            </button>
           </div>
         ) : (
           <>

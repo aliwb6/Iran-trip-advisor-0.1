@@ -151,6 +151,9 @@ export default function Tours() {
             </div>
             <p className="font-heading text-2xl text-muted-foreground font-light">{errorTitle}</p>
             <p className="font-body text-sm text-destructive mt-2">{error}</p>
+            <button type="button" onClick={() => window.location.reload()} className="mt-4 text-sm font-body text-accent hover:underline">
+              {lang === 'fa' ? 'تلاش دوباره' : lang === 'ar' ? 'إعادة المحاولة' : 'Try again'}
+            </button>
           </div>
         ) : (
           <AnimatePresence mode="wait">
